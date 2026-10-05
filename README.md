@@ -2,7 +2,7 @@
 
 > **Principe central** : l'IA comprend les informations non structurées ; le moteur métier décide comment les comparer et les scorer.
 
-Les diagrammes sont en [Mermaid](https://mermaid.js.org/) : ils s'affichent directement sur GitHub.
+Les diagrammes sont en [Mermaid](https://mermaid.js.org/) .
 
 ---
 
