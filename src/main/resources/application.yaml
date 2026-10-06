@@ -6,6 +6,30 @@ spring:
     username: ${DB_USER}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+
   jpa:
     hibernate:
       ddl-auto: update
+    open-in-view: false
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+
+
+
+
+
+talent:
+  llm:
+    provider: ${LLM_PROVIDER:ollama}
+    base-url: ${OLLAMA_URL:http://localhost:11434}
+    model: ${OLLAMA_MODEL:qwen2.5:7b}
+    timeout-seconds: 180
+  scoring:
+      high-threshold: 80
+      review-threshold: 60
+      secondary-threshold: 40
+      mandatory-missing-cap: 59
+  storage:
+      dir: ${CV_STORAGE_DIR:./data/cvs}

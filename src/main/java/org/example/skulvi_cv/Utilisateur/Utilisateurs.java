@@ -11,7 +11,6 @@ import java.util.regex.Pattern;
 @Builder
 @Getter
 @Setter
-@Entity
 @Table(name = "User")
 @AllArgsConstructor
 @NoArgsConstructor
