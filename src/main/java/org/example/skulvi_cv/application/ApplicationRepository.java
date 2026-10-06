@@ -13,6 +13,8 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
 
     List<Application> findByOfferIdOrderBySubmittedAtDesc(UUID offerId);
 
+    List<Application> findByOwnerIdOrderBySubmittedAtDesc(UUID ownerId);
+
     List<Application> findByOfferIdAndStatusOrderByScoreTotalDesc(UUID offerId, ApplicationStatus status);
 
     long countByStatus(ApplicationStatus status);

@@ -2,6 +2,8 @@ package org.example.skulvi_cv.application;
 
 import lombok.RequiredArgsConstructor;
 import org.example.skulvi_cv.application.ApplicationDtos.*;
+import org.example.skulvi_cv.Utilisateur.AppUser;
+import org.example.skulvi_cv.Utilisateur.AppUserRepository;
 import org.example.skulvi_cv.candidate.Candidate;
 import org.example.skulvi_cv.candidate.CandidateRepository;
 import org.example.skulvi_cv.common.ApiException;
@@ -30,9 +32,18 @@ public class ApplicationService {
     private final CandidateRepository candidates;
     private final OfferService offers;
     private final CvStorageService storage;
+    private final AppUserRepository users;
 
     @Transactional
-    public Application submit(UUID offerId, ApplicationRequest req, MultipartFile cv) {
+    public Application submit(UUID offerId, ApplicationRequest req, MultipartFile cv, UUID ownerId) {
+        AppUser owner = null;
+        if (ownerId != null) {
+            owner = users.findById(ownerId).orElseThrow(() -> ApiException.notFound("Compte introuvable"));
+            // Connecté : l'email du compte est imposé (on ne postule pas au nom d'un autre)
+            req = new ApplicationRequest(req.firstName(), req.lastName(), owner.getEmail(),
+                    req.phone(), req.linkedinUrl(), req.githubUrl(), req.portfolioUrl());
+        }
+
         Offer offer = offers.getEntity(offerId);
         boolean expired = offer.getClosingDate() != null && offer.getClosingDate().isBefore(LocalDate.now());
         if (offer.getStatus() != OfferStatus.OPEN || expired) {
@@ -61,6 +72,7 @@ public class ApplicationService {
         app.setStatus(ApplicationStatus.CV_UPLOADED);
         app.setCvPath(storage.store(bytes));
         app.setCvHash(sha256(bytes));
+        app.setOwner(owner);
         return applications.save(app);
     }
 
@@ -86,10 +98,30 @@ public class ApplicationService {
     }
 
     @Transactional(readOnly = true)
+    public List<MyApplicationSummary> listMine(UUID userId) {
+        return applications.findByOwnerIdOrderBySubmittedAtDesc(userId).stream()
+                .map(ApplicationService::toMine).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public MyApplicationSummary getMine(UUID id, UUID userId) {
+        return toMine(findOwned(id, userId));
+    }
+
+    @Transactional(readOnly = true)
     public void assertRetryable(UUID id) {
         if (find(id).getStatus() == ApplicationStatus.ANALYZING) {
             throw ApiException.conflict("Une analyse est déjà en cours");
         }
+    }
+
+    /** Renvoie 404 (et non 403) si la candidature n'appartient pas à l'utilisateur : on ne révèle pas son existence. */
+    private Application findOwned(UUID id, UUID userId) {
+        Application app = find(id);
+        if (app.getOwner() == null || !app.getOwner().getId().equals(userId)) {
+            throw ApiException.notFound("Candidature introuvable : " + id);
+        }
+        return app;
     }
 
     private Application find(UUID id) {
@@ -99,6 +131,11 @@ public class ApplicationService {
     static ApplicationSummary toSummary(Application a) {
         return new ApplicationSummary(a.getId(), name(a), a.getCandidate().getEmail(), a.getStatus(),
                 a.getScoreTotal(), a.getPriority(), a.getFailureReason(), a.getSubmittedAt());
+    }
+
+    static MyApplicationSummary toMine(Application a) {
+        return new MyApplicationSummary(a.getId(), a.getOffer().getId(), a.getOffer().getTitle(),
+                a.getStatus(), a.getScoreTotal(), a.getSubmittedAt());
     }
 
     private static String name(Application a) {

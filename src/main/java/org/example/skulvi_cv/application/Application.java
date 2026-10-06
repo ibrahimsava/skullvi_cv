@@ -1,4 +1,5 @@
 package org.example.skulvi_cv.application;
+import org.example.skulvi_cv.Utilisateur.AppUser;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -53,6 +54,11 @@ public class Application {
     /** Détail du score, critère par critère (JSON) : sert à l'explicabilité. */
     @Column(columnDefinition = "text")
     private String breakdownJson;
+
+    /** Compte du candidat si la candidature a été déposée connecté, sinon null (candidature anonyme). */
+    @ManyToOne
+    @JoinColumn(name = "owner_id")
+    private AppUser owner;
 
     @Column(length = 500)
     private String failureReason;

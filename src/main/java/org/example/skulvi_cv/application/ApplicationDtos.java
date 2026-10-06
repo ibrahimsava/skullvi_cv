@@ -26,6 +26,11 @@ public final class ApplicationDtos {
             UUID id, String candidateName, String email, ApplicationStatus status,
             Integer score, Priority priority, String failureReason, Instant submittedAt) {}
 
+    /** Vue réservée au candidat connecté : pas de détail de scoring interne. */
+    public record MyApplicationSummary(
+            UUID id, UUID offerId, String offerTitle, ApplicationStatus status,
+            Integer score, Instant submittedAt) {}
+
     public record ScoreResponse(
             UUID applicationId, String candidateName, int total, int rawTotal,
             boolean capped, Priority priority, List<MatchItem> details) {}
