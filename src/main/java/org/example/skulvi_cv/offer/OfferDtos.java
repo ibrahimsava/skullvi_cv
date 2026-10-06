@@ -32,10 +32,21 @@ public final class OfferDtos {
             LocalDate closingDate,
             @NotEmpty @Valid List<CriterionRequest> criteria) {}
 
-    public record CriterionResponse(UUID id, String name, CriterionType type, boolean mandatory, int weight, Integer threshold) {}
+    public record CriterionResponse(UUID id,
+                                    String name,
+                                    CriterionType type,
+                                    boolean mandatory,
+                                    int weight,
+                                    Integer threshold) {}
 
     public record OfferResponse(
-            UUID id, String title, String description, String domain, String level,
-            Integer minExperienceYears, LocalDate startDate, LocalDate closingDate,
+            UUID id,
+            String title,
+            String description,
+            String domain,
+            String level,
+            Integer minExperienceYears,
+            LocalDate startDate,
+            LocalDate closingDate,
             OfferStatus status, List<CriterionResponse> criteria) {}
 }

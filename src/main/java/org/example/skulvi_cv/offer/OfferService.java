@@ -57,14 +57,28 @@ public class OfferService {
     }
 
     public Offer getEntity(UUID id) {
-        return repository.findById(id).orElseThrow(() -> ApiException.notFound("Offre introuvable : " + id));
+
+        return repository.findById(id).orElseThrow(() ->
+                ApiException.notFound("Offre introuvable : " + id));
     }
 
     static OfferResponse toResponse(Offer o) {
         List<CriterionResponse> criteria = o.getCriteria().stream()
-                .map(c -> new CriterionResponse(c.getId(), c.getName(), c.getType(), c.isMandatory(), c.getWeight(), c.getThreshold()))
+                .map(c -> new CriterionResponse(c.getId(),
+                        c.getName(),
+                        c.getType(),
+                        c.isMandatory(),
+                        c.getWeight(),
+                        c.getThreshold()))
                 .toList();
-        return new OfferResponse(o.getId(), o.getTitle(), o.getDescription(), o.getDomain(), o.getLevel(),
-                o.getMinExperienceYears(), o.getStartDate(), o.getClosingDate(), o.getStatus(), criteria);
+        return new OfferResponse(o.getId(),
+                o.getTitle(),
+                o.getDescription(),
+                o.getDomain(), o.getLevel(),
+                o.getMinExperienceYears(),
+                o.getStartDate(),
+                o.getClosingDate(),
+                o.getStatus(),
+                criteria);
     }
 }
