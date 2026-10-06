@@ -21,7 +21,14 @@ public final class AuthDtos {
             @NotBlank @Email String email,
             @NotBlank String password) {}
 
-    public record MeResponse(UUID id, String email, String firstName, String lastName, Roles role) {}
+    public record MeResponse(UUID id,
+                             String email,
+                             String firstName,
+                             String lastName,
+                             Roles role) {}
 
-    public record TokenResponse(String accessToken, String tokenType, long expiresInSeconds, MeResponse user) {}
+    public record TokenResponse(String accessToken,
+                                String tokenType,
+                                long expiresInSeconds,
+                                MeResponse user) {}
 }

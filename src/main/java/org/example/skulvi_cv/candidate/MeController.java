@@ -1,4 +1,4 @@
-package org.example.skulvi_cv.me;
+package org.example.skulvi_cv.candidate;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
