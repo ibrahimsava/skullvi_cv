@@ -1,0 +1,211 @@
+<header class="topbar">
+  <div class="container topbar-inner">
+    <a class="brand" routerLink="/" aria-label="Skulvi, accueil">
+      <span class="brand-mark">S</span>
+      <span class="brand-name">Skulvi</span>
+    </a>
+
+    <nav class="header-nav" aria-label="Navigation principale">
+      <a routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">Accueil</a>
+      <a routerLink="/offres" routerLinkActive="active-link">Offres</a>
+      <a routerLink="/postuler" routerLinkActive="active-link">Postuler</a>
+      <a routerLink="/analyse" routerLinkActive="active-link">Analyse</a>
+    </nav>
+
+    <div class="nav-right">
+      <a class="nav-link" routerLink="/login" routerLinkActive="active-link">Connexion</a>
+      <a class="btn btn-primary btn-sm" routerLink="/register">Créer un compte</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <h1>Le bon poste commence ici.</h1>
+        <p class="lead">
+          Trouvez des offres qui vous correspondent, suivez chaque candidature
+          et sachez où vous en êtes, à chaque étape.
+        </p>
+
+        <div class="hero-actions">
+          <a class="btn btn-primary" routerLink="/register">Créer un compte</a>
+          <a class="btn btn-ghost" routerLink="/login">Se connecter</a>
+        </div>
+
+        <ul class="trust-list" aria-label="Points clés">
+          <li>250+ offres actives</li>
+          <li>Analyse de CV rapide</li>
+          <li>Suivi des candidatures</li>
+        </ul>
+      </div>
+
+      <aside class="search-card" aria-label="Image de recrutement">
+        <div class="hero-media">
+          <img src="/images/i.jpeg" alt="Professionnels de recrutement Skulvi" />
+          <div class="floating-pill">
+            <span class="pill-value">250+</span>
+            <span class="pill-label">offres actives</span>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- FONCTIONNALITÉS -->
+  <section class="features" aria-label="Fonctionnalités">
+    <div class="container features-grid">
+      <article class="feature">
+        <div class="feature-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M7 7.5V7A2.5 2.5 0 0 1 9.5 4.5h5A2.5 2.5 0 0 1 17 7v.5"/><rect x="3.5" y="7.5" width="17" height="12" rx="2.5"/><path d="M8.5 12.5h7"/><path d="M8.5 15.5h4.5"/></svg>
+        </div>
+        <h3>Offres ciblées</h3>
+        <p>Des postes sélectionnés selon votre profil et vos compétences.</p>
+      </article>
+
+      <article class="feature">
+        <div class="feature-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M7 4.5h10A2.5 2.5 0 0 1 19.5 7v10A2.5 2.5 0 0 1 17 19.5H7A2.5 2.5 0 0 1 4.5 17V7A2.5 2.5 0 0 1 7 4.5Z"/><path d="M8 8.5h8"/><path d="M8 12h8"/><path d="M8 15.5h5"/></svg>
+        </div>
+        <h3>Suivi simple</h3>
+        <p>Retrouvez toutes vos candidatures et leur statut au même endroit.</p>
+      </article>
+
+      <article class="feature">
+        <div class="feature-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4.5 18.5V10"/><path d="M10.5 18.5V5.5"/><path d="M16.5 18.5v-7"/><path d="M22.5 18.5V8.5"/><path d="M2.5 18.5h20"/></svg>
+        </div>
+        <h3>Analyse claire</h3>
+        <p>Identifiez vos atouts et ce qu'il faut améliorer dans votre CV.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- PRÉSENTATION -->
+  <section class="showcase">
+    <div class="container showcase-grid">
+      <div class="showcase-copy">
+        <h2>Une plateforme pensée pour votre progression.</h2>
+        <p>
+          De la recherche d'un poste à l'envoi de votre candidature, chaque étape
+          est conçue pour vous faire gagner du temps et valoriser votre profil.
+        </p>
+        <ul class="check-list">
+          <li>Profils alignés sur des offres réelles</li>
+          <li>Suivi intelligent des candidatures</li>
+          <li>Analyse claire des compétences</li>
+        </ul>
+      </div>
+
+      <div class="showcase-visual">
+        <img src="/images/imag.jpeg" alt="Plateforme de recrutement Skulvi" />
+        <div class="overlay-card">
+          <span class="overlay-label">Taux de réponse</span>
+          <strong>+38%</strong>
+          <p>Avec une candidature mieux cadrée et plus visible.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ÉTAPES -->
+  <section class="steps">
+    <div class="container">
+      <h2 class="section-title">Comment ça marche</h2>
+      <ol class="steps-list">
+        <li class="step">
+          <span class="step-number">1</span>
+          <h3>Créez votre profil</h3>
+          <p>Décrivez votre parcours, vos compétences et les postes qui vous intéressent.</p>
+        </li>
+        <li class="step">
+          <span class="step-number">2</span>
+          <h3>Explorez les offres</h3>
+          <p>Consultez les opportunités pertinentes et repérez celles qui vous correspondent.</p>
+        </li>
+        <li class="step">
+          <span class="step-number">3</span>
+          <h3>Suivez votre progression</h3>
+          <p>Gardez le contrôle sur chaque candidature et ajustez votre stratégie.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- CHIFFRES -->
+  <section class="stats" aria-label="Chiffres clés">
+    <div class="container stats-grid">
+      <div class="stat">
+        <strong>12k+</strong>
+        <span>Candidats accompagnés</span>
+      </div>
+      <div class="stat">
+        <strong>48 h</strong>
+        <span>Pour recevoir votre analyse</span>
+      </div>
+      <div class="stat">
+        <strong>98 %</strong>
+        <span>D'utilisateurs satisfaits</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <div class="container cta-inner">
+      <h2>Créez votre profil et trouvez la bonne opportunité.</h2>
+      <div class="cta-actions">
+        <a class="btn btn-light" routerLink="/register">Créer un compte</a>
+        <a class="btn btn-outline-light" routerLink="/login">Connexion</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <div class="footer-brand">
+      <span class="brand-mark small">S</span>
+      <span>Skulvi</span>
+    </div>
+
+    <div class="footer-links">
+      <div>
+        <h4>Entreprise</h4>
+        <a href="#">À propos</a>
+        <a href="#">Contact</a>
+      </div>
+      <div>
+        <h4>Rubriques</h4>
+        <a href="#">Offres</a>
+        <a href="#">Analyse</a>
+        <a href="#">Candidatures</a>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <a href="tel:+2250576478231">+225 05 76 47 82 31</a>
+        <a href="mailto:savadogoibrahim0915@gmail.com">savadogoibrahim0915@gmail.com</a>
+        <a href="#">Abidjan, Côte d’Ivoire</a>
+      </div>
+      <div>
+        <h4>Réseaux</h4>
+        <div class="social-links">
+          <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+            <svg viewBox="0 0 24 24"><path d="M6.94 8.5a1.56 1.56 0 1 1 0-3.1 1.56 1.56 0 0 1 0 3.1ZM5.5 9.8h2.9V18H5.5zm5.5 0h2.78v1.13h.04c.39-.73 1.34-1.5 2.77-1.5 2.97 0 3.52 1.95 3.52 4.48V18h-2.9v-3.7c0-1.1-.02-2.52-1.54-2.52s-1.78 1.2-1.78 2.45V18H11V9.8Z"/></svg>
+          </a>
+          <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+            <svg viewBox="0 0 24 24"><path d="M13.5 22v-8h2.7l.4-3h-3.1V7.5c0-.9.5-1.4 1.5-1.4H17V3.1c-.7-.1-1.6-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3V11H8v3h2.3v8h3.2Z"/></svg>
+          </a>
+          <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+            <svg viewBox="0 0 24 24"><path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5Zm0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7Zm5 3.2A4.8 4.8 0 1 1 7.2 12 4.8 4.8 0 0 1 12 7.2Zm0 2A2.8 2.8 0 1 0 14.8 12 2.8 2.8 0 0 0 12 9.2Zm4.5-2.7a1.2 1.2 0 1 1-1.2-1.2 1.2 1.2 0 0 1 1.2 1.2Z"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="container footer-bottom">
+    <span>© 2026 Skulvi. Tous droits réservés.</span>
+  </div>
+</footer>

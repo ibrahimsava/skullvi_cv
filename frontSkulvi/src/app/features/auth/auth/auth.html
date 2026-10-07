@@ -1,0 +1,32 @@
+<form (ngSubmit)="submit()">
+  <h2>{{ isLogin ? 'Connexion' : 'Inscription' }}</h2>
+
+  @if (!isLogin) {
+    <div>
+      <label for="firstName">Prénom</label>
+      <input id="firstName" type="text" [(ngModel)]="userRequest.firstName" name="firstName" />
+    </div>
+
+    <div>
+      <label for="lastName">Nom</label>
+      <input id="lastName" type="text" [(ngModel)]="userRequest.lastName" name="lastName" />
+    </div>
+  }
+
+  <div>
+    <label for="email">Email</label>
+    <input id="email" type="email" [(ngModel)]="userRequest.email" name="email" />
+  </div>
+
+  <div>
+    <label for="password">Mot de passe</label>
+    <input id="password" type="password" [(ngModel)]="userRequest.password" name="password" />
+  </div>
+
+  <button type="submit">{{ isLogin ? 'Se connecter' : 'S\'inscrire' }}</button>
+
+  <p class="switch-link">
+    {{ isLogin ? 'Pas encore inscrit ?' : 'Déjà inscrit ?' }}
+    <a [routerLink]="isLogin ? '/register' : '/login'">{{ isLogin ? 'Créer un compte' : 'Se connecter' }}</a>
+  </p>
+</form>
