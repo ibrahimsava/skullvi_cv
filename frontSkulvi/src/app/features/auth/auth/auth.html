@@ -1,17 +1,16 @@
 <form (ngSubmit)="submit()">
   <h2>{{ isLogin ? 'Connexion' : 'Inscription' }}</h2>
+    <ng-container *ngIf="!isLogin">
+      <div>
+        <label for="firstName">Prénom</label>
+        <input id="firstName" type="text" [(ngModel)]="userRequest.firstName" name="firstName" />
+      </div>
 
-  @if (!isLogin) {
-    <div>
-      <label for="firstName">Prénom</label>
-      <input id="firstName" type="text" [(ngModel)]="userRequest.firstName" name="firstName" />
-    </div>
-
-    <div>
-      <label for="lastName">Nom</label>
-      <input id="lastName" type="text" [(ngModel)]="userRequest.lastName" name="lastName" />
-    </div>
-  }
+      <div>
+        <label for="lastName">Nom</label>
+        <input id="lastName" type="text" [(ngModel)]="userRequest.lastName" name="lastName" />
+      </div>
+    </ng-container>
 
   <div>
     <label for="email">Email</label>

@@ -1,11 +1,14 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { CommonModule } from '@angular/common';
 import { AuthService } from '../auth';
 import { UserRequest } from '../model';
+import  { Router } from '@angular/router';
 
 @Component({
-  imports: [FormsModule, RouterLink],
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterLink],
   selector: 'app-auth',
   styleUrl: './auth.scss',
   templateUrl: './auth.html',
@@ -13,6 +16,7 @@ import { UserRequest } from '../model';
 export class Auth implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router); 
 
   mode: 'login' | 'register' = 'register';
 
@@ -23,9 +27,20 @@ export class Auth implements OnInit {
     password: '',
   };
 
+  // UI error state for tests and user feedback
+  isError = false;
+  message = '';
+
   ngOnInit(): void {
-    const currentRoute = this.route.snapshot.url[0]?.path ?? 'register';
-    this.mode = currentRoute === 'login' ? 'login' : 'register';
+    const url = this.router.url ?? '';
+    if (url.includes('/login')) {
+      this.mode = 'login';
+    } else if (url.includes('/register')) {
+      this.mode = 'register';
+    } else {
+      const path = this.route.snapshot.routeConfig?.path ?? '';
+      this.mode = path === 'login' ? 'login' : path === 'register' ? 'register' : this.mode;
+    }
   }
 
   get isLogin(): boolean {
@@ -33,21 +48,64 @@ export class Auth implements OnInit {
   }
 
   submit(): void {
+    // reset UI error state
+    this.isError = false;
+    this.message = '';
+
     if (this.mode === 'login') {
-      this.authService.login(this.userRequest.email, this.userRequest.password).subscribe((response) => {
-        console.log('Connexion réussie :', response);
+      this.authService.login(this.userRequest.email, this.userRequest.password).subscribe({
+        next: (response) => {
+            console.log('Connexion réussie :', response);
+            // store access token so interceptor can send it on subsequent requests
+            try {
+              if (response?.accessToken) {
+                localStorage.setItem('accessToken', response.accessToken);
+              }
+              // optionally store user info
+              if (response?.user) {
+                localStorage.setItem('user', JSON.stringify(response.user));
+              }
+            } catch (err) {
+              console.warn('Unable to store token in localStorage', err);
+            }
+            this.router.navigate(['offres']);
+          },
+        error: (err) => {
+          console.error('Erreur connexion :', err);
+          this.isError = true;
+          this.message = err?.status === 401 ? 'Identifiants invalides.' : 'Erreur lors de la connexion.';
+        }
       });
       return;
     }
 
     this.createUser();
-  }
+}
 
   createUser(): void {
-    this.authService.createUser(this.userRequest).subscribe((user) => {
-      console.log('Utilisateur créé :', user);
+    // reset UI error state
+    this.isError = false;
+    this.message = '';
+
+    this.authService.createUser(this.userRequest).subscribe({
+      next: (user) => {
+        console.log('Utilisateur créé :', user);
+        this.router.navigate(['offres']);
+      },
+      error: (err) => {
+        console.error('Erreur création :', err);
+        if (err?.status === 409) {
+          this.isError = true;
+          this.message = 'Cette adresse e-mail est déjà utilisée.';
+        } else {
+          this.isError = true;
+          this.message = 'Erreur lors de la création du compte.';
+        }
+      }
     });
   }
+
+
 }
 
 

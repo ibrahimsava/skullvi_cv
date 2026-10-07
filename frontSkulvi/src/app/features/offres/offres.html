@@ -1,1 +1,21 @@
-<p>offres works!</p>
+<div class="offres-list">
+  <h2>Offres</h2>
+
+  <div *ngIf="loadError" class="error">Erreur lors du chargement des offres : {{ errorMessage }}</div>
+
+  <div *ngIf="!loadError && offres.length === 0" class="empty">Aucune offre trouvée.</div>
+
+  <div *ngFor="let offre of offres" class="offre-card">
+    <h3>{{ offre.title }}</h3>
+    <div class="meta">
+      <span>{{ offre.domain }}</span> •
+      <span>{{ offre.level }}</span> •
+      <span>{{ offre.minExperienceYears }} ans d'expérience</span>
+    </div>
+    <p class="desc">{{ offre.description }}</p>
+    <div class="footer">
+      <small>Du {{ offre.startDate }} au {{ offre.closingDate }}</small>
+      <small class="status">Statut: {{ offre.status }}</small>
+    </div>
+  </div>
+</div>

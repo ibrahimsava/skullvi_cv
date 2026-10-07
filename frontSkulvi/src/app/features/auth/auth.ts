@@ -1,21 +1,18 @@
-import { Service } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { UserRequest, AuthResponse } from './model';
 import { Observable } from 'rxjs';
 
-
-
-@Service()
+@Injectable({ providedIn: 'root' })
 export class AuthService {
 
     apiUrl = environment.apiBaseUrl + '/auth';
 
-     private readonly http= inject(HttpClient);
+    private readonly http = inject(HttpClient);
 
-     createUser(userRequest: UserRequest):
-           Observable<UserRequest> {
+    createUser(userRequest: UserRequest): Observable<UserRequest> {
         return this.http.post<UserRequest>(`${this.apiUrl}/register`, userRequest);
     }
 
