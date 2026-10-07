@@ -81,6 +81,10 @@ public class AuthService {
     }
 
     private static MeResponse toMe(AppUser u) {
-        return new MeResponse(u.getId(), u.getEmail(), u.getFirstName(), u.getLastName(), u.getRole());
+        return new MeResponse(u.getId(),
+                u.getEmail(),
+                u.getFirstName(),
+                u.getLastName(),
+                u.getRole());
     }
 }
