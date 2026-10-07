@@ -6,7 +6,7 @@ import { catchError, throwError } from 'rxjs';
 // Ce tableau contient les endpoints publics.
 // Ces requêtes ne doivent pas nécessiter un token JWT pour être envoyées.
 // Endpoints/paths that should be allowed without a JWT (frontend path or backend URL fragment)
-const PUBLIC_URLS = ['/login', '/register', '/forgot-password'];
+const PUBLIC_URLS = ['/login', '/register', '/forgot-password', '/offres'];
 
 // Intercepteur JWT global : il est exécuté avant chaque requête HTTP de l'application.
 // Son rôle est de :

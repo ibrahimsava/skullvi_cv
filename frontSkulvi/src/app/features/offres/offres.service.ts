@@ -7,7 +7,9 @@ import { environment } from '../../../environments/environment';
 @Injectable({ providedIn: 'root' })
 export class OffresService {
 
-  private readonly apiUrl = `${environment.apiBaseUrl}/offres`;
+  Offre: Offre[]=[] 
+
+  private readonly apiUrl = `${environment.apiBaseUrl}/offers`;
 
   private readonly http = inject(HttpClient);
 

@@ -29,14 +29,14 @@ export class Offres implements  OnInit{
   loadOffres(): void {
     this.loadError = false;
     this.errorMessage = '';
-    console.log('Loading offres...');
+    console.log('Loading offers...');
     this.offresService.list().subscribe({
       next: (data) => {
-        console.log('API offres response:', data);
+        console.log('API offers response:', data);
         this.offres = data;
       },
       error: (err) => {
-        console.error('Erreur list offres:', err);
+        console.error('Erreur list offers:', err);
         this.offres = [];
         this.loadError = true;
         this.errorMessage = err?.message || (err?.status ? `HTTP ${err.status}` : 'Erreur inconnue');
