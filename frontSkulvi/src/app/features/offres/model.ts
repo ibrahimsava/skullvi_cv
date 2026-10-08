@@ -20,7 +20,7 @@ export enum OfferStatus {
   CLOSED = 'CLOSED',
 }
 
-export interface Offre {
+export interface Offre{
   id: string;
   title: string;
   description: string;

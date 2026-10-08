@@ -1,44 +1,367 @@
-<div class="offres-list">
+/* <div class="offres-list">
 
-  <h2>Offres</h2>
+  <header class="list-header">
+    <h2>Offres</h2>
+    <span class="count">{{ offres().length }} offre(s)</span>
+  </header>
 
-  <p>Nombre d'offres : {{ offres.length }}</p>
-
-  <div *ngIf="loadError">
-    Erreur lors du chargement :
-    {{ errorMessage }}
+  <div class="message error" *ngIf="loadError()">
+    Erreur lors du chargement : {{ errorMessage() }}
   </div>
 
-  <div *ngIf="!loadError && offres.length === 0">
+  <div class="message empty" *ngIf="!loadError() && offres().length === 0">
     Aucune offre trouvée.
   </div>
 
-  <div *ngFor="let offre of offres">
+  <article class="offre-card" *ngFor="let offre of offres()">
 
-    <h3>{{ offre.title }}</h3>
-
-    <div>
-      {{ offre.domain }} -
-      {{ offre.level }} -
-      {{ offre.minExperienceYears }} ans d'expérience
+    <div class="card-top">
+      <h3>{{ offre.title }}</h3>
+      <span class="status" [ngClass]="'status-' + offre.status.toLowerCase()">
+        {{ offre.status }}
+      </span>
     </div>
 
-    <div>
-      {{ offre.criteria }} -
+    <div class="meta">
+      <span>{{ offre.domain }}</span>
+      <span>{{ offre.level }}</span>
+      <span>{{ offre.minExperienceYears }} ans d'expérience</span>
     </div>
 
-    <p>{{ offre.description }}</p>
+    <p class="description">{{ offre.description }}</p>
 
-    <div>
-      Du {{ offre.startDate }} au {{ offre.closingDate }}
+    <h4>Critères</h4>
+    <ul class="criteria">
+      <li *ngFor="let c of offre.criteria">
+        <span class="type" [ngClass]="'type-' + c.type.toLowerCase()">{{ c.type }}</span>
+        <span class="name">{{ c.name }}</span>
+        <span class="weight">poids : {{ c.weight }}</span>
+        <span class="mandatory" *ngIf="c.mandatory">obligatoire</span>
+      </li>
+    </ul>
+
+    <div class="dates">
+      Du {{ offre.startDate ? (offre.startDate | date:'dd/MM/yyyy') : 'date non définie' }}
+      au {{ offre.closingDate | date:'dd/MM/yyyy' }}
     </div>
 
-    <div>
-      Statut : {{ offre.status }}
+  </article>
+
+</div> 
+
+
+
+<div class="offer-form">
+
+  <h2>Créer une offre</h2>
+
+  <form [formGroup]="offerForm" (ngSubmit)="createOffre()">
+
+    <!-- TITRE -->
+    <div class="form-group">
+      <label for="title">Titre de l'offre</label>
+
+      <input
+        id="title"
+        type="text"
+        formControlName="title"
+        placeholder="Ex : Développeur Java Senior"
+      >
+
+      @if (
+        offerForm.get('title')?.invalid &&
+        offerForm.get('title')?.touched
+      ) {
+        <small class="error">
+          Le titre est obligatoire et doit contenir au moins 3 caractères.
+        </small>
+      }
     </div>
 
-    <hr>
 
-  </div>
+    <!-- DESCRIPTION -->
+    <div class="form-group">
+      <label for="description">Description</label>
+
+      <textarea
+        id="description"
+        rows="5"
+        formControlName="description"
+        placeholder="Description du poste..."
+      ></textarea>
+
+      @if (
+        offerForm.get('description')?.invalid &&
+        offerForm.get('description')?.touched
+      ) {
+        <small class="error">
+          La description est obligatoire.
+        </small>
+      }
+    </div>
+
+
+    <!-- DOMAINE -->
+    <div class="form-group">
+      <label for="domain">Domaine</label>
+
+      <input
+        id="domain"
+        type="text"
+        formControlName="domain"
+        placeholder="Ex : IT / Software Engineering"
+      >
+
+      @if (
+        offerForm.get('domain')?.invalid &&
+        offerForm.get('domain')?.touched
+      ) {
+        <small class="error">
+          Le domaine est obligatoire.
+        </small>
+      }
+    </div>
+
+
+    <!-- NIVEAU -->
+    <div class="form-group">
+      <label for="level">Niveau</label>
+
+      <select
+        id="level"
+        formControlName="level"
+      >
+        <option value="">Sélectionner un niveau</option>
+        <option value="JUNIOR">Junior</option>
+        <option value="MID">Intermédiaire</option>
+        <option value="SENIOR">Senior</option>
+      </select>
+
+      @if (
+        offerForm.get('level')?.invalid &&
+        offerForm.get('level')?.touched
+      ) {
+        <small class="error">
+          Le niveau est obligatoire.
+        </small>
+      }
+    </div>
+
+
+    <!-- EXPERIENCE -->
+    <div class="form-group">
+      <label for="minExperienceYears">
+        Expérience minimale (années)
+      </label>
+
+      <input
+        id="minExperienceYears"
+        type="number"
+        min="0"
+        formControlName="minExperienceYears"
+      >
+
+      @if (
+        offerForm.get('minExperienceYears')?.invalid &&
+        offerForm.get('minExperienceYears')?.touched
+      ) {
+        <small class="error">
+          L'expérience doit être supérieure ou égale à 0.
+        </small>
+      }
+    </div>
+
+
+    <!-- DATES -->
+    <div class="form-row">
+
+      <div class="form-group">
+        <label for="startDate">Date de début</label>
+
+        <input
+          id="startDate"
+          type="date"
+          formControlName="startDate"
+        >
+
+        @if (
+          offerForm.get('startDate')?.invalid &&
+          offerForm.get('startDate')?.touched
+        ) {
+          <small class="error">
+            La date de début est obligatoire.
+          </small>
+        }
+      </div>
+
+
+      <div class="form-group">
+        <label for="closingDate">Date de clôture</label>
+
+        <input
+          id="closingDate"
+          type="date"
+          formControlName="closingDate"
+        >
+
+        @if (
+          offerForm.get('closingDate')?.invalid &&
+          offerForm.get('closingDate')?.touched
+        ) {
+          <small class="error">
+            La date de clôture est obligatoire.
+          </small>
+        }
+      </div>
+
+    </div>
+
+
+    <!-- ====================== -->
+    <!-- CRITERES -->
+    <!-- ====================== -->
+
+    <div class="criteria-section">
+
+      <div class="criteria-header">
+
+        <h3>Critères de sélection</h3>
+
+        <button
+          type="button"
+          (click)="addCriterion()"
+        >
+          + Ajouter un critère
+        </button>
+
+      </div>
+
+
+      <div formArrayName="criteria">
+
+        @for (
+          criterion of criteria.controls;
+          track $index
+        ) {
+
+          <div
+            class="criterion"
+            [formGroupName]="$index"
+          >
+
+            <h4>
+              Critère {{ $index + 1 }}
+            </h4>
+
+
+            <!-- NOM -->
+            <div class="form-group">
+
+              <label>Nom du critère</label>
+
+              <input
+                type="text"
+                formControlName="name"
+                placeholder="Ex : Spring Boot"
+              >
+
+            </div>
+
+
+            <!-- TYPE -->
+            <div class="form-group">
+
+              <label>Type</label>
+
+              <select formControlName="type">
+
+                @for (
+                  type of criterionTypes;
+                  track type
+                ) {
+
+                  <option [value]="type">
+                    {{ type }}
+                  </option>
+
+                }
+
+              </select>
+
+            </div>
+
+
+            <!-- POIDS -->
+            <div class="form-group">
+
+              <label>Poids</label>
+
+              <input
+                type="number"
+                min="0"
+                formControlName="weight"
+              >
+
+            </div>
+
+
+            <!-- SEUIL -->
+            <div class="form-group">
+
+              <label>Seuil</label>
+
+              <input
+                type="number"
+                min="0"
+                formControlName="threshold"
+              >
+
+            </div>
+
+
+            <!-- OBLIGATOIRE -->
+            <div class="form-group checkbox">
+
+              <label>
+
+                <input
+                  type="checkbox"
+                  formControlName="mandatory"
+                >
+
+                Critère obligatoire
+
+              </label>
+
+            </div>
+
+
+            <!-- SUPPRIMER -->
+            <button
+              type="button"
+              (click)="removeCriterion($index)"
+            >
+              Supprimer
+            </button>
+
+          </div>
+
+        }
+
+      </div>
+
+    </div>
+
+
+    <!-- SUBMIT -->
+
+    <button
+      type="submit"
+      [disabled]="offerForm.invalid"
+    >
+      Créer l'offre
+    </button>
+
+  </form>
 
 </div>
