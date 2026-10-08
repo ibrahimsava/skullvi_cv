@@ -17,12 +17,6 @@ import {
   templateUrl: './offres.html',
 })
 export class Offres implements OnInit {
-removeCriterion(_t116: number) {
-throw new Error('Method not implemented.');
-}
-addCriterion() {
-throw new Error('Method not implemented.');
-}
 
   private readonly offresService = inject(OffresService);
   private readonly fb = inject(FormBuilder);

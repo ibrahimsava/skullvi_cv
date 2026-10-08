@@ -1,0 +1,291 @@
+.offer-form {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 32px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+
+  h2 {
+    margin: 0 0 30px;
+    font-size: 28px;
+    font-weight: 600;
+    color: #1f2937;
+  }
+
+  form {
+    width: 100%;
+  }
+}
+
+/* =========================
+   FORM GROUP
+========================= */
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+
+  label {
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+  }
+
+  input,
+  textarea,
+  select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+
+    background: #ffffff;
+    color: #111827;
+
+    font-size: 14px;
+
+    outline: none;
+
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
+
+    &:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    &::placeholder {
+      color: #9ca3af;
+    }
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 120px;
+  }
+}
+
+/* =========================
+   ERRORS
+========================= */
+
+.error {
+  margin-top: 6px;
+  color: #dc2626;
+  font-size: 12px;
+}
+
+
+/* =========================
+   DATES
+========================= */
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+
+/* =========================
+   CRITERES
+========================= */
+
+.criteria-section {
+  margin-top: 35px;
+  padding-top: 25px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.criteria-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+
+  h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #1f2937;
+  }
+
+  button {
+    padding: 9px 14px;
+
+    border: none;
+    border-radius: 7px;
+
+    background: #2563eb;
+    color: white;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: #1d4ed8;
+    }
+  }
+}
+
+
+/* =========================
+   CARTE CRITERE
+========================= */
+
+.criterion {
+  margin-bottom: 18px;
+  padding: 20px;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+
+  background: #f9fafb;
+
+  h4 {
+    margin: 0 0 18px;
+
+    font-size: 15px;
+    font-weight: 600;
+    color: #374151;
+  }
+
+  .form-group {
+    margin-bottom: 15px;
+  }
+
+  > button {
+    margin-top: 5px;
+
+    padding: 8px 12px;
+
+    border: 1px solid #dc2626;
+    border-radius: 6px;
+
+    background: transparent;
+    color: #dc2626;
+
+    font-size: 13px;
+    font-weight: 500;
+
+    cursor: pointer;
+
+    transition:
+      background 0.2s ease,
+      color 0.2s ease;
+
+    &:hover {
+      background: #dc2626;
+      color: white;
+    }
+  }
+}
+
+
+/* =========================
+   CHECKBOX
+========================= */
+
+.form-group.checkbox {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  margin-top: 5px;
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    margin: 0;
+
+    font-size: 14px;
+    font-weight: 500;
+
+    cursor: pointer;
+  }
+
+  input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+
+    margin: 0;
+
+    cursor: pointer;
+  }
+}
+
+
+/* =========================
+   BOUTON CREER
+========================= */
+
+form > button[type='submit'] {
+  width: 100%;
+
+  margin-top: 25px;
+  padding: 13px 20px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: #111827;
+  color: white;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    opacity 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: #1f2937;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 700px) {
+
+  .offer-form {
+    margin: 20px;
+    padding: 22px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .criteria-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .criteria-header button {
+    width: 100%;
+  }
+}
