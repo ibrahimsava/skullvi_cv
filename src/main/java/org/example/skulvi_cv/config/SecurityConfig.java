@@ -49,6 +49,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/offers/*/applications").permitAll()
                         // Espace personnel
                         .requestMatchers("/api/v1/me", "/api/v1/me/**").hasAnyRole("CANDIDAT", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/applications/*/cv").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/applications/*").hasRole("ADMIN")
                         // Tout le reste : admin uniquement
                         .anyRequest().hasRole("ADMIN"))
                 .oauth2ResourceServer(oauth -> oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtConverter())));
@@ -83,7 +85,7 @@ public class SecurityConfig {
     CorsConfigurationSource corsConfigurationSource(@Value("${app.security.cors-origin}") String origin) {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(origin));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", config);
