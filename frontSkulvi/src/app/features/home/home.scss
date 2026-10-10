@@ -851,3 +851,186 @@ $accent: #06b6d4;
   .reveal { opacity: 1; transform: none; }
   .mini-bar i { width: 82%; }
 }
+
+
+// ====================== SECONDE COUCHE ======================
+
+// ---------- Barre de progression ----------
+.progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 3px;
+  pointer-events: none;
+
+  span {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, $blue-500, $accent);
+    border-radius: 0 3px 3px 0;
+    transition: width .1s linear;
+  }
+}
+
+// ---------- Mot qui change ----------
+.hero-copy h1 { max-width: 14ch; }
+
+.rotator {
+  display: inline-block;
+  animation: wordIn .55s cubic-bezier(.2, .7, .2, 1);
+}
+@keyframes wordIn {
+  from { opacity: 0; transform: translateY(.4em); filter: blur(6px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+
+// ---------- Inclinaison 3D ----------
+.hero-media {
+  transition: transform .25s ease-out;
+  will-change: transform;
+  transform-style: preserve-3d;
+}
+
+// ---------- Halo qui suit le curseur ----------
+.features-grid .feature {
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgba($blue-500, .13), transparent 70%);
+    opacity: 0;
+    transition: opacity .3s;
+    pointer-events: none;
+  }
+  &:hover::before { opacity: 1; }
+}
+
+// ---------- Section analyse ----------
+.analysis {
+  padding: 24px 0 88px;
+
+  &-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 64px;
+
+    @include tablet { grid-template-columns: 1fr; gap: 40px; }
+  }
+
+  &-copy {
+    h2 {
+      max-width: 18ch;
+      margin: 16px 0 18px;
+      font-size: clamp(1.9rem, 3vw, 2.7rem);
+      line-height: 1.12;
+      letter-spacing: -.035em;
+    }
+    p { max-width: 46ch; margin-bottom: 28px; font-size: 1.05rem; color: $text; }
+  }
+
+  &-card {
+    padding: 28px;
+    border: 1px solid $line;
+    border-radius: 24px;
+    background: $white;
+    box-shadow: 0 40px 80px -30px rgba($blue-500, .35);
+  }
+
+  &-head {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding-bottom: 22px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid $line;
+  }
+
+  &-title {
+    display: grid;
+    gap: 8px;
+    strong { font-size: 1rem; }
+  }
+
+  &-note { margin-top: 18px; font-size: .78rem; color: $muted; }
+}
+
+.tag-ok {
+  justify-self: start;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #166534;
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+// Anneau de score
+.ring {
+  flex-shrink: 0;
+  width: 96px;
+  height: 96px;
+  transform: rotate(-90deg);
+
+  circle { fill: none; stroke-width: 9; }
+  &-bg { stroke: $line; }
+  &-fg {
+    stroke: $blue-500;
+    stroke-linecap: round;
+    stroke-dasharray: 327;
+    stroke-dashoffset: 327;
+    transition: stroke-dashoffset 1.6s cubic-bezier(.2, .7, .2, 1) .3s;
+  }
+}
+.analysis-card.is-visible .ring-fg { stroke-dashoffset: 59; }   // 327 × (1 − 0,82)
+
+.ring-value {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  place-content: center;
+  width: 96px;
+  height: 96px;
+  text-align: center;
+
+  b { font-size: 1.7rem; line-height: 1; letter-spacing: -.04em; color: $ink; }
+  small { font-size: .7rem; color: $muted; }
+}
+
+// Barres de critères
+.criteria {
+  display: grid;
+  gap: 16px;
+
+  &-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: .9rem; font-weight: 600; b { color: $blue; } }
+  &-bar {
+    height: 8px;
+    overflow: hidden;
+    border-radius: 99px;
+    background: $line;
+
+    i {
+      display: block;
+      width: 0;
+      height: 100%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, $blue-500, $accent);
+      transition: width 1.3s cubic-bezier(.2, .7, .2, 1) .5s;
+    }
+  }
+}
+.analysis-card.is-visible .criteria-bar i { width: var(--w); }
+
+// ---------- Accessibilité ----------
+@media (prefers-reduced-motion: reduce) {
+  .rotator { animation: none; }
+  .ring-fg { stroke-dashoffset: 59; }
+  .criteria-bar i { width: var(--w); }
+}
