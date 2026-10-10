@@ -24,7 +24,7 @@ talent:
   llm:
     provider: ${LLM_PROVIDER:ollama}
     base-url: ${OLLAMA_URL:http://localhost:11434}
-    model: ${OLLAMA_MODEL:qwen2.5:7b}
+    model: ${OLLAMA_MODEL:qwen2.5:3b}
     timeout-seconds: 180
   scoring:
       high-threshold: 80

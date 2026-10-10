@@ -17,6 +17,15 @@ services:
       timeout: 5s
       retries: 10
 
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
   app:
     build: .
     container_name: springboot-app
@@ -27,10 +36,10 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      ollama:
+        condition: service_started
     environment:
-      OLLAMA_URL: http://host.docker.internal:11434
+      OLLAMA_URL: http://ollama:11434
       CV_STORAGE_DIR: /data/cvs
     volumes:
       - cvs:/data/cvs
@@ -38,3 +47,4 @@ services:
 volumes:
   postgres_data:
   cvs:
+  ollama_data:
