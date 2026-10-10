@@ -552,3 +552,6 @@ Vérifier que `datasource` et `jpa` sont directement sous `spring:` dans `applic
 ├── pom.xml
 └── src/
 ```
+## Notes de développement
+Commandes utiles, problèmes résolus et aide-mémoire : voir [DEV-NOTES.md](DEV-NOTES.md).
+
