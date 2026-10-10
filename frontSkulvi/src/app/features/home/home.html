@@ -23,29 +23,53 @@
 <main>
   <!-- HERO -->
   <section class="hero">
+    <div class="hero-bg" aria-hidden="true">
+      <span class="blob blob-a"></span>
+      <span class="blob blob-b"></span>
+      <span class="grid-bg"></span>
+    </div>
+
     <div class="container hero-grid">
       <div class="hero-copy">
-        <h1>Le bon poste commence ici.</h1>
-        <p class="lead">
+        <span class="badge" [appReveal]="0">✨ Nouveau · Analyse de CV par IA</span>
+        <h1 [appReveal]="100">Le bon poste commence <span class="gradient-text">ici.</span></h1>
+        <p class="lead" [appReveal]="200">
           Trouvez des offres qui vous correspondent, suivez chaque candidature
           et sachez où vous en êtes, à chaque étape.
         </p>
 
-        <div class="hero-actions">
+        <div class="hero-actions" [appReveal]="300">
           <a class="btn btn-primary" routerLink="/register">Créer un compte</a>
           <a class="btn btn-ghost" routerLink="/login">Se connecter</a>
         </div>
 
-        <ul class="trust-list" aria-label="Points clés">
+        <ul class="trust-list" aria-label="Points clés" [appReveal]="400">
           <li>250+ offres actives</li>
           <li>Analyse de CV rapide</li>
           <li>Suivi des candidatures</li>
         </ul>
       </div>
 
-      <aside class="search-card" aria-label="Image de recrutement">
+      <aside class="search-card" aria-label="Image de recrutement" [appReveal]="200">
         <div class="hero-media">
           <img src="/images/i.jpeg" alt="Professionnels de recrutement Skulvi" />
+
+          <div class="float-card float-card--a" aria-hidden="true">
+            <div>
+              <small>Score de votre CV</small>
+              <div class="mini-bar"><i></i></div>
+            </div>
+            <b>82</b>
+          </div>
+
+          <div class="float-card float-card--b" aria-hidden="true">
+            <span class="check">✓</span>
+            <div>
+              <strong>Candidature envoyée</strong>
+              <small>Suivi en temps réel</small>
+            </div>
+          </div>
+
           <div class="floating-pill">
             <span class="pill-value">250+</span>
             <span class="pill-label">offres actives</span>
@@ -58,7 +82,7 @@
   <!-- FONCTIONNALITÉS -->
   <section class="features" aria-label="Fonctionnalités">
     <div class="container features-grid">
-      <article class="feature">
+      <article class="feature" [appReveal]="0">
         <div class="feature-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24"><path d="M7 7.5V7A2.5 2.5 0 0 1 9.5 4.5h5A2.5 2.5 0 0 1 17 7v.5"/><rect x="3.5" y="7.5" width="17" height="12" rx="2.5"/><path d="M8.5 12.5h7"/><path d="M8.5 15.5h4.5"/></svg>
         </div>
@@ -66,7 +90,7 @@
         <p>Des postes sélectionnés selon votre profil et vos compétences.</p>
       </article>
 
-      <article class="feature">
+      <article class="feature" [appReveal]="120">
         <div class="feature-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24"><path d="M7 4.5h10A2.5 2.5 0 0 1 19.5 7v10A2.5 2.5 0 0 1 17 19.5H7A2.5 2.5 0 0 1 4.5 17V7A2.5 2.5 0 0 1 7 4.5Z"/><path d="M8 8.5h8"/><path d="M8 12h8"/><path d="M8 15.5h5"/></svg>
         </div>
@@ -74,7 +98,7 @@
         <p>Retrouvez toutes vos candidatures et leur statut au même endroit.</p>
       </article>
 
-      <article class="feature">
+      <article class="feature" [appReveal]="240">
         <div class="feature-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24"><path d="M4.5 18.5V10"/><path d="M10.5 18.5V5.5"/><path d="M16.5 18.5v-7"/><path d="M22.5 18.5V8.5"/><path d="M2.5 18.5h20"/></svg>
         </div>
@@ -87,7 +111,7 @@
   <!-- PRÉSENTATION -->
   <section class="showcase">
     <div class="container showcase-grid">
-      <div class="showcase-copy">
+      <div class="showcase-copy" [appReveal]="0">
         <h2>Une plateforme pensée pour votre progression.</h2>
         <p>
           De la recherche d'un poste à l'envoi de votre candidature, chaque étape
@@ -100,7 +124,7 @@
         </ul>
       </div>
 
-      <div class="showcase-visual">
+      <div class="showcase-visual" [appReveal]="150">
         <img src="/images/imag.jpeg" alt="Plateforme de recrutement Skulvi" />
         <div class="overlay-card">
           <span class="overlay-label">Taux de réponse</span>
@@ -114,19 +138,19 @@
   <!-- ÉTAPES -->
   <section class="steps">
     <div class="container">
-      <h2 class="section-title">Comment ça marche</h2>
+      <h2 class="section-title" [appReveal]="0">Comment ça marche</h2>
       <ol class="steps-list">
-        <li class="step">
+        <li class="step" [appReveal]="0">
           <span class="step-number">1</span>
           <h3>Créez votre profil</h3>
           <p>Décrivez votre parcours, vos compétences et les postes qui vous intéressent.</p>
         </li>
-        <li class="step">
+        <li class="step" [appReveal]="150">
           <span class="step-number">2</span>
           <h3>Explorez les offres</h3>
           <p>Consultez les opportunités pertinentes et repérez celles qui vous correspondent.</p>
         </li>
-        <li class="step">
+        <li class="step" [appReveal]="300">
           <span class="step-number">3</span>
           <h3>Suivez votre progression</h3>
           <p>Gardez le contrôle sur chaque candidature et ajustez votre stratégie.</p>
@@ -138,15 +162,15 @@
   <!-- CHIFFRES -->
   <section class="stats" aria-label="Chiffres clés">
     <div class="container stats-grid">
-      <div class="stat">
+      <div class="stat" [appReveal]="0">
         <strong>12k+</strong>
         <span>Candidats accompagnés</span>
       </div>
-      <div class="stat">
+      <div class="stat" [appReveal]="120">
         <strong>48 h</strong>
         <span>Pour recevoir votre analyse</span>
       </div>
-      <div class="stat">
+      <div class="stat" [appReveal]="240">
         <strong>98 %</strong>
         <span>D'utilisateurs satisfaits</span>
       </div>
@@ -155,7 +179,7 @@
 
   <!-- CTA -->
   <section class="cta">
-    <div class="container cta-inner">
+    <div class="container cta-inner" [appReveal]="0">
       <h2>Créez votre profil et trouvez la bonne opportunité.</h2>
       <div class="cta-actions">
         <a class="btn btn-light" routerLink="/register">Créer un compte</a>

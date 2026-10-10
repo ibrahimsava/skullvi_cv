@@ -130,3 +130,18 @@
     </tbody>
   </table>
 </div>
+
+@if (cvViewer(); as v) {
+  <div class="cv-overlay" (click)="closeCv()">
+    <div class="cv-modal" (click)="$event.stopPropagation()">
+      <header class="cv-modal__head">
+        <strong>CV — {{ v.name }}</strong>
+        <div class="cv-modal__actions">
+          <a [href]="v.safeUrl" target="_blank">Ouvrir dans un onglet</a>
+          <button type="button" (click)="closeCv()" aria-label="Fermer">✕</button>
+        </div>
+      </header>
+      <iframe class="cv-modal__frame" [src]="v.safeUrl" title="CV du candidat"></iframe>
+    </div>
+  </div>
+}

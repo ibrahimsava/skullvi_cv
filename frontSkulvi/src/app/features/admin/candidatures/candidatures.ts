@@ -1,10 +1,11 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal,  HostListener } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { catchError, forkJoin, of } from 'rxjs';
 import { AdminApi } from '../admin-api';
 import { ApplicationSummary, Offer, RankedCandidate } from '../admin.models';
 import { RouterLink } from '@angular/router';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 type Filter = 'tous' | 'classes' | 'echec';
 interface Row extends ApplicationSummary { rank: number | null; }
@@ -19,6 +20,10 @@ interface Row extends ApplicationSummary { rank: number | null; }
 export class Candidatures implements OnInit {
   private readonly api = inject(AdminApi);
   private readonly route = inject(ActivatedRoute);
+
+
+  private readonly sanitizer = inject(DomSanitizer);
+cvViewer = signal<{ url: string; safeUrl: SafeResourceUrl; name: string } | null>(null);
 
   offers = signal<Offer[]>([]);
   rows = signal<Row[]>([]);
@@ -116,16 +121,27 @@ export class Candidatures implements OnInit {
 
   // ---------- Actions ----------
 
-  viewCv(r: Row): void {
-    this.api.downloadCv(r.id).subscribe({
-      next: (blob) => {
-        const url = URL.createObjectURL(blob);
-        window.open(url, '_blank');
-        setTimeout(() => URL.revokeObjectURL(url), 60_000);
-      },
-      error: () => this.flash("Impossible d'ouvrir ce CV.", true),
-    });
-  }
+ viewCv(r: Row): void {
+  this.api.downloadCv(r.id).subscribe({
+    next: (blob) => {
+      this.closeCv();   // libère un éventuel CV déjà ouvert
+      const url = URL.createObjectURL(blob);
+      this.cvViewer.set({
+        url,
+        safeUrl: this.sanitizer.bypassSecurityTrustResourceUrl(url),
+        name: r.candidateName,
+      });
+    },
+    error: (err) => this.flash(`Impossible d'ouvrir ce CV (code ${err.status}).`, true),
+  });
+}
+
+@HostListener('document:keydown.escape')
+closeCv(): void {
+  const v = this.cvViewer();
+  if (v) URL.revokeObjectURL(v.url);
+  this.cvViewer.set(null);
+}
 
   download(r: Row): void {
     this.api.downloadCv(r.id).subscribe({

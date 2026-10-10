@@ -667,3 +667,187 @@ a { color: inherit; text-decoration: none; }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
+
+
+// ====================== COUCHE « WAOU » ======================
+$accent: #06b6d4;
+
+// ---------- Apparition au scroll ----------
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity .8s ease var(--d, 0ms),
+    transform .8s cubic-bezier(.2, .7, .2, 1) var(--d, 0ms);
+
+  &.is-visible { opacity: 1; transform: none; }
+}
+
+// ---------- Boutons ----------
+.btn-primary {
+  background: linear-gradient(135deg, $blue, $blue-500 55%, $accent);
+  box-shadow: 0 10px 26px rgba($blue-500, .35);
+  transition: transform .2s, box-shadow .2s, filter .2s;
+
+  &:hover {
+    background: linear-gradient(135deg, $blue, $blue-500 55%, $accent);
+    transform: translateY(-2px);
+    box-shadow: 0 16px 34px rgba($blue-500, .45);
+    filter: brightness(1.06);
+  }
+}
+.btn-ghost:hover { transform: translateY(-2px); }
+
+// ---------- Hero ----------
+.hero { position: relative; overflow: hidden; }
+.hero-grid { position: relative; z-index: 1; }
+
+.hero-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: .45;
+  animation: drift 14s ease-in-out infinite alternate;
+
+  &-a { width: 520px; height: 520px; top: -140px; right: -100px; background: #93c5fd; }
+  &-b { width: 420px; height: 420px; bottom: -120px; left: -120px; background: #67e8f9; animation-delay: -6s; }
+}
+@keyframes drift { to { transform: translate(40px, 30px) scale(1.12); } }
+
+.grid-bg {
+  position: absolute;
+  inset: 0;
+  opacity: .5;
+  background-image:
+    linear-gradient($line 1px, transparent 1px),
+    linear-gradient(90deg, $line 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at 60% 40%, #000 25%, transparent 72%);
+}
+
+.badge {
+  display: inline-block;
+  margin-bottom: 20px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba($blue-500, .22);
+  background: rgba($blue-500, .08);
+  color: $blue-700;
+  font-size: .85rem;
+  font-weight: 700;
+}
+
+.gradient-text {
+  background: linear-gradient(120deg, $blue-500, $accent 70%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero-media img { filter: drop-shadow(0 30px 50px rgba($blue-500, .25)); }
+
+// ---------- Cartes flottantes du hero ----------
+.float-card {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  border: 1px solid $line;
+  background: rgba($white, .95);
+  box-shadow: 0 18px 40px rgba($navy, .14);
+  animation: bob 6s ease-in-out infinite;
+
+  small { display: block; font-size: .72rem; font-weight: 600; color: $muted; }
+  strong { display: block; font-size: .85rem; }
+  b { font-size: 1.5rem; letter-spacing: -.03em; color: $blue; }
+
+  &--a { top: 28px; left: 18px; }
+  &--b { right: 18px; bottom: 28px; animation-delay: -3s; }
+
+  @include mobile { &--b { display: none; } }
+}
+
+.mini-bar {
+  width: 110px;
+  height: 6px;
+  margin-top: 6px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: $line;
+
+  i {
+    display: block;
+    width: 0;
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, #22c55e, #16a34a);
+    animation: fillbar 1.4s .9s cubic-bezier(.2, .7, .2, 1) forwards;
+  }
+}
+@keyframes fillbar { to { width: 82%; } }
+
+.check {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: #16a34a;
+  font-weight: 800;
+}
+@keyframes bob { 50% { transform: translateY(-10px); } }
+
+// ---------- Cartes de fonctionnalités ----------
+.features-grid { gap: 24px; }
+
+.features-grid .feature,
+.features-grid .feature:first-child {
+  padding: 32px 28px;
+  border: 1px solid $line;
+  border-radius: 20px;
+  background: $white;
+  transition:
+    opacity .8s ease var(--d, 0ms),
+    transform .8s cubic-bezier(.2, .7, .2, 1) var(--d, 0ms),
+    translate .3s ease,
+    box-shadow .3s ease,
+    border-color .3s ease;
+
+  &:hover {
+    translate: 0 -6px;
+    border-color: rgba($blue-500, .4);
+    box-shadow: 0 24px 48px -18px rgba($blue-500, .3);
+  }
+}
+
+// ---------- Étapes ----------
+.step-number {
+  background: linear-gradient(135deg, $blue, $accent);
+  box-shadow: 0 0 0 8px $bg, 0 10px 24px rgba($blue-500, .35);
+}
+
+// ---------- Chiffres et appel à l'action ----------
+.stats {
+  background:
+    radial-gradient(circle at 15% 0%, rgba($blue-500, .45), transparent 55%),
+    $navy;
+}
+
+.cta {
+  background:
+    radial-gradient(circle at 85% 0%, rgba($accent, .5), transparent 50%),
+    linear-gradient(135deg, $blue-700, $blue-500);
+}
+
+// ---------- Accessibilité ----------
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .reveal { opacity: 1; transform: none; }
+  .mini-bar i { width: 82%; }
+}
