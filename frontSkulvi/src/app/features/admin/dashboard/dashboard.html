@@ -1,0 +1,34 @@
+<header class="sk-page-head">
+  <div>
+    <h1>Tableau de bord</h1>
+    <p>Vue d'ensemble des candidatures reçues sur vos offres.</p>
+  </div>
+</header>
+
+<section class="summary" aria-label="Indicateurs clés">
+ @for (k of kpis(); track k.label; let first = $first) {
+  @if (k.filter && k.alert) {
+    <a class="stat alert" routerLink="/admin/candidatures" [queryParams]="{ filtre: k.filter }">
+      <strong class="num">{{ k.value }}</strong>
+      <span>{{ k.label }} : voir le détail</span>
+    </a>
+  } @else {
+    <div class="stat" [class.primary]="first">
+      <strong class="num">{{ k.value }}</strong>
+      <span>{{ k.label }}</span>
+    </div>
+  }
+}
+</section>
+
+<section class="panel">
+  <h2>Candidatures par jour sur les 30 derniers jours</h2>
+
+  @if (trendCount() > 0) {
+    <div class="chart">
+      <canvas baseChart [data]="chartData()" [options]="chartOptions" type="line"></canvas>
+    </div>
+  } @else {
+    <p class="empty">Aucune candidature pour l'instant. Elles apparaîtront ici dès le premier dépôt de CV.</p>
+  }
+</section>

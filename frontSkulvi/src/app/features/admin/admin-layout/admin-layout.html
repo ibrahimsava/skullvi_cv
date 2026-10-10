@@ -1,0 +1,61 @@
+<div class="shell" [class.collapsed]="collapsed()">
+  <aside class="sidebar" aria-label="Navigation administrateur">
+
+    <div class="brand">
+      <span class="mark" aria-hidden="true">S</span>
+      <span class="brand-text">Skulvi</span>
+      <button type="button" class="toggle" (click)="toggle()"
+              [attr.aria-label]="collapsed() ? 'Déplier le menu' : 'Replier le menu'">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m15 18-6-6 6-6"/>
+        </svg>
+      </button>
+    </div>
+
+    <nav>
+      <p class="group">Recrutement</p>
+
+      <a routerLink="dashboard" routerLinkActive="active" title="Tableau de bord">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/>
+          <rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>
+        </svg>
+        <span>Tableau de bord</span>
+      </a>
+
+      <a routerLink="candidatures" routerLinkActive="active" title="Candidatures">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/>
+          <path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.4c2.2.6 3.5 2.4 3.5 5.6"/>
+        </svg>
+        <span>Candidatures</span>
+      </a>
+
+      <a routerLink="offres/new" routerLinkActive="active" title="Nouvelle offre">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5z"/>
+          <path d="M14 3v5h5M12 11v6M9 14h6"/>
+        </svg>
+        <span>Nouvelle offre</span>
+      </a>
+    </nav>
+
+    <div class="account">
+      <span class="avatar" aria-hidden="true">{{ initial }}</span>
+      <div class="who">
+        <strong>Administrateur</strong>
+        <small>{{ email }}</small>
+      </div>
+      <button type="button" class="logout" (click)="logout()" title="Se déconnecter" aria-label="Se déconnecter">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+        </svg>
+      </button>
+    </div>
+
+  </aside>
+
+  <main class="content">
+    <router-outlet />
+  </main>
+</div>

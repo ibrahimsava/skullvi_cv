@@ -1,0 +1,132 @@
+<header class="sk-page-head">
+  <div>
+    <h1>Candidatures</h1>
+    <p>Classées par mérite (score). Ouvrez, téléchargez ou supprimez un dossier, et relancez l'analyse si elle a échoué.</p>
+  </div>
+  <button type="button" class="sk-btn ghost danger" (click)="closeOffer()" [disabled]="!selectedOfferId()">
+    Clôturer l'offre
+  </button>
+</header>
+
+@if (toast(); as t) {
+  <p class="toast" [class.err]="t.error" role="status">{{ t.text }}</p>
+}
+
+<div class="toolbar">
+  <label class="field">
+    <span>Offre</span>
+    <select (change)="selectOffer($any($event.target).value)">
+      @for (o of offers(); track o.id) {
+        <option [value]="o.id">{{ o.title }}</option>
+      }
+    </select>
+  </label>
+
+  <div class="tabs" role="tablist" aria-label="Filtrer les candidatures">
+    <button type="button" role="tab" [class.active]="filter() === 'tous'"
+            [attr.aria-selected]="filter() === 'tous'" (click)="filter.set('tous')">
+      Tous <span class="n num">{{ rows().length }}</span>
+    </button>
+    <button type="button" role="tab" [class.active]="filter() === 'classes'"
+            [attr.aria-selected]="filter() === 'classes'" (click)="filter.set('classes')">
+      Classés <span class="n num">{{ rankedCount() }}</span>
+    </button>
+    <button type="button" role="tab" [class.active]="filter() === 'echec'" [class.warn]="failedCount() > 0"
+            [attr.aria-selected]="filter() === 'echec'" (click)="filter.set('echec')">
+      En échec <span class="n num">{{ failedCount() }}</span>
+    </button>
+  </div>
+
+  <button type="button" class="sk-btn ghost sm refresh" (click)="reload()" [disabled]="loading()">
+    {{ loading() ? 'Chargement…' : 'Actualiser' }}
+  </button>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th class="rank">Rang</th>
+        <th>Candidat</th>
+        <th>Score</th>
+        <th>Priorité</th>
+        <th>Reçue le</th>
+        <th class="actions"><span class="sk-sr">Actions</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (r of visibleRows(); track r.id) {
+        <tr [class.failed]="isFailed(r)">
+          <td class="rank num">{{ r.rank ?? '–' }}</td>
+
+          <td>
+            <div class="who">
+              <span class="avatar" aria-hidden="true">{{ initialOf(r) }}</span>
+              <div class="id">
+                <strong>{{ r.candidateName }}</strong>
+                <small>{{ r.email }}</small>
+                @if (isFailed(r) && r.failureReason) {
+                  <small class="reason" [attr.title]="r.failureReason">{{ r.failureReason }}</small>
+                }
+              </div>
+            </div>
+          </td>
+
+          <td>
+            @if (hasScore(r)) {
+              <div class="meter" [attr.data-tone]="tone(r.score!)">
+                <div class="bar"><i [style.width.%]="pct(r.score!)"></i></div>
+                <span class="num">{{ r.score }}</span>
+              </div>
+            } @else {
+              <span class="state" [attr.data-state]="stateOf(r)" [attr.title]="r.status">{{ stateLabel(r) }}</span>
+            }
+          </td>
+
+          <td><span class="chip" [attr.data-priority]="r.priority">{{ priorityLabel(r.priority) }}</span></td>
+
+          <td class="date">{{ r.submittedAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+
+          <td class="actions">
+            <button type="button" class="sk-btn primary sm" (click)="viewCv(r)" [disabled]="busyId() === r.id">Voir le CV</button>
+
+            <button type="button" class="icon-btn" title="Télécharger le CV" aria-label="Télécharger le CV"
+                    (click)="download(r)" [disabled]="busyId() === r.id">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19h14"/>
+              </svg>
+            </button>
+
+            <button type="button" class="icon-btn" title="Relancer l'analyse" aria-label="Relancer l'analyse"
+                    (click)="reanalyze(r)" [disabled]="busyId() === r.id">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 12a9 9 0 0 1 15.5-6.2L21 8M21 3v5h-5M21 12a9 9 0 0 1-15.5 6.2L3 16M3 21v-5h5"/>
+              </svg>
+            </button>
+
+            <button type="button" class="icon-btn danger" title="Supprimer la candidature" aria-label="Supprimer la candidature"
+                    (click)="remove(r)" [disabled]="busyId() === r.id">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/>
+              </svg>
+            </button>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="6" class="empty">
+            @if (loading()) {
+              Chargement des candidatures…
+            } @else if (filter() === 'echec') {
+              Aucune analyse en échec sur cette offre.
+            } @else if (filter() === 'classes') {
+              Aucun candidat classé pour l'instant. Les CV apparaissent ici une fois analysés.
+            } @else {
+              Aucune candidature sur cette offre pour le moment.
+            }
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

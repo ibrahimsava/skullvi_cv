@@ -1,0 +1,158 @@
+<div class="apply-page">
+  <div class="wrap">
+
+    <a routerLink="/offres" class="back">Retour aux offres</a>
+
+    @if (offer(); as o) {
+      <div class="layout">
+
+        <aside class="offer-card">
+          <h1>{{ o.title }}</h1>
+          <dl>
+            <div><dt>Domaine</dt><dd>{{ o.domain }}</dd></div>
+            <div><dt>Niveau</dt><dd>{{ o.level }}</dd></div>
+            <div><dt>Expérience</dt><dd>{{ o.minExperienceYears }} an(s) minimum</dd></div>
+            <div><dt>Clôture</dt><dd>{{ o.closingDate | date: 'dd/MM/yyyy' }}</dd></div>
+          </dl>
+          <p class="desc">{{ o.description }}</p>
+        </aside>
+
+        <section class="form-card">
+
+          @if (done()) {
+            <div class="success">
+              <span class="check" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+              </span>
+              <h2>Candidature envoyée</h2>
+              <p>Nous avons bien reçu votre CV pour le poste « {{ o.title }} ». Le recruteur reviendra vers vous s'il retient votre profil.</p>
+              <a routerLink="/offres" class="sk-btn primary">Voir d'autres offres</a>
+            </div>
+
+          } @else if (closed()) {
+            <div class="closed">
+              <h2>Cette offre est clôturée</h2>
+              <p>Elle n'accepte plus de candidatures. D'autres postes sont peut-être ouverts.</p>
+              <a routerLink="/offres" class="sk-btn primary">Voir les offres</a>
+            </div>
+
+          } @else {
+            <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+              <h2>Postuler à cette offre</h2>
+
+              @if (error()) {
+                <p class="banner" role="alert">{{ error() }}</p>
+              }
+
+              <!-- COMPTE -->
+              <fieldset class="block">
+                <legend>Votre compte</legend>
+
+                @if (mode() === 'loggedIn') {
+                  <p class="logged">
+                    Connecté en tant que <strong>{{ me()?.firstName }} {{ me()?.lastName }}</strong>
+                    ({{ me()?.email }}).
+                    <button type="button" class="link" (click)="switchAccount()">Changer de compte</button>
+                  </p>
+                } @else {
+                  <div class="tabs" role="tablist" aria-label="Type de compte">
+                    <button type="button" role="tab" [class.active]="mode() === 'create'"
+                            [attr.aria-selected]="mode() === 'create'" (click)="setMode('create')">
+                      Créer un compte
+                    </button>
+                    <button type="button" role="tab" [class.active]="mode() === 'login'"
+                            [attr.aria-selected]="mode() === 'login'" (click)="setMode('login')">
+                      J'ai déjà un compte
+                    </button>
+                  </div>
+
+                  <div class="grid">
+                    @if (mode() === 'create') {
+                      <div class="field">
+                        <label for="firstName">Prénom</label>
+                        <input id="firstName" type="text" formControlName="firstName" autocomplete="given-name">
+                        @if (invalid('firstName')) { <small class="error">Ce champ est obligatoire.</small> }
+                      </div>
+                      <div class="field">
+                        <label for="lastName">Nom</label>
+                        <input id="lastName" type="text" formControlName="lastName" autocomplete="family-name">
+                        @if (invalid('lastName')) { <small class="error">Ce champ est obligatoire.</small> }
+                      </div>
+                    }
+
+                    <div class="field">
+                      <label for="email">Adresse e-mail</label>
+                      <input id="email" type="email" formControlName="email" autocomplete="email">
+                      @if (invalid('email')) { <small class="error">Saisissez une adresse e-mail valide.</small> }
+                    </div>
+
+                    <div class="field">
+                      <label for="password">Mot de passe</label>
+                      <input id="password" type="password" formControlName="password"
+                             [attr.autocomplete]="mode() === 'create' ? 'new-password' : 'current-password'">
+                      @if (invalid('password')) {
+                        <small class="error">
+                          {{ mode() === 'create' ? 'Au moins 8 caractères.' : 'Saisissez votre mot de passe.' }}
+                        </small>
+                      }
+                    </div>
+                  </div>
+                }
+              </fieldset>
+
+              <!-- CANDIDATURE -->
+              <fieldset class="block">
+                <legend>Votre candidature</legend>
+
+                <div class="field cv">
+                  <label for="cv">CV</label>
+                  <input id="cv" type="file" class="sk-sr" accept=".pdf,.doc,.docx" (change)="onFile($event)">
+                  <label for="cv" class="drop" [class.has-file]="fileName()">
+                    @if (fileName()) {
+                      <span><strong>{{ fileName() }}</strong> : cliquez pour changer de fichier</span>
+                    } @else {
+                      <span><strong>Choisir un fichier</strong> (PDF ou Word, 5 Mo maximum)</span>
+                    }
+                  </label>
+                  @if (invalid('cv')) { <small class="error">Ajoutez votre CV pour postuler.</small> }
+                </div>
+
+                <div class="grid">
+                  <div class="field">
+                    <label for="phone">Téléphone <span class="opt">(facultatif)</span></label>
+                    <input id="phone" type="tel" formControlName="phone" autocomplete="tel">
+                  </div>
+                  <div class="field">
+                    <label for="linkedinUrl">LinkedIn <span class="opt">(facultatif)</span></label>
+                    <input id="linkedinUrl" type="url" formControlName="linkedinUrl" placeholder="https://linkedin.com/in/…">
+                    @if (invalid('linkedinUrl')) { <small class="error">Saisissez une adresse commençant par https://</small> }
+                  </div>
+                  <div class="field">
+                    <label for="githubUrl">GitHub <span class="opt">(facultatif)</span></label>
+                    <input id="githubUrl" type="url" formControlName="githubUrl" placeholder="https://github.com/…">
+                    @if (invalid('githubUrl')) { <small class="error">Saisissez une adresse commençant par https://</small> }
+                  </div>
+                  <div class="field">
+                    <label for="portfolioUrl">Portfolio <span class="opt">(facultatif)</span></label>
+                    <input id="portfolioUrl" type="url" formControlName="portfolioUrl" placeholder="https://…">
+                    @if (invalid('portfolioUrl')) { <small class="error">Saisissez une adresse commençant par https://</small> }
+                  </div>
+                </div>
+              </fieldset>
+
+              <button type="submit" class="sk-btn primary submit" [disabled]="loading()">{{ submitLabel }}</button>
+              <p class="note">Votre CV est analysé automatiquement pour aider le recruteur à classer les candidatures.</p>
+            </form>
+          }
+
+        </section>
+      </div>
+
+    } @else if (loadError()) {
+      <p class="state">Cette offre est introuvable. Elle a peut-être été supprimée.</p>
+    } @else {
+      <p class="state">Chargement de l'offre…</p>
+    }
+
+  </div>
+</div>

@@ -1,53 +1,97 @@
+<div class="offres-page">
+  <div class="wrap">
 
+    <header class="head">
+      <h1>Offres d'emploi</h1>
+      <p>Trouvez le poste qui correspond à votre profil et postulez en quelques minutes.</p>
+    </header>
 
+    <div class="toolbar">
+      <label class="search">
+        <span class="sk-sr">Rechercher une offre</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+        </svg>
+        <input type="search" placeholder="Rechercher par poste, domaine ou niveau"
+               [value]="search()" (input)="search.set($any($event.target).value)">
+      </label>
 
- <div class="offres-list">
+      @if (!loading() && !loadError()) {
+        <p class="count"><strong class="num">{{ visibleOffres().length }}</strong> offre(s)</p>
+      }
+    </div>
 
-  <header class="list-header">
-    <h2>Offres</h2>
-    <span class="count">{{ offres().length }} offre(s)</span>
-  </header>
+    @if (loading()) {
+      <p class="state">Chargement des offres…</p>
 
-  <div class="message error" *ngIf="loadError()">
-    Erreur lors du chargement : {{ errorMessage() }}
+    } @else if (loadError()) {
+      <div class="state error" role="alert">
+        <p>Impossible de charger les offres ({{ errorMessage() }}).</p>
+        <button type="button" class="sk-btn ghost sm" (click)="loadOffres()">Réessayer</button>
+      </div>
+
+    } @else if (visibleOffres().length === 0) {
+      <p class="state">
+        @if (search()) {
+          Aucune offre ne correspond à « {{ search() }} ». Essayez un autre mot-clé.
+        } @else {
+          Aucune offre pour le moment. Revenez bientôt, de nouveaux postes sont publiés régulièrement.
+        }
+      </p>
+
+    } @else {
+      <div class="list">
+        @for (o of visibleOffres(); track o.id) {
+          <article class="offre" [class.closed]="!isOpen(o)">
+
+            <h2>{{ o.title }}</h2>
+
+            <ul class="facts">
+              <li>{{ o.domain }}</li>
+              <li>{{ o.level }}</li>
+              <li>
+                @if (o.minExperienceYears > 0) {
+                  {{ o.minExperienceYears }} an(s) d'expérience minimum
+                } @else {
+                  Sans expérience requise
+                }
+              </li>
+            </ul>
+
+            <p class="description">{{ o.description }}</p>
+
+            @if (o.criteria.length) {
+              <div class="profile">
+                <p class="label">Profil recherché</p>
+                <ul class="chips">
+                  @for (c of shownCriteria(o); track c.id) {
+                    <li class="chip" [class.must]="c.mandatory"
+                        [attr.title]="c.mandatory ? 'Critère obligatoire' : null">{{ c.name }}</li>
+                  }
+                  @if (hiddenCount(o) > 0) {
+                    <li class="chip more">+{{ hiddenCount(o) }} autre(s)</li>
+                  }
+                </ul>
+              </div>
+            }
+
+            <footer class="foot">
+              <div class="when">
+                <strong [class.urgent]="isUrgent(o)">{{ deadlineLabel(o) }}</strong>
+                <small>{{ period(o) }}</small>
+              </div>
+
+              @if (isOpen(o)) {
+                <a class="sk-btn primary" [routerLink]="['/postuler', o.id]">Postuler à cette offre</a>
+              } @else {
+                <button type="button" class="sk-btn ghost" disabled>Candidatures fermées</button>
+              }
+            </footer>
+
+          </article>
+        }
+      </div>
+    }
+
   </div>
-
-  <div class="message empty" *ngIf="!loadError() && offres().length === 0">
-    Aucune offre trouvée.
-  </div>
-
-  <article class="offre-card" *ngFor="let offre of offres()">
-
-    <div class="card-top">
-      <h3>{{ offre.title }}</h3>
-      <span class="status" [ngClass]="'status-' + offre.status.toLowerCase()">
-        {{ offre.status }}
-      </span>
-    </div>
-
-    <div class="meta">
-      <span>{{ offre.domain }}</span>
-      <span>{{ offre.level }}</span>
-      <span>{{ offre.minExperienceYears }} ans d'expérience</span>
-    </div>
-
-    <p class="description">{{ offre.description }}</p>
-
-    <h4>Critères</h4>
-    <ul class="criteria">
-      <li *ngFor="let c of offre.criteria">
-        <span class="type" [ngClass]="'type-' + c.type.toLowerCase()">{{ c.type }}</span>
-        <span class="name">{{ c.name }}</span>
-        <span class="weight">poids : {{ c.weight }}</span>
-        <span class="mandatory" *ngIf="c.mandatory">obligatoire</span>
-      </li>
-    </ul>
-
-    <div class="dates">
-      Du {{ offre.startDate ? (offre.startDate | date:'dd/MM/yyyy') : 'date non définie' }}
-      au {{ offre.closingDate | date:'dd/MM/yyyy' }}
-    </div>
-
-  </article>
-
-</div> 
+</div>

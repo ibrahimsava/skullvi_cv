@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from '../auth';
 import { UserRequest } from '../model';
 import  { Router } from '@angular/router';
+import { jwtDecode } from 'jwt-decode';
 
 @Component({
   standalone: true,
@@ -65,10 +66,28 @@ export class Auth implements OnInit {
               if (response?.user) {
                 localStorage.setItem('user', JSON.stringify(response.user));
               }
+               console.log('JWT décodé :', jwtDecode(response.accessToken));
+               console.log('role lu :', this.authService.getUserRoles());
+
+              const isAdmin = this.authService.isAdmin();
+
+              if (isAdmin) {
+                this.router.navigate(['/admin/dashboard']);
+              } else {
+                this.router.navigate(['/offres']);
+              }
+
             } catch (err) {
               console.warn('Unable to store token in localStorage', err);
             }
-            this.router.navigate(['offres']);
+
+           //  const user = response?.user;
+
+        //  if (user?.role === 'ADMIN' || user?.role?.includes('ADMIN')) {
+             //  this.router.navigate(['/creationoffre']);
+                //  } else {
+             //  this.router.navigate(['/offres']);
+            //}
           },
         error: (err) => {
           console.error('Erreur connexion :', err);
