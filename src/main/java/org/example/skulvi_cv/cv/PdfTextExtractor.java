@@ -12,8 +12,14 @@ public class PdfTextExtractor {
 
     public String extract(byte[] pdf) {
         try (PDDocument doc = Loader.loadPDF(pdf)) {
-            String text = new PDFTextStripper().getText(doc);
-            return clean(text);
+            PDFTextStripper stripper = new PDFTextStripper();
+            stripper.setSortByPosition(true);
+            String text = clean(stripper.getText(doc));
+            if (text.isBlank()) {
+                throw new IllegalStateException(
+                        "CV illisible : aucun texte détecté (PDF scanné ou image). Un OCR est nécessaire.");
+            }
+            return text;
         } catch (IOException e) {
             throw new IllegalStateException("CV illisible : " + e.getMessage(), e);
         }
@@ -27,5 +33,3 @@ public class PdfTextExtractor {
                 .strip();
     }
 }
-
-

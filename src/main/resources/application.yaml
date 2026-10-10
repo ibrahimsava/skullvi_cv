@@ -35,6 +35,8 @@ talent:
       dir: ${CV_STORAGE_DIR:./data/cvs}
 
 
+
+
 app:
   security:
     jwt-secret: ${JWT_SECRET}
@@ -42,3 +44,6 @@ app:
     admin-email: ${ADMIN_EMAIL:}
     admin-password: ${ADMIN_PASSWORD:}
     cors-origin: ${CORS_ORIGIN:http://localhost:4200}
+
+volumes:
+  cvs:

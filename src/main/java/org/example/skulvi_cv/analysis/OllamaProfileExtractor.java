@@ -13,11 +13,17 @@ import org.springframework.web.client.RestClientException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Appelle un LLM local via Ollama (gratuit, aucune donnée ne quitte la machine). */
 @Component
 @ConditionalOnProperty(name = "talent.llm.provider", havingValue = "ollama", matchIfMissing = true)
 public class OllamaProfileExtractor implements ProfileExtractor {
+
+    // dans la classe :
+    private static final Logger log = LoggerFactory.getLogger(OllamaProfileExtractor.class);
+
 
     private static final int MAX_CHARS = 12_000;
 
@@ -59,24 +65,37 @@ public class OllamaProfileExtractor implements ProfileExtractor {
                 "model", model,
                 "stream", false,
                 "format", "json",
-                // num_ctx : sans cela Ollama tronque les CV longs (contexte par défaut réduit)
+                "keep_alive", "30m",
                 "options", Map.of("temperature", 0, "num_ctx", 8192),
                 "messages", List.of(
                         Map.of("role", "system", "content", SYSTEM_PROMPT),
                         Map.of("role", "user", "content", "CV :\n" + text)));
 
-        OllamaResponse response;
+        String raw;
         try {
-            response = client.post().uri("/api/chat").contentType(MediaType.APPLICATION_JSON)
-                    .body(body).retrieve().body(OllamaResponse.class);
+            raw = client.post().uri("/api/chat")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .body(body)
+                    .retrieve()
+                    .body(String.class);
         } catch (RestClientException e) {
             throw new IllegalStateException("Service IA indisponible (Ollama) : " + e.getMessage(), e);
         }
+        if (raw == null || raw.isBlank()) {
+            throw new IllegalStateException("Réponse IA vide");
+        }
+        log.debug("Réponse brute Ollama : {}", raw);
+
+        OllamaResponse response = Json.read(raw, OllamaResponse.class);
         if (response == null || response.message() == null || response.message().content() == null) {
             throw new IllegalStateException("Réponse IA vide");
         }
         return parse(response.message().content());
     }
+
+
+
 
     static StructuredProfile parse(String content) {
         String json = content.strip();

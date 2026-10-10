@@ -27,8 +27,14 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      OLLAMA_URL: http://host.docker.internal:11434
+      CV_STORAGE_DIR: /data/cvs
+    volumes:
+      - cvs:/data/cvs
 
 volumes:
   postgres_data:
-
-
+  cvs:
