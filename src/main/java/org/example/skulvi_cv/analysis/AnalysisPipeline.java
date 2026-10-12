@@ -13,6 +13,7 @@ import org.example.skulvi_cv.matching.MatchingService;
 import org.example.skulvi_cv.scoring.ScoreResult;
 import org.example.skulvi_cv.scoring.ScoringService;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,6 +25,7 @@ import java.util.UUID;
  */
 @Slf4j
 @Service
+@EnableAsync
 @RequiredArgsConstructor
 public class AnalysisPipeline {
 
@@ -41,6 +43,7 @@ public class AnalysisPipeline {
     }
 
     public void run(UUID applicationId) {
+        log.info("Analyse {} sur le thread {}", applicationId, Thread.currentThread().getName());
         Application app = applications.findById(applicationId).orElse(null);
         if (app == null) return;
         try {
