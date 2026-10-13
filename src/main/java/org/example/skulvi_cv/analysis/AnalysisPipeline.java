@@ -37,7 +37,8 @@ public class AnalysisPipeline {
     private final MatchingService matching;
     private final ScoringService scoring;
 
-    @Async
+
+    @Async("analysisExecutor")
     public void runAsync(UUID applicationId) {
         run(applicationId);
     }
