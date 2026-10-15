@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 env:
-  FRONT_DIST: frontSkulvi/dist/front-skulvi/browser
+  FRONT_DIST: frontSkulvi/dist/frontSkulvi/browser
 
 jobs:
   backend:
