@@ -3,24 +3,23 @@
     <ng-container *ngIf="!isLogin">
       <div>
         <label for="firstName">Prénom</label>
-        <input id="firstName" type="text" [(ngModel)]="userRequest.firstName" name="firstName" autocomplete="given-name" />
+        <input id="firstName" type="text" [(ngModel)]="userRequest.firstName" name="firstName" />
       </div>
 
       <div>
         <label for="lastName">Nom</label>
-        <input id="lastName" type="text" [(ngModel)]="userRequest.lastName" name="lastName" autocomplete="family-name" />
+        <input id="lastName" type="text" [(ngModel)]="userRequest.lastName" name="lastName" />
       </div>
     </ng-container>
 
   <div>
     <label for="email">Email</label>
-    <input id="email" type="email" [(ngModel)]="userRequest.email" name="email" autocomplete="email" />
+    <input id="email" type="email" [(ngModel)]="userRequest.email" name="email" />
   </div>
 
   <div>
     <label for="password">Mot de passe</label>
-    <input id="password" type="password" [(ngModel)]="userRequest.password" name="password"
-       [attr.autocomplete]="isLogin ? 'current-password' : 'new-password'" />
+    <input id="password" type="password" [(ngModel)]="userRequest.password" name="password" />
   </div>
 
   <button type="submit">{{ isLogin ? 'Se connecter' : 'S\'inscrire' }}</button>
