@@ -1,15 +1,21 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
-import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Criterion, CriterionType, Offre, OfferStatus } from './model';
-import { OffresService } from './offres.service';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { PublicOffer } from '../admin/admin.models';
+import { OffresService, PublicOrganization } from './offres.service';
 
-const MAX_CHIPS = 6;
-
+/**
+ * Liste publique des offres.
+ *
+ * <p>Deux usages avec le même composant : le job board général (`/offres`) et la page carrière
+ * d'une entreprise (`/c/:slug`), qui ne diffèrent que par la source des données et l'en-tête.
+ *
+ * <p>Ne porte plus le formulaire de création d'offre. Il vivait ici et `Form` en héritait, ce
+ * qui liait une page vue par les candidats à l'outil des recruteurs : toute retouche de la
+ * liste risquait de casser la création, et réciproquement.
+ */
 @Component({
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [RouterLink],
   selector: 'app-offres',
   styleUrl: './offres.scss',
   templateUrl: './offres.html',
@@ -17,109 +23,112 @@ const MAX_CHIPS = 6;
 export class Offres implements OnInit {
 
   private readonly offresService = inject(OffresService);
-  private readonly fb = inject(FormBuilder);
-  protected readonly criterionTypes = Object.values(CriterionType);
+  private readonly route = inject(ActivatedRoute);
 
-  offres = signal<Offre[]>([]);
+  offres = signal<PublicOffer[]>([]);
   loading = signal(true);
   loadError = signal(false);
   errorMessage = signal('');
   search = signal('');
 
-  /** Offres affichées au public : sans les brouillons, filtrées, ouvertes d'abord */
+  /** Entreprise affichée en page carrière. Null sur le job board général. */
+  company = signal<PublicOrganization | null>(null);
+
   visibleOffres = computed(() => {
     const q = this.search().trim().toLowerCase();
     return this.offres()
-      .filter((o) => o.status !== OfferStatus.DRAFT)
-      .filter((o) => !q || [o.title, o.domain, o.level].some((v) => v?.toLowerCase().includes(q)))
+      .filter((o) => !q || [o.title, o.domain, o.level, o.organizationName]
+        .some((v) => v?.toLowerCase().includes(q)))
       .sort((a, b) =>
         Number(this.isOpen(b)) - Number(this.isOpen(a)) ||
-        a.closingDate.localeCompare(b.closingDate)
+        this.closingKey(a).localeCompare(this.closingKey(b))
       );
   });
 
-  protected offerForm = this.fb.group({
-    title: ['', [Validators.required, Validators.minLength(3)]],
-    description: ['', Validators.required],
-    domain: ['', Validators.required],
-    level: ['', Validators.required],
-    minExperienceYears: [0, [Validators.required, Validators.min(0)]],
-    startDate: ['', Validators.required],
-    closingDate: ['', Validators.required],
-    criteria: this.fb.array([], Validators.required),
-  });
-
-  get criteria(): FormArray {
-    return this.offerForm.get('criteria') as FormArray;
-  }
-
   ngOnInit(): void {
-    this.loadOffres();
+    this.load();
   }
 
-  loadOffres(): void {
+  load(): void {
     this.loading.set(true);
     this.loadError.set(false);
     this.errorMessage.set('');
 
-    this.offresService.list().subscribe({
+    const slug = this.route.snapshot.paramMap.get('slug');
+
+    if (slug) {
+      this.offresService.organization(slug).subscribe({
+        next: (org) => this.company.set(org),
+        error: () => this.company.set(null),
+      });
+    }
+
+    const source$ = slug ? this.offresService.byOrganization(slug) : this.offresService.list();
+
+    source$.subscribe({
       next: (data) => {
         this.offres.set(data);
         this.loading.set(false);
       },
       error: (err) => {
-        console.error('Erreur list offers:', err);
         this.offres.set([]);
         this.loading.set(false);
         this.loadError.set(true);
-        this.errorMessage.set(
-          err?.status ? `erreur ${err.status}` : 'serveur injoignable'
-        );
+        this.errorMessage.set(err?.status === 404
+          ? 'entreprise inconnue'
+          : err?.status ? `erreur ${err.status}` : 'serveur injoignable');
       },
     });
   }
 
   // ---------- Affichage des cartes ----------
 
-  isOpen(o: Offre): boolean {
-    return o.status === OfferStatus.OPEN && this.daysLeft(o) >= 0;
+  /**
+   * Le serveur ne renvoie publiquement que des offres ouvertes et non expirées. Le contrôle est
+   * refait ici parce qu'une page laissée ouverte dans un onglet peut franchir une date de clôture.
+   */
+  isOpen(o: PublicOffer): boolean {
+    return o.status === 'OPEN' && this.daysLeft(o) >= 0;
   }
 
-  isUrgent(o: Offre): boolean {
-    return this.isOpen(o) && this.daysLeft(o) <= 7;
-  }
-
-  deadlineLabel(o: Offre): string {
+  isUrgent(o: PublicOffer): boolean {
     const d = this.daysLeft(o);
+    return this.isOpen(o) && d !== Infinity && d <= 7;
+  }
+
+  deadlineLabel(o: PublicOffer): string {
     if (!this.isOpen(o)) return 'Offre clôturée';
-    if (d === 0) return "Dernier jour pour postuler";
+    const d = this.daysLeft(o);
+    if (d === Infinity) return 'Candidatures ouvertes';
+    if (d === 0) return 'Dernier jour pour postuler';
     if (d === 1) return 'Clôture demain';
     if (d <= 14) return `Clôture dans ${d} jours`;
     return `Clôture le ${this.fmt(o.closingDate)}`;
   }
 
-  period(o: Offre): string {
+  period(o: PublicOffer): string {
+    if (!o.closingDate) {
+      return o.startDate ? `À partir du ${this.fmt(o.startDate)}` : 'Sans date limite';
+    }
     return o.startDate
       ? `Du ${this.fmt(o.startDate)} au ${this.fmt(o.closingDate)}`
       : `Jusqu'au ${this.fmt(o.closingDate)}`;
   }
 
-  shownCriteria(o: Offre): Criterion[] {
-    return [...o.criteria]
-      .sort((a, b) => Number(b.mandatory) - Number(a.mandatory) || b.weight - a.weight)
-      .slice(0, MAX_CHIPS);
-  }
-
-  hiddenCount(o: Offre): number {
-    return Math.max(0, o.criteria.length - MAX_CHIPS);
-  }
-
-  private fmt(date: string): string {
+  private fmt(date: string | null): string {
+    if (!date) return '—';
     const [y, m, d] = date.substring(0, 10).split('-');
     return `${d}/${m}/${y}`;
   }
 
-  private daysLeft(o: Offre): number {
+  /**
+   * Nombre de jours avant clôture, {@code Infinity} si l'offre n'a pas de date limite.
+   *
+   * <p>Le cas sans date n'était pas traité : `closingDate.substring` plantait sur un null et
+   * faisait échouer l'affichage de toute la liste.
+   */
+  private daysLeft(o: PublicOffer): number {
+    if (!o.closingDate) return Infinity;
     const [y, m, d] = o.closingDate.substring(0, 10).split('-').map(Number);
     const end = new Date(y, m - 1, d);
     const now = new Date();
@@ -127,34 +136,8 @@ export class Offres implements OnInit {
     return Math.round((end.getTime() - today.getTime()) / 86_400_000);
   }
 
-  // ---------- Création d'offre (utilisé par le formulaire admin) ----------
-
-  createOffre(): void {
-    if (this.offerForm.invalid) {
-      this.offerForm.markAllAsTouched();
-      return;
-    }
-
-    const offre = this.offerForm.getRawValue() as unknown as Offre;
-
-    this.offresService.create(offre).subscribe({
-      next: (response) => {
-        this.offres.update((current) => [...current, response]);
-
-        this.offerForm.reset({
-          title: '',
-          description: '',
-          domain: '',
-          level: '',
-          minExperienceYears: 0,
-          startDate: '',
-          closingDate: '',
-        });
-        this.criteria.clear();
-      },
-      error: (err) => {
-        console.error('Erreur lors de la création :', err);
-      },
-    });
+  /** Clé de tri : les offres sans date de clôture passent en dernier. */
+  private closingKey(o: PublicOffer): string {
+    return o.closingDate ?? '9999-12-31';
   }
 }

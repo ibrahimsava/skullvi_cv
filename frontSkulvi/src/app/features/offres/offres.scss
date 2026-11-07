@@ -162,3 +162,14 @@
   .offre { padding: 18px; }
   .foot { flex-direction: column; align-items: stretch; .sk-btn { width: 100%; } }
 }
+/* Nom de l'entreprise sur chaque carte, cliquable vers sa page carrière. */
+.offre .company {
+  display: inline-block;
+  margin: -8px 0 12px;
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.offre .company:hover { text-decoration: underline; }

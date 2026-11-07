@@ -1,0 +1,94 @@
+<div class="signup-page">
+  <div class="wrap">
+
+    <section class="pitch">
+      <p class="eyebrow">Essai gratuit, 14 jours</p>
+      <h1>Triez vos CV sans les lire tous</h1>
+      <p class="lead">
+        Vous décrivez le poste et les compétences attendues. Chaque CV déposé est analysé, puis
+        noté sur la grille que vous avez définie. Vous recevez un classement expliqué, critère
+        par critère.
+      </p>
+
+      <ul class="points">
+        <li>
+          <strong>Le score est calculé, pas deviné.</strong>
+          L'IA se contente de lire le CV. La note vient de vos critères et de leurs poids, elle
+          est reproductible et vous pouvez voir le détail ligne par ligne.
+        </li>
+        <li>
+          <strong>Vos CV restent chez nous, en France.</strong>
+          L'analyse tourne sur notre propre infrastructure. Aucune donnée de candidat n'est
+          envoyée à un service d'IA tiers.
+        </li>
+        <li>
+          <strong>C'est vous qui décidez.</strong>
+          Skulvi classe et explique. Retenir ou écarter un dossier reste une action humaine.
+        </li>
+      </ul>
+
+      <p class="fine">
+        Sans carte bancaire. 1 offre et 20 analyses de CV incluses pendant l'essai.
+      </p>
+    </section>
+
+    <section class="form-side">
+      <form class="sk-card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <h2>Créer mon espace recruteur</h2>
+        <p class="sub">Deux minutes, et votre première offre est en ligne.</p>
+
+        @if (error()) {
+          <p class="sk-alert error" role="alert">{{ error() }}</p>
+        }
+
+        <div class="sk-field">
+          <label for="organizationName">Nom de votre entreprise</label>
+          <input id="organizationName" type="text" formControlName="organizationName"
+                 autocomplete="organization" placeholder="Ex : Cabinet Léon &amp; Fils">
+          @if (invalid('organizationName')) {
+            <small class="error">Indiquez le nom de votre entreprise.</small>
+          }
+          <small class="help">Il apparaîtra sur vos offres et sur votre page carrière.</small>
+        </div>
+
+        <div class="two">
+          <div class="sk-field">
+            <label for="firstName">Prénom</label>
+            <input id="firstName" type="text" formControlName="firstName" autocomplete="given-name">
+            @if (invalid('firstName')) { <small class="error">Champ requis.</small> }
+          </div>
+
+          <div class="sk-field">
+            <label for="lastName">Nom</label>
+            <input id="lastName" type="text" formControlName="lastName" autocomplete="family-name">
+            @if (invalid('lastName')) { <small class="error">Champ requis.</small> }
+          </div>
+        </div>
+
+        <div class="sk-field">
+          <label for="email">E-mail professionnel</label>
+          <input id="email" type="email" formControlName="email" autocomplete="email">
+          @if (invalid('email')) { <small class="error">Saisissez une adresse e-mail valide.</small> }
+        </div>
+
+        <div class="sk-field">
+          <label for="password">Mot de passe</label>
+          <input id="password" type="password" formControlName="password" autocomplete="new-password">
+          @if (invalid('password')) { <small class="error">8 caractères minimum.</small> }
+        </div>
+
+        <button type="submit" class="sk-btn primary block" [disabled]="loading()">
+          {{ loading() ? 'Création de votre espace…' : 'Démarrer mon essai gratuit' }}
+        </button>
+
+        <p class="alt">
+          Vous avez déjà un espace ? <a routerLink="/login">Se connecter</a>
+        </p>
+        <p class="alt">
+          Vous cherchez un emploi ? <a routerLink="/offres">Voir les offres</a>
+        </p>
+      </form>
+    </section>
+
+  </div>
+</div>

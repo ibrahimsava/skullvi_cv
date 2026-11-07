@@ -1,0 +1,91 @@
+<header class="sk-page-head">
+  <div>
+    <h1>Mes offres</h1>
+    <p>
+      @if (openCount() === 1) {
+        1 offre ouverte aux candidatures.
+      } @else {
+        {{ openCount() }} offres ouvertes aux candidatures.
+      }
+    </p>
+  </div>
+
+  @if (canWrite()) {
+    <a class="sk-btn primary" routerLink="/admin/offres/new">Nouvelle offre</a>
+  }
+</header>
+
+@if (toast(); as t) {
+  <p class="sk-alert" [class.error]="t.error" [class.ok]="!t.error" role="status">{{ t.text }}</p>
+}
+
+@if (loading()) {
+  <p class="sk-empty">Chargement…</p>
+
+} @else if (offers().length === 0) {
+  <section class="sk-card">
+    <div class="sk-empty">
+      <p>Vous n'avez pas encore créé d'offre.</p>
+      <small>Une offre décrit le poste et les critères sur lesquels les CV seront notés.</small>
+      @if (canWrite()) {
+        <a class="sk-btn primary sm" routerLink="/admin/offres/new">Créer ma première offre</a>
+      }
+    </div>
+  </section>
+
+} @else {
+  <div class="offers">
+    @for (o of sorted(); track o.id) {
+      <article class="offer" [class.closed]="o.status === 'CLOSED'">
+
+        <div class="offer-head">
+          <div>
+            <h2>{{ o.title }}</h2>
+            <p class="facts">
+              @if (o.domain) { <span>{{ o.domain }}</span> }
+              @if (o.level) { <span>{{ o.level }}</span> }
+              @if (o.closingDate) { <span>Clôture le {{ o.closingDate | date:'dd/MM/yyyy' }}</span> }
+            </p>
+          </div>
+          <span class="sk-badge"
+                [class.ok]="stateTone(o) === 'ok'"
+                [class.warn]="stateTone(o) === 'warn'">{{ stateLabel(o) }}</span>
+        </div>
+
+        <div class="offer-stats">
+          <div class="s">
+            <strong class="num">{{ o.applications }}</strong>
+            <span>candidature(s)</span>
+          </div>
+          <div class="s">
+            <strong class="num">{{ o.criteria.length }}</strong>
+            <span>critère(s)</span>
+          </div>
+          <div class="s">
+            <strong class="num">{{ mandatoryCount(o) }}</strong>
+            <span>obligatoire(s)</span>
+          </div>
+        </div>
+
+        <footer class="offer-actions">
+          <a class="sk-btn ghost sm" routerLink="/admin/candidatures">Voir les candidatures</a>
+
+          @if (canWrite()) {
+            @if (o.status === 'OPEN') {
+              <button type="button" class="sk-btn danger sm" (click)="close(o)"
+                      [disabled]="busyId() === o.id">
+                {{ busyId() === o.id ? 'Clôture…' : 'Clôturer' }}
+              </button>
+            } @else {
+              <button type="button" class="sk-btn ghost sm" (click)="reopen(o)"
+                      [disabled]="busyId() === o.id">
+                {{ busyId() === o.id ? 'Réouverture…' : 'Réouvrir' }}
+              </button>
+            }
+          }
+        </footer>
+
+      </article>
+    }
+  </div>
+}

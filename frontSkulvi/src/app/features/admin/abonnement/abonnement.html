@@ -1,0 +1,166 @@
+<header class="sk-page-head">
+  <div>
+    <h1>Abonnement</h1>
+    <p>Votre consommation du mois et les limites de votre plan.</p>
+  </div>
+</header>
+
+@if (loading()) {
+  <p class="sk-empty">Chargement…</p>
+
+} @else if (loadError() || !usage()) {
+  <p class="sk-alert error" role="alert">Impossible de charger votre abonnement.</p>
+
+} @else {
+  @if (banner(usage()!); as message) {
+    @if (message) {
+      <p class="sk-alert" [class.warn]="bannerTone(usage()!) === 'warn'"
+         [class.error]="bannerTone(usage()!) === 'error'" role="alert">{{ message }}</p>
+    }
+  }
+
+  <!-- ------------------------------------------------------- plan en cours -->
+  <section class="sk-card">
+    <div class="card-head">
+      <div>
+        <h2>Plan {{ usage()!.planLabel }}</h2>
+        <p class="sub">
+          Période du {{ usage()!.period }}
+          @if (usage()!.status === 'TRIAL' && usage()!.trialEndsAt) {
+            · essai jusqu'au {{ usage()!.trialEndsAt | date:'dd/MM/yyyy' }}
+          }
+        </p>
+      </div>
+      <span class="sk-badge"
+            [class.ok]="statusTone(usage()!) === 'ok'"
+            [class.warn]="statusTone(usage()!) === 'warn'"
+            [class.danger]="statusTone(usage()!) === 'danger'"
+            [class.accent]="statusTone(usage()!) === 'accent'">{{ statusLabel(usage()!) }}</span>
+    </div>
+
+    <div class="meters">
+      <div class="meter-row">
+        <div class="meter-label">
+          <strong>Analyses de CV</strong>
+          <span class="num">
+            {{ usage()!.analysesUsed }} / {{ limitLabel(usage()!.analysesLimit) }}
+            @if (usage()!.analysesLimit != null) {
+              ({{ percent(usage()!.analysesUsed, usage()!.analysesLimit) }} %)
+            }
+          </span>
+        </div>
+        <div class="sk-meter"
+             [class.warn]="meterTone(usage()!.analysesUsed, usage()!.analysesLimit) === 'warn'"
+             [class.danger]="meterTone(usage()!.analysesUsed, usage()!.analysesLimit) === 'danger'">
+          <span [style.width.%]="percent(usage()!.analysesUsed, usage()!.analysesLimit)"></span>
+        </div>
+      </div>
+
+      <div class="meter-row">
+        <div class="meter-label">
+          <strong>Offres ouvertes</strong>
+          <span class="num">{{ usage()!.activeOffers }} / {{ limitLabel(usage()!.activeOffersLimit) }}</span>
+        </div>
+        <div class="sk-meter"
+             [class.warn]="meterTone(usage()!.activeOffers, usage()!.activeOffersLimit) === 'warn'"
+             [class.danger]="meterTone(usage()!.activeOffers, usage()!.activeOffersLimit) === 'danger'">
+          <span [style.width.%]="percent(usage()!.activeOffers, usage()!.activeOffersLimit)"></span>
+        </div>
+      </div>
+
+      <div class="meter-row">
+        <div class="meter-label">
+          <strong>Utilisateurs</strong>
+          <span class="num">{{ usage()!.seats }} / {{ limitLabel(usage()!.seatsLimit) }}</span>
+        </div>
+        <div class="sk-meter"
+             [class.warn]="meterTone(usage()!.seats, usage()!.seatsLimit) === 'warn'"
+             [class.danger]="meterTone(usage()!.seats, usage()!.seatsLimit) === 'danger'">
+          <span [style.width.%]="percent(usage()!.seats, usage()!.seatsLimit)"></span>
+        </div>
+      </div>
+    </div>
+
+    @if (usage()!.overageCount > 0) {
+      <p class="overage">
+        <strong>{{ usage()!.overageCount }}</strong> analyse(s) au-delà du quota ce mois-ci,
+        soit <strong>{{ euros(usage()!.overageCents) }} €</strong> en supplément.
+      </p>
+    }
+  </section>
+
+  <!-- ------------------------------------------------------- grille -->
+  <section class="sk-card">
+    <h2>Changer de plan</h2>
+    <p class="sub">
+      @if (canManage()) {
+        Le paiement en ligne arrive. En attendant, écrivez-nous et nous activons votre plan
+        sous 24 h ouvrées.
+      } @else {
+        Seul le propriétaire du compte peut modifier l'abonnement.
+      }
+    </p>
+
+    <div class="plans">
+      @for (p of plans(); track p.plan) {
+        <article class="plan" [class.current]="p.current">
+          <header>
+            <h3>{{ p.label }}</h3>
+            @if (p.current) { <span class="sk-badge accent">Votre plan</span> }
+          </header>
+
+          <p class="price">
+            @if (p.priceCents === 0) {
+              <strong>Gratuit</strong>
+            } @else {
+              <strong>{{ euros(p.priceCents) }} €</strong><span>/ mois</span>
+            }
+          </p>
+
+          <ul>
+            <li><strong class="num">{{ limitLabel(p.maxAnalysesPerMonth) }}</strong> analyses de CV / mois</li>
+            <li><strong class="num">{{ limitLabel(p.maxActiveOffers) }}</strong> offre(s) ouverte(s)</li>
+            <li><strong class="num">{{ limitLabel(p.maxSeats) }}</strong> utilisateur(s)</li>
+            <li class="over">
+              @if (p.allowsOverage) {
+                Au-delà : {{ euros(p.overageCents) }} € par analyse
+              } @else {
+                Le service s'arrête une fois le quota atteint
+              }
+            </li>
+          </ul>
+
+          @if (!p.current && p.priceCents > 0 && canManage()) {
+            <a class="sk-btn primary sm" [href]="mailto(p)">Passer au {{ p.label }}</a>
+          } @else if (p.current) {
+            <button type="button" class="sk-btn ghost sm" disabled>Plan actuel</button>
+          }
+        </article>
+      }
+    </div>
+  </section>
+
+  <section class="sk-card">
+    <h2>Comment la facturation fonctionne</h2>
+    <ul class="faq">
+      <li>
+        <strong>L'unité facturée est l'analyse de CV.</strong>
+        Une candidature déposée consomme une analyse. Relancer une analyse qui a échoué de notre
+        côté n'en consomme pas de nouvelle.
+      </li>
+      <li>
+        <strong>Le compteur repart à zéro chaque mois.</strong>
+        Les analyses non utilisées ne se cumulent pas d'un mois sur l'autre.
+      </li>
+      <li>
+        <strong>Dépasser le quota ne coupe pas le service</strong>
+        sur un plan payant : les analyses supplémentaires sont facturées à l'unité. Seul l'essai
+        gratuit s'arrête net.
+      </li>
+      <li>
+        <strong>Un impayé ne supprime rien.</strong>
+        Le compte passe en lecture seule. Vos offres, vos candidatures et vos CV restent en place.
+      </li>
+    </ul>
+  </section>
+}

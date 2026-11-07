@@ -140,11 +140,17 @@
       }
     </section>
 
+    @if (error()) {
+      <p class="form-error" role="alert">{{ error() }}</p>
+    }
+
     <div class="actions">
       <p class="hint">
         @if (offerForm.invalid) { Complétez les champs obligatoires pour créer l'offre. }
       </p>
-      <button type="submit" class="sk-btn primary" [disabled]="offerForm.invalid">Créer l'offre</button>
+      <button type="submit" class="sk-btn primary" [disabled]="offerForm.invalid || saving()">
+        {{ saving() ? 'Création…' : 'Créer l\'offre' }}
+      </button>
     </div>
 
   </form>

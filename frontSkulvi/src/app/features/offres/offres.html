@@ -2,8 +2,21 @@
   <div class="wrap">
 
     <header class="head">
-      <h1>Offres d'emploi</h1>
-      <p>Trouvez le poste qui correspond à votre profil et postulez en quelques minutes.</p>
+      @if (company()) {
+        <h1>{{ company()!.name }}</h1>
+        <p>
+          @if (company()!.openOffers === 1) {
+            1 poste ouvert en ce moment. Déposez votre CV, il est analysé automatiquement.
+          } @else if (company()!.openOffers > 1) {
+            {{ company()!.openOffers }} postes ouverts en ce moment. Déposez votre CV, il est analysé automatiquement.
+          } @else {
+            Aucun poste ouvert en ce moment.
+          }
+        </p>
+      } @else {
+        <h1>Offres d'emploi</h1>
+        <p>Trouvez le poste qui correspond à votre profil et postulez en quelques minutes.</p>
+      }
     </header>
 
     <div class="toolbar">
@@ -12,7 +25,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
         </svg>
-        <input type="search" placeholder="Rechercher par poste, domaine ou niveau"
+        <input type="search" placeholder="Rechercher par poste, entreprise, domaine ou niveau"
                [value]="search()" (input)="search.set($any($event.target).value)">
       </label>
 
@@ -27,7 +40,7 @@
     } @else if (loadError()) {
       <div class="state error" role="alert">
         <p>Impossible de charger les offres ({{ errorMessage() }}).</p>
-        <button type="button" class="sk-btn ghost sm" (click)="loadOffres()">Réessayer</button>
+        <button type="button" class="sk-btn ghost sm" (click)="load()">Réessayer</button>
       </div>
 
     } @else if (visibleOffres().length === 0) {
@@ -46,9 +59,13 @@
 
             <h2>{{ o.title }}</h2>
 
+            @if (!company()) {
+              <a class="company" [routerLink]="['/c', o.organizationSlug]">{{ o.organizationName }}</a>
+            }
+
             <ul class="facts">
-              <li>{{ o.domain }}</li>
-              <li>{{ o.level }}</li>
+              @if (o.domain) { <li>{{ o.domain }}</li> }
+              @if (o.level) { <li>{{ o.level }}</li> }
               <li>
                 @if (o.minExperienceYears > 0) {
                   {{ o.minExperienceYears }} an(s) d'expérience minimum
@@ -58,21 +75,8 @@
               </li>
             </ul>
 
-            <p class="description">{{ o.description }}</p>
-
-            @if (o.criteria.length) {
-              <div class="profile">
-                <p class="label">Profil recherché</p>
-                <ul class="chips">
-                  @for (c of shownCriteria(o); track c.id) {
-                    <li class="chip" [class.must]="c.mandatory"
-                        [attr.title]="c.mandatory ? 'Critère obligatoire' : null">{{ c.name }}</li>
-                  }
-                  @if (hiddenCount(o) > 0) {
-                    <li class="chip more">+{{ hiddenCount(o) }} autre(s)</li>
-                  }
-                </ul>
-              </div>
+            @if (o.description) {
+              <p class="description">{{ o.description }}</p>
             }
 
             <footer class="foot">

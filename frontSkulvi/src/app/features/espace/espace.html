@@ -1,0 +1,276 @@
+<div class="espace-page">
+  <div class="wrap">
+
+    <header class="top">
+      <div>
+        <h1>Mon espace</h1>
+        <p>
+          @if (me()) {
+            {{ me()!.firstName }} {{ me()!.lastName }} · {{ me()!.email }}
+          } @else {
+            Chargement…
+          }
+        </p>
+      </div>
+
+      <div class="top-actions">
+        @if (isRecruiter()) {
+          <a class="sk-btn ghost sm" routerLink="/admin/dashboard">Espace recruteur</a>
+        }
+        <a class="sk-btn ghost sm" routerLink="/offres">Voir les offres</a>
+        <button type="button" class="sk-btn ghost sm" (click)="logout()">Se déconnecter</button>
+      </div>
+    </header>
+
+    @if (toast(); as t) {
+      <p class="sk-alert" [class.error]="t.error" [class.ok]="!t.error" role="status">{{ t.text }}</p>
+    }
+
+    <nav class="tabs" aria-label="Sections de mon espace">
+      <button type="button" [class.active]="tab() === 'candidatures'" (click)="tab.set('candidatures')">
+        Mes candidatures
+        @if (applications().length) { <span class="pill">{{ applications().length }}</span> }
+      </button>
+      <button type="button" [class.active]="tab() === 'profil'" (click)="tab.set('profil')">
+        Mon CV analysé
+      </button>
+      <button type="button" [class.active]="tab() === 'compte'" (click)="tab.set('compte')">
+        Mon compte
+      </button>
+    </nav>
+
+    <!-- ------------------------------------------------------- candidatures -->
+    @if (tab() === 'candidatures') {
+      <section class="sk-card">
+        <h2>Mes candidatures</h2>
+        <p class="sub">
+          @if (inProgress() === 1) {
+            1 dossier est encore en cours d'examen.
+          } @else if (inProgress() > 1) {
+            {{ inProgress() }} dossiers sont encore en cours d'examen.
+          } @else {
+            Aucun dossier en cours.
+          }
+        </p>
+
+        @if (loading()) {
+          <p class="sk-empty">Chargement…</p>
+
+        } @else if (applications().length === 0) {
+          <div class="sk-empty">
+            <p>Vous n'avez pas encore postulé.</p>
+            <a class="sk-btn primary sm" routerLink="/offres">Parcourir les offres</a>
+          </div>
+
+        } @else {
+          <ul class="apps">
+            @for (a of applications(); track a.id) {
+              <li class="app">
+                <div class="app-main">
+                  <h3>{{ a.offerTitle }}</h3>
+                  <p class="org">{{ a.organizationName }}</p>
+                  <p class="meta">Déposée le {{ a.submittedAt | date:'dd/MM/yyyy' }}</p>
+                </div>
+
+                <div class="app-state">
+                  <span class="sk-badge" [class.ok]="tone(a.status) === 'ok'"
+                        [class.danger]="tone(a.status) === 'danger'"
+                        [class.accent]="tone(a.status) === 'accent'">{{ a.statusLabel }}</span>
+                  <small>{{ advice(a.status) }}</small>
+                </div>
+
+                <button type="button" class="sk-btn danger sm" (click)="withdraw(a)"
+                        [disabled]="busyId() === a.id">
+                  {{ busyId() === a.id ? 'Retrait…' : 'Retirer' }}
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    }
+
+    <!-- ------------------------------------------------------- profil extrait -->
+    @if (tab() === 'profil') {
+      <section class="sk-card">
+        <h2>Ce que l'analyse a lu dans votre CV</h2>
+        <p class="sub">
+          Voici exactement ce que notre lecture automatique a su extraire de votre document.
+          Si une compétence manque ici, c'est qu'elle n'est pas lisible dans votre CV.
+        </p>
+
+        @if (!profile()) {
+          <p class="sk-empty">Chargement…</p>
+
+        } @else if (!profile()!.available) {
+          <div class="sk-empty">
+            <p>Aucune analyse disponible pour le moment.</p>
+            <small>Votre CV est analysé peu après le dépôt d'une candidature. Revenez dans quelques minutes.</small>
+          </div>
+
+        } @else {
+          <p class="analyzed-at">
+            D'après votre candidature du {{ profile()!.analyzedAt | date:'dd/MM/yyyy' }}
+          </p>
+
+          <div class="sk-grid stats">
+            <div class="stat">
+              <strong class="num">{{ skillCount() }}</strong>
+              <span>compétences détectées</span>
+            </div>
+            <div class="stat">
+              <strong class="num">{{ years() }}</strong>
+              <span>d'expérience estimée</span>
+            </div>
+            <div class="stat">
+              <strong class="num">{{ profile()!.profile!.experience.length }}</strong>
+              <span>expériences lues</span>
+            </div>
+          </div>
+
+          @if (skillCount() === 0) {
+            <p class="sk-alert warn">
+              Aucune compétence n'a pu être extraite. C'est presque toujours un problème de mise
+              en forme : un CV exporté en image, scanné, ou mis en page sur deux colonnes se lit
+              mal. Un PDF avec du texte sélectionnable donne de bien meilleurs résultats.
+            </p>
+          }
+
+          @if (profile()!.profile!.skills.length) {
+            <div class="block">
+              <h3>Compétences</h3>
+              <ul class="chips">
+                @for (s of profile()!.profile!.skills; track s.name) {
+                  <li class="chip" [attr.title]="s.evidence">{{ s.name }}</li>
+                }
+              </ul>
+              <p class="hint">Survolez une compétence pour voir l'extrait de CV qui l'a justifiée.</p>
+            </div>
+          }
+
+          @if (profile()!.profile!.experience.length) {
+            <div class="block">
+              <h3>Expériences</h3>
+              <ul class="timeline">
+                @for (e of profile()!.profile!.experience; track $index) {
+                  <li>
+                    <strong>{{ e.role || 'Poste non identifié' }}</strong>
+                    @if (e.company) { <span class="at">chez {{ e.company }}</span> }
+                    @if (e.years) { <span class="dur">{{ e.years }} an(s)</span> }
+                    @if (e.technologies?.length) {
+                      <small>{{ e.technologies!.join(' · ') }}</small>
+                    }
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+
+          @if (profile()!.profile!.education.length) {
+            <div class="block">
+              <h3>Formation</h3>
+              <ul class="plain">
+                @for (ed of profile()!.profile!.education; track $index) {
+                  <li>
+                    <strong>{{ ed.degree || 'Diplôme non identifié' }}</strong>
+                    @if (ed.field) { <span>— {{ ed.field }}</span> }
+                    @if (ed.institution) { <small>{{ ed.institution }}</small> }
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+
+          @if (profile()!.profile!.languages.length) {
+            <div class="block">
+              <h3>Langues</h3>
+              <ul class="chips">
+                @for (l of profile()!.profile!.languages; track l) { <li class="chip soft">{{ l }}</li> }
+              </ul>
+            </div>
+          }
+
+          @if (profile()!.profile!.certifications.length) {
+            <div class="block">
+              <h3>Certifications</h3>
+              <ul class="chips">
+                @for (c of profile()!.profile!.certifications; track c) { <li class="chip soft">{{ c }}</li> }
+              </ul>
+            </div>
+          }
+
+          @if (profile()!.profile!.projects.length) {
+            <div class="block">
+              <h3>Projets</h3>
+              <ul class="plain">
+                @for (p of profile()!.profile!.projects; track $index) { <li>{{ p }}</li> }
+              </ul>
+            </div>
+          }
+
+          <p class="note">
+            Cette lecture sert à comparer votre profil aux critères de chaque offre. La décision
+            de vous retenir ou non appartient au recruteur, pas à la machine.
+          </p>
+        }
+      </section>
+    }
+
+    <!-- ------------------------------------------------------- compte -->
+    @if (tab() === 'compte') {
+      <section class="sk-card">
+        <h2>Mon compte</h2>
+        <p class="sub">Votre nom tel qu'il apparaît sur vos candidatures.</p>
+
+        <form [formGroup]="nameForm" (ngSubmit)="saveName()" novalidate class="account-form">
+          <div class="two">
+            <div class="sk-field">
+              <label for="firstName">Prénom</label>
+              <input id="firstName" type="text" formControlName="firstName" autocomplete="given-name">
+            </div>
+            <div class="sk-field">
+              <label for="lastName">Nom</label>
+              <input id="lastName" type="text" formControlName="lastName" autocomplete="family-name">
+            </div>
+          </div>
+
+          <div class="sk-field">
+            <label for="email">E-mail</label>
+            <input id="email" type="email" [value]="me()?.email ?? ''" disabled>
+            <small class="help">
+              L'adresse e-mail identifie votre compte et ne peut pas être modifiée ici.
+            </small>
+          </div>
+
+          <button type="submit" class="sk-btn primary" [disabled]="savingName()">
+            {{ savingName() ? 'Enregistrement…' : 'Enregistrer' }}
+          </button>
+        </form>
+      </section>
+
+      <section class="sk-card">
+        <h2>Vos données</h2>
+        <p class="sub">Ce que Skulvi conserve, et comment le faire effacer.</p>
+
+        <ul class="plain data-list">
+          <li>
+            <strong>Votre CV</strong>
+            est conservé par chaque entreprise à laquelle vous avez postulé, le temps qu'elle
+            traite sa sélection.
+          </li>
+          <li>
+            <strong>Pour faire effacer un CV</strong>
+            retirez la candidature correspondante depuis l'onglet « Mes candidatures ». Le
+            fichier est supprimé immédiatement.
+          </li>
+          <li>
+            <strong>Votre profil analysé</strong>
+            est consultable dans l'onglet « Mon CV analysé ». Il est recalculé à chaque nouvelle
+            candidature et disparaît avec elle.
+          </li>
+        </ul>
+      </section>
+    }
+
+  </div>
+</div>

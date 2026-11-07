@@ -8,13 +8,22 @@
 
         <aside class="offer-card">
           <h1>{{ o.title }}</h1>
+          <p class="company">{{ o.organizationName }}</p>
           <dl>
-            <div><dt>Domaine</dt><dd>{{ o.domain }}</dd></div>
-            <div><dt>Niveau</dt><dd>{{ o.level }}</dd></div>
-            <div><dt>Expérience</dt><dd>{{ o.minExperienceYears }} an(s) minimum</dd></div>
-            <div><dt>Clôture</dt><dd>{{ o.closingDate | date: 'dd/MM/yyyy' }}</dd></div>
+            @if (o.domain) { <div><dt>Domaine</dt><dd>{{ o.domain }}</dd></div> }
+            @if (o.level) { <div><dt>Niveau</dt><dd>{{ o.level }}</dd></div> }
+            <div><dt>Expérience</dt><dd>{{ o.minExperienceYears || 0 }} an(s) minimum</dd></div>
+            <div>
+              <dt>Clôture</dt>
+              <dd>{{ o.closingDate ? (o.closingDate | date: 'dd/MM/yyyy') : 'Sans date limite' }}</dd>
+            </div>
           </dl>
-          <p class="desc">{{ o.description }}</p>
+          @if (o.description) {
+            <p class="desc">{{ o.description }}</p>
+          }
+          <a class="all-offers" [routerLink]="['/c', o.organizationSlug]">
+            Voir les autres offres de {{ o.organizationName }}
+          </a>
         </aside>
 
         <section class="form-card">
@@ -106,12 +115,14 @@
 
                 <div class="field cv">
                   <label for="cv">CV</label>
-                  <input id="cv" type="file" class="sk-sr" accept=".pdf,.doc,.docx" (change)="onFile($event)">
+                  <!-- PDF uniquement : le serveur vérifie la signature du fichier, un .docx
+                       renommé serait refusé. Autant ne pas le proposer. -->
+                  <input id="cv" type="file" class="sk-sr" accept="application/pdf,.pdf" (change)="onFile($event)">
                   <label for="cv" class="drop" [class.has-file]="fileName()">
                     @if (fileName()) {
                       <span><strong>{{ fileName() }}</strong> : cliquez pour changer de fichier</span>
                     } @else {
-                      <span><strong>Choisir un fichier</strong> (PDF ou Word, 5 Mo maximum)</span>
+                      <span><strong>Choisir un fichier</strong> (PDF uniquement, 5 Mo maximum)</span>
                     }
                   </label>
                   @if (invalid('cv')) { <small class="error">Ajoutez votre CV pour postuler.</small> }
@@ -141,7 +152,11 @@
               </fieldset>
 
               <button type="submit" class="sk-btn primary submit" [disabled]="loading()">{{ submitLabel }}</button>
-              <p class="note">Votre CV est analysé automatiquement pour aider le recruteur à classer les candidatures.</p>
+              <p class="note">
+                Votre CV est analysé automatiquement pour aider le recruteur à classer les
+                candidatures. La décision de vous retenir reste la sienne. Vous pourrez suivre
+                votre dossier et retirer votre candidature depuis votre espace personnel.
+              </p>
             </form>
           }
 

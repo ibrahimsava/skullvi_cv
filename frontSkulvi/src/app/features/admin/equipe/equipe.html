@@ -1,0 +1,173 @@
+<header class="sk-page-head">
+  <div>
+    <h1>Équipe</h1>
+    <p>Les personnes qui ont accès à votre espace de recrutement.</p>
+  </div>
+
+  @if (canManage() && !loading()) {
+    <button type="button" class="sk-btn primary" (click)="toggleForm()" [disabled]="seatsFull()">
+      {{ showForm() ? 'Annuler' : 'Ajouter un membre' }}
+    </button>
+  }
+</header>
+
+@if (toast(); as t) {
+  <p class="sk-alert" [class.error]="t.error" [class.ok]="!t.error" role="status">{{ t.text }}</p>
+}
+
+@if (seatsFull()) {
+  <p class="sk-alert warn">
+    Tous les sièges de votre plan sont occupés.
+    <a routerLink="/admin/abonnement">Changer de plan</a> pour agrandir l'équipe.
+  </p>
+}
+
+@if (showForm()) {
+  <section class="sk-card">
+    <h2>Ajouter un membre</h2>
+    <p class="sub">
+      Vous choisissez son mot de passe initial et le lui transmettez vous-même. L'envoi
+      d'invitations par e-mail arrive prochainement.
+    </p>
+
+    @if (error()) {
+      <p class="sk-alert error" role="alert">{{ error() }}</p>
+    }
+
+    <form [formGroup]="inviteForm" (ngSubmit)="invite()" novalidate class="invite-form">
+      <div class="row">
+        <div class="sk-field">
+          <label for="firstName">Prénom</label>
+          <input id="firstName" type="text" formControlName="firstName">
+          @if (invalid('firstName')) { <small class="error">Champ requis.</small> }
+        </div>
+
+        <div class="sk-field">
+          <label for="lastName">Nom</label>
+          <input id="lastName" type="text" formControlName="lastName">
+          @if (invalid('lastName')) { <small class="error">Champ requis.</small> }
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="sk-field">
+          <label for="email">E-mail</label>
+          <input id="email" type="email" formControlName="email" autocomplete="off">
+          @if (invalid('email')) { <small class="error">Adresse e-mail invalide.</small> }
+        </div>
+
+        <div class="sk-field">
+          <label for="password">Mot de passe initial</label>
+          <input id="password" type="text" formControlName="password" autocomplete="off">
+          @if (invalid('password')) { <small class="error">8 caractères minimum.</small> }
+          <small class="help">Visible pour que vous puissiez le copier et le transmettre.</small>
+        </div>
+      </div>
+
+      <div class="sk-field">
+        <label for="role">Rôle</label>
+        <select id="role" formControlName="role">
+          @for (r of roles; track r.value) {
+            <option [value]="r.value">{{ r.label }}</option>
+          }
+        </select>
+        <small class="help">
+          @for (r of roles; track r.value) {
+            @if (r.value === inviteForm.controls.role.value) { {{ r.help }} }
+          }
+        </small>
+      </div>
+
+      <button type="submit" class="sk-btn primary" [disabled]="saving()">
+        {{ saving() ? 'Ajout…' : 'Ajouter au compte' }}
+      </button>
+    </form>
+  </section>
+}
+
+<section class="sk-card">
+  <div class="card-head">
+    <div>
+      <h2>Membres</h2>
+      @if (team(); as t) {
+        <p class="sub">
+          <span class="num">{{ t.seats }}</span> / {{ limitLabel(t.seatsLimit) }} siège(s) utilisé(s)
+        </p>
+      }
+    </div>
+  </div>
+
+  @if (loading()) {
+    <p class="sk-empty">Chargement…</p>
+
+  } @else if (!team() || team()!.members.length === 0) {
+    <p class="sk-empty">Aucun membre.</p>
+
+  } @else {
+    <table class="sk-table">
+      <thead>
+        <tr>
+          <th>Personne</th>
+          <th>Rôle</th>
+          <th>Depuis</th>
+          <th class="right">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (m of team()!.members; track m.membershipId) {
+          <tr>
+            <td>
+              <div class="person">
+                <span class="avatar" aria-hidden="true">{{ initial(m) }}</span>
+                <div>
+                  <strong>{{ m.firstName }} {{ m.lastName }}</strong>
+                  @if (m.me) { <span class="sk-badge">Vous</span> }
+                  <small>{{ m.email }}</small>
+                </div>
+              </div>
+            </td>
+
+            <td>
+              @if (canManage() && !m.me) {
+                <select class="role-select" [value]="m.role"
+                        [disabled]="busyId() === m.membershipId"
+                        (change)="changeRole(m, $any($event.target).value)"
+                        [attr.aria-label]="'Rôle de ' + m.firstName">
+                  @for (r of roles; track r.value) {
+                    <option [value]="r.value">{{ r.label }}</option>
+                  }
+                </select>
+              } @else {
+                <span class="sk-badge" [class.accent]="m.role === 'OWNER'">{{ roleLabel(m.role) }}</span>
+              }
+            </td>
+
+            <td>{{ m.joinedAt | date:'dd/MM/yyyy' }}</td>
+
+            <td class="right">
+              @if (canManage() && !m.me) {
+                <button type="button" class="sk-btn danger sm" (click)="remove(m)"
+                        [disabled]="busyId() === m.membershipId">Retirer</button>
+              } @else {
+                <span class="dash">—</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>
+
+<section class="sk-card">
+  <h2>Ce que chaque rôle permet</h2>
+  <ul class="roles-help">
+    @for (r of roles; track r.value) {
+      <li><strong>{{ r.label }}</strong> {{ r.help }}</li>
+    }
+  </ul>
+  <p class="note">
+    Votre espace doit toujours garder au moins un propriétaire : sans lui, plus personne ne
+    pourrait gérer l'abonnement ni l'équipe.
+  </p>
+</section>

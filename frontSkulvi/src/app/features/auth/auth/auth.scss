@@ -67,16 +67,23 @@ button {
   box-shadow: 0 10px 24px rgba(37, 99, 235, 0.25);
 }
 
-button:hover {
+button:hover:not(:disabled) {
   transform: translateY(-1px);
 }
 
-button:active {
+button:active:not(:disabled) {
   transform: translateY(0);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 .switch-link {
   margin-top: 1rem;
+  margin-bottom: 0;
   text-align: center;
   color: #4a5875;
   font-size: 0.95rem;
@@ -86,5 +93,39 @@ button:active {
   color: #1d4ed8;
   text-decoration: none;
   font-weight: 700;
+}
+
+.switch-link a:hover {
+  text-decoration: underline;
+}
+
+/* Passerelle vers le parcours recruteur, séparée par un trait : les deux inscriptions
+   n'ont rien à voir et ne doivent pas se confondre visuellement. */
+.switch-link.recruiter {
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid #e5e7eb;
+  font-size: 0.88rem;
+}
+
+.feedback {
+  margin: 0 0 1.1rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 10px;
+  background: #eef5ff;
+  border: 1px solid #c9ddfb;
+  color: #1d4ed8;
+  font-size: 0.9rem;
+}
+
+.feedback.error {
+  background: #fdeceb;
+  border-color: #f2c4bf;
+  color: #b3372c;
+}
+
+.help {
+  font-size: 0.8rem;
+  color: #6b7a90;
 }
 

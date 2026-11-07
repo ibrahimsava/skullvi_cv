@@ -183,3 +183,22 @@ input[type='file']:focus-visible + .drop { outline: 2px solid var(--accent); out
   .grid { grid-template-columns: 1fr; }
   .form-card, .offer-card { padding: 18px; }
 }
+/* Nom de l'entreprise et lien vers sa page carrière : une offre ne vient plus d'un site
+   unique, le candidat doit voir chez qui il postule. */
+.offer-card .company {
+  margin: -6px 0 16px;
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--accent, #2563eb);
+}
+
+.offer-card .all-offers {
+  display: inline-block;
+  margin-top: 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent, #2563eb);
+  text-decoration: none;
+}
+
+.offer-card .all-offers:hover { text-decoration: underline; }

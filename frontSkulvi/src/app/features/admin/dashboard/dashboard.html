@@ -5,21 +5,54 @@
   </div>
 </header>
 
-<section class="summary" aria-label="Indicateurs clés">
- @for (k of kpis(); track k.label; let first = $first) {
-  @if (k.filter && k.alert) {
-    <a class="stat alert" routerLink="/admin/candidatures" [queryParams]="{ filtre: k.filter }">
-      <strong class="num">{{ k.value }}</strong>
-      <span>{{ k.label }} : voir le détail</span>
-    </a>
-  } @else {
-    <div class="stat" [class.primary]="first">
-      <strong class="num">{{ k.value }}</strong>
-      <span>{{ k.label }}</span>
-    </div>
-  }
+@if (pending() > 0) {
+  <p class="sk-alert" role="status">
+    @if (pending() === 1) {
+      1 CV est en cours d'analyse. Le résultat apparaît dans les candidatures d'ici une minute.
+    } @else {
+      {{ pending() }} CV sont en file d'analyse. Ils sont traités l'un après l'autre, comptez
+      environ une minute par CV.
+    }
+  </p>
 }
+
+<section class="summary" aria-label="Indicateurs clés">
+  @for (k of kpis(); track k.label; let first = $first) {
+    @if (k.filter && k.alert) {
+      <a class="stat alert" routerLink="/admin/candidatures" [queryParams]="{ filtre: k.filter }">
+        <strong class="num">{{ k.value }}</strong>
+        <span>{{ k.label }} : voir le détail</span>
+      </a>
+    } @else {
+      <div class="stat" [class.primary]="first">
+        <strong class="num">{{ k.value }}</strong>
+        <span>{{ k.label }}</span>
+      </div>
+    }
+  }
 </section>
+
+@if (quota(); as q) {
+  <section class="panel quota">
+    <div class="quota-head">
+      <div>
+        <h2>Analyses de CV ce mois-ci</h2>
+        <p>
+          <strong class="num">{{ q.used }}</strong> sur {{ q.label }}
+          @if (q.limit != null) { ({{ q.percent }} %) }
+        </p>
+      </div>
+      <a class="sk-btn ghost sm" routerLink="/admin/abonnement">Mon abonnement</a>
+    </div>
+
+    @if (q.limit != null) {
+      <div class="sk-meter" [class.warn]="q.percent >= 80 && q.percent < 100"
+           [class.danger]="q.percent >= 100">
+        <span [style.width.%]="q.percent"></span>
+      </div>
+    }
+  </section>
+}
 
 <section class="panel">
   <h2>Candidatures par jour sur les 30 derniers jours</h2>

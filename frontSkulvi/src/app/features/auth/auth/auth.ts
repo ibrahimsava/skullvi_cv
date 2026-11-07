@@ -1,130 +1,100 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../auth';
-import { UserRequest } from '../model';
-import  { Router } from '@angular/router';
-import { jwtDecode } from 'jwt-decode';
+import { AuthResponse, UserRequest } from '../model';
 
+/**
+ * Connexion et inscription candidat.
+ *
+ * <p>La création d'un espace recruteur a sa propre page ({@code /inscription-entreprise}) :
+ * elle demande le nom de l'entreprise et s'adresse à quelqu'un qui vient acheter, pas
+ * postuler. Mélanger les deux parcours dans un même formulaire perdait tout le monde.
+ */
 @Component({
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink],
   selector: 'app-auth',
   styleUrl: './auth.scss',
   templateUrl: './auth.html',
 })
 export class Auth implements OnInit {
+
   private readonly authService = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router); 
+  private readonly router = inject(Router);
 
-  mode: 'login' | 'register' = 'register';
+  mode = signal<'login' | 'register'>('login');
+  loading = signal(false);
+  isError = signal(false);
+  message = signal('');
 
-  userRequest: UserRequest = {
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-  };
+  userRequest: UserRequest = { firstName: '', lastName: '', email: '', password: '' };
 
-  // UI error state for tests and user feedback
-  isError = false;
-  message = '';
+  /** Page demandée avant la redirection vers la connexion. */
+  private redirectTo = '';
 
   ngOnInit(): void {
-    const url = this.router.url ?? '';
-    if (url.includes('/login')) {
-      this.mode = 'login';
-    } else if (url.includes('/register')) {
-      this.mode = 'register';
-    } else {
-      const path = this.route.snapshot.routeConfig?.path ?? '';
-      this.mode = path === 'login' ? 'login' : path === 'register' ? 'register' : this.mode;
-    }
+    const path = this.route.snapshot.routeConfig?.path ?? '';
+    this.mode.set(path === 'register' ? 'register' : 'login');
+    this.redirectTo = this.route.snapshot.queryParamMap.get('suite') ?? '';
   }
 
   get isLogin(): boolean {
-    return this.mode === 'login';
+    return this.mode() === 'login';
   }
 
   submit(): void {
-    // reset UI error state
-    this.isError = false;
-    this.message = '';
+    if (this.loading()) return;
 
-    if (this.mode === 'login') {
-      this.authService.login(this.userRequest.email, this.userRequest.password).subscribe({
-        next: (response) => {
-            console.log('Connexion réussie :', response);
-            // store access token so interceptor can send it on subsequent requests
-            try {
-              if (response?.accessToken) {
-                localStorage.setItem('accessToken', response.accessToken);
-              }
-              // optionally store user info
-              if (response?.user) {
-                localStorage.setItem('user', JSON.stringify(response.user));
-              }
-               console.log('JWT décodé :', jwtDecode(response.accessToken));
-               console.log('role lu :', this.authService.getUserRoles());
+    this.isError.set(false);
+    this.message.set('');
+    this.loading.set(true);
 
-              const isAdmin = this.authService.isAdmin();
+    const call$ = this.isLogin
+      ? this.authService.login(this.userRequest.email, this.userRequest.password)
+      : this.authService.createUser(this.userRequest);
 
-              if (isAdmin) {
-                this.router.navigate(['/admin/dashboard']);
-              } else {
-                this.router.navigate(['/offres']);
-              }
-
-            } catch (err) {
-              console.warn('Unable to store token in localStorage', err);
-            }
-
-           //  const user = response?.user;
-
-        //  if (user?.role === 'ADMIN' || user?.role?.includes('ADMIN')) {
-             //  this.router.navigate(['/creationoffre']);
-                //  } else {
-             //  this.router.navigate(['/offres']);
-            //}
-          },
-        error: (err) => {
-          console.error('Erreur connexion :', err);
-          this.isError = true;
-          this.message = err?.status === 401 ? 'Identifiants invalides.' : 'Erreur lors de la connexion.';
-        }
-      });
-      return;
-    }
-
-    this.createUser();
-}
-
-  createUser(): void {
-    // reset UI error state
-    this.isError = false;
-    this.message = '';
-
-    this.authService.createUser(this.userRequest).subscribe({
-      next: (user) => {
-        console.log('Utilisateur créé :', user);
-        this.router.navigate(['offres']);
+    call$.subscribe({
+      next: (res) => {
+        this.loading.set(false);
+        this.goAfterLogin(res);
       },
-      error: (err) => {
-        console.error('Erreur création :', err);
-        if (err?.status === 409) {
-          this.isError = true;
-          this.message = 'Cette adresse e-mail est déjà utilisée.';
-        } else {
-          this.isError = true;
-          this.message = 'Erreur lors de la création du compte.';
-        }
-      }
+      error: (err: HttpErrorResponse) => {
+        this.loading.set(false);
+        this.isError.set(true);
+        this.message.set(this.messageFor(err));
+      },
     });
   }
 
+  /**
+   * Oriente vers le bon espace après connexion.
+   *
+   * <p>La destination vient de la réponse du serveur, et non d'un rôle lu dans le jeton :
+   * `organizationId` dit sans ambiguïté si ce compte a un espace recruteur. L'ancienne version
+   * testait un rôle « ADMIN » qui n'existe plus que pour l'administrateur de la plateforme, et
+   * aurait envoyé tous les recruteurs sur la liste des offres publiques.
+   */
+  private goAfterLogin(res: AuthResponse): void {
+    if (this.redirectTo && this.redirectTo.startsWith('/')) {
+      this.router.navigateByUrl(this.redirectTo);
+      return;
+    }
+    if (res.user?.organizationId) {
+      this.router.navigateByUrl('/admin/dashboard');
+      return;
+    }
+    this.router.navigateByUrl('/mon-espace');
+  }
 
+  private messageFor(err: HttpErrorResponse): string {
+    if (err.status === 401) return 'E-mail ou mot de passe incorrect.';
+    if (err.status === 409) return 'Cette adresse e-mail est déjà utilisée.';
+    if (err.status === 400) return 'Vérifiez les champs : 8 caractères minimum pour le mot de passe.';
+    return this.isLogin
+      ? 'Connexion impossible pour le moment. Réessayez dans un instant.'
+      : 'La création du compte a échoué. Réessayez dans un instant.';
+  }
 }
-
-

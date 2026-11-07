@@ -1,4 +1,4 @@
-/* You can add global styles to this file, and also import other style files */
+/* Styles globaux et primitives partagées par les écrans. */
 :root {
   --canvas: #f4f7fc;
   --surface: #ffffff;
@@ -10,7 +10,10 @@
   --accent: #2563eb;
   --accent-hover: #1d4ed8;
   --accent-soft: #eaf1ff;
+  --ok: #176b4d;
+  --ok-soft: #e4f5ec;
   --warn: #a9650b;
+  --warn-soft: #fdf2dd;
   --danger: #b3372c;
   --danger-soft: #fae6e3;
   --radius: 10px;
@@ -38,6 +41,7 @@
   padding: 10px 16px;
   border: 1px solid transparent; border-radius: var(--radius-sm);
   font: inherit; font-size: 14px; font-weight: 600;
+  text-decoration: none;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
 
@@ -63,6 +67,110 @@
 .sidebar button:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------- primitives */
+
+/* Panneau blanc : la brique de base de tous les écrans de gestion. */
+.sk-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px;
+
+  & + .sk-card { margin-top: 18px; }
+
+  > h2 {
+    margin: 0 0 4px;
+    font-size: 17px; font-weight: 650; letter-spacing: -0.01em; color: var(--ink);
+  }
+  > .sub { margin: 0 0 18px; font-size: 13px; color: var(--muted); }
+}
+
+/* Étiquette d'état. Le ton porte le sens, jamais la couleur seule : le texte suffit à lire. */
+.sk-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 12px; font-weight: 650; letter-spacing: 0.01em;
+  background: var(--canvas); color: var(--ink-2); border: 1px solid var(--line-strong);
+
+  &.ok     { background: var(--ok-soft);     color: var(--ok);     border-color: #b9ddc9; }
+  &.warn   { background: var(--warn-soft);   color: var(--warn);   border-color: #ebd4a4; }
+  &.danger { background: var(--danger-soft); color: var(--danger); border-color: #e5bdb8; }
+  &.accent { background: var(--accent-soft); color: var(--accent-hover); border-color: #bdd3fb; }
+}
+
+/* Champ de formulaire */
+.sk-field {
+  display: flex; flex-direction: column; gap: 6px;
+
+  label { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+
+  input, select, textarea {
+    padding: 10px 12px;
+    border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
+    background: var(--surface); color: var(--ink);
+    font: inherit; font-size: 14px;
+
+    &:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
+    &[disabled] { background: var(--canvas); color: var(--muted); }
+  }
+
+  .error { font-size: 12px; color: var(--danger); }
+  .help  { font-size: 12px; color: var(--muted); }
+}
+
+.sk-grid {
+  display: grid; gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+/* Message d'erreur ou d'information en pleine largeur */
+.sk-alert {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  border: 1px solid var(--line-strong);
+  background: var(--canvas); color: var(--ink-2);
+
+  &.error { background: var(--danger-soft); color: var(--danger); border-color: #e5bdb8; }
+  &.warn  { background: var(--warn-soft);   color: var(--warn);   border-color: #ebd4a4; }
+  &.ok    { background: var(--ok-soft);     color: var(--ok);     border-color: #b9ddc9; }
+}
+
+/* Jauge de consommation. Le pourcentage est aussi écrit en clair à côté : une barre
+   seule n'est pas lisible par un lecteur d'écran ni par quelqu'un qui distingue mal les teintes. */
+.sk-meter {
+  height: 8px; border-radius: 999px; overflow: hidden;
+  background: var(--line);
+
+  > span {
+    display: block; height: 100%;
+    background: var(--accent);
+    transition: width 0.3s;
+  }
+  &.warn > span   { background: var(--warn); }
+  &.danger > span { background: var(--danger); }
+}
+
+.sk-table {
+  width: 100%; border-collapse: collapse; font-size: 14px;
+
+  th {
+    text-align: left; padding: 10px 12px;
+    font-size: 12px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--muted); border-bottom: 1px solid var(--line);
+  }
+  td { padding: 12px; border-bottom: 1px solid var(--line); color: var(--ink-2); }
+  tr:last-child td { border-bottom: none; }
+  .right { text-align: right; }
+}
+
+.sk-empty {
+  margin: 0; padding: 28px 0;
+  text-align: center; font-size: 14px; color: var(--muted);
 }
 
 @media (prefers-reduced-motion: reduce) {

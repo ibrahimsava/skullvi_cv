@@ -1,0 +1,55 @@
+.offers {
+  display: grid; gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.offer {
+  display: flex; flex-direction: column; gap: 16px;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+
+  /* Une offre clôturée reste lisible, seulement mise en retrait : on continue d'y consulter
+     les candidatures reçues. */
+  &.closed { background: var(--canvas); }
+}
+
+.offer-head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+
+  h2 { margin: 0 0 6px; font-size: 16px; font-weight: 650; color: var(--ink); }
+}
+
+.facts {
+  margin: 0;
+  display: flex; flex-wrap: wrap; gap: 8px;
+  font-size: 12px; color: var(--muted);
+
+  span:not(:last-child)::after { content: ' ·'; }
+}
+
+.offer-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+
+  .s {
+    strong { display: block; font-size: 20px; font-weight: 700; color: var(--ink); line-height: 1.2; }
+    span   { font-size: 11px; color: var(--muted); }
+  }
+}
+
+.offer-actions {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  /* Colle les actions en bas pour aligner les cartes de hauteurs différentes. */
+  margin-top: auto;
+}
+
+.sk-empty {
+  display: grid; gap: 12px; justify-items: center;
+
+  p { margin: 0; }
+  small { font-size: 13px; max-width: 48ch; }
+}

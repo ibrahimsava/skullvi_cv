@@ -1,0 +1,73 @@
+.card-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+  margin-bottom: 14px;
+
+  h2 { margin: 0 0 4px; }
+  .sub { margin: 0; }
+}
+
+/* ---------------------------------------------------------------- formulaire */
+
+.invite-form {
+  display: grid; gap: 16px; justify-items: start;
+
+  .row, .sk-field { width: 100%; }
+  .row { display: grid; gap: 14px; grid-template-columns: 1fr 1fr; }
+  select { max-width: 280px; }
+}
+
+/* ---------------------------------------------------------------- liste */
+
+.person {
+  display: flex; align-items: center; gap: 12px;
+
+  strong { color: var(--ink); font-weight: 650; }
+  small  { display: block; margin-top: 2px; font-size: 12px; color: var(--muted); }
+  .sk-badge { margin-left: 6px; vertical-align: 2px; }
+}
+
+.avatar {
+  flex: 0 0 34px;
+  width: 34px; height: 34px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--accent-soft); color: var(--accent-hover);
+  font-size: 14px; font-weight: 700;
+}
+
+.role-select {
+  padding: 6px 10px;
+  border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
+  background: var(--surface); color: var(--ink);
+  font: inherit; font-size: 13px;
+
+  &:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  &[disabled] { opacity: 0.5; }
+}
+
+.dash { color: var(--muted); }
+
+/* ---------------------------------------------------------------- aide */
+
+.roles-help {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; gap: 12px;
+  font-size: 14px; line-height: 1.6; color: var(--ink-2);
+
+  li { padding-left: 14px; border-left: 2px solid var(--line-strong); max-width: 70ch; }
+  strong { display: block; color: var(--ink); font-weight: 650; }
+}
+
+.note {
+  margin: 18px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  font-size: 13px; color: var(--muted);
+}
+
+.sk-alert a { color: inherit; font-weight: 650; text-decoration: underline; }
+
+@media (max-width: 680px) {
+  .invite-form .row { grid-template-columns: 1fr; }
+}

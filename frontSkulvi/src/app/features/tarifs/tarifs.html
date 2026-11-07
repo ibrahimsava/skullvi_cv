@@ -1,0 +1,131 @@
+<div class="tarifs-page">
+  <div class="wrap">
+
+    <header class="head">
+      <p class="eyebrow">Tarifs</p>
+      <h1>Vous payez les CV que vous faites analyser</h1>
+      <p class="lead">
+        Pas de frais d'installation, pas d'engagement annuel. Commencez par l'essai gratuit :
+        14 jours, une offre, 20 analyses de CV, sans carte bancaire.
+      </p>
+    </header>
+
+    @if (loading()) {
+      <p class="sk-empty">Chargement des tarifs…</p>
+
+    } @else if (loadError()) {
+      <p class="sk-alert error" role="alert">
+        Impossible de charger la grille tarifaire. Réessayez dans un instant.
+      </p>
+
+    } @else {
+      <div class="plans">
+        @for (p of plans(); track p.plan) {
+          <article class="plan" [class.featured]="isFeatured(p)">
+            @if (isFeatured(p)) {
+              <p class="flag">Le plus choisi</p>
+            }
+
+            <h2>{{ p.label }}</h2>
+
+            <p class="price">
+              @if (p.priceCents === 0) {
+                <strong>0 €</strong><span>14 jours</span>
+              } @else {
+                <strong>{{ euros(p.priceCents) }} €</strong><span>/ mois</span>
+              }
+            </p>
+
+            <ul class="features">
+              <li>
+                <strong class="num">{{ limitLabel(p.maxAnalysesPerMonth) }}</strong>
+                analyses de CV par mois
+              </li>
+              <li>
+                <strong class="num">{{ limitLabel(p.maxActiveOffers) }}</strong>
+                offre(s) ouverte(s) en même temps
+              </li>
+              <li>
+                <strong class="num">{{ limitLabel(p.maxSeats) }}</strong>
+                utilisateur(s) dans l'équipe
+              </li>
+              <li>Classement expliqué critère par critère</li>
+              <li>Page carrière à votre nom</li>
+              <li class="over">
+                @if (p.allowsOverage) {
+                  Au-delà du quota : {{ euros(p.overageCents) }} € par analyse, le service continue
+                } @else {
+                  Le service s'arrête une fois les 20 analyses consommées
+                }
+              </li>
+            </ul>
+
+            @if (p.priceCents === 0) {
+              <a class="sk-btn ghost" routerLink="/inscription-entreprise">Démarrer l'essai</a>
+            } @else {
+              <a class="sk-btn" [class.primary]="isFeatured(p)" [class.ghost]="!isFeatured(p)"
+                 routerLink="/inscription-entreprise">Choisir {{ p.label }}</a>
+            }
+          </article>
+        }
+      </div>
+
+      <section class="faq">
+        <h2>Questions fréquentes</h2>
+
+        <div class="qa">
+          <h3>Qu'est-ce qui compte comme une analyse ?</h3>
+          <p>
+            Une candidature déposée avec un CV. Nous en extrayons le profil, le comparons à vos
+            critères et calculons le score. Si l'analyse échoue de notre côté, la relance ne vous
+            est pas facturée.
+          </p>
+        </div>
+
+        <div class="qa">
+          <h3>Que se passe-t-il si je dépasse mon quota ?</h3>
+          <p>
+            Sur un plan payant, rien ne s'arrête : les analyses supplémentaires sont facturées à
+            l'unité en fin de mois. Nous ne coupons pas le service d'un client en pleine campagne
+            de recrutement. L'essai gratuit, lui, s'arrête à 20 analyses.
+          </p>
+        </div>
+
+        <div class="qa">
+          <h3>Où sont stockés les CV ?</h3>
+          <p>
+            Sur nos serveurs en France. L'analyse par intelligence artificielle tourne sur notre
+            propre infrastructure : aucun CV n'est envoyé à un service d'IA tiers. C'est un choix
+            technique qui coûte plus cher, et qui nous paraît non négociable sur des données de
+            candidats.
+          </p>
+        </div>
+
+        <div class="qa">
+          <h3>Est-ce l'IA qui décide qui est embauché ?</h3>
+          <p>
+            Non. Skulvi classe les dossiers et explique chaque point attribué. Retenir ou écarter
+            un candidat reste une action humaine, faite par vous. Le score est calculé par des
+            règles que vous avez définies, pas par un modèle opaque — vous pouvez en vérifier le
+            détail pour chaque candidat.
+          </p>
+        </div>
+
+        <div class="qa">
+          <h3>Puis-je arrêter quand je veux ?</h3>
+          <p>
+            Oui, sans préavis. Si vous arrêtez, votre compte passe en lecture seule : vos
+            données restent accessibles, rien n'est supprimé.
+          </p>
+        </div>
+      </section>
+
+      <section class="cta">
+        <h2>Testez sur un vrai recrutement</h2>
+        <p>14 jours, 20 CV analysés, sans carte bancaire.</p>
+        <a class="sk-btn primary" routerLink="/inscription-entreprise">Créer mon espace</a>
+      </section>
+    }
+
+  </div>
+</div>

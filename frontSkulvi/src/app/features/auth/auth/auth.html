@@ -1,31 +1,54 @@
-<form (ngSubmit)="submit()">
-  <h2>{{ isLogin ? 'Connexion' : 'Inscription' }}</h2>
-    <ng-container *ngIf="!isLogin">
-      <div>
-        <label for="firstName">Prénom</label>
-        <input id="firstName" type="text" [(ngModel)]="userRequest.firstName" name="firstName" />
-      </div>
+<form (ngSubmit)="submit()" novalidate>
+  <h2>{{ isLogin ? 'Connexion' : 'Créer un compte candidat' }}</h2>
 
-      <div>
-        <label for="lastName">Nom</label>
-        <input id="lastName" type="text" [(ngModel)]="userRequest.lastName" name="lastName" />
-      </div>
-    </ng-container>
+  @if (message()) {
+    <p class="feedback" [class.error]="isError()" role="alert">{{ message() }}</p>
+  }
+
+  @if (!isLogin) {
+    <div>
+      <label for="firstName">Prénom</label>
+      <input id="firstName" type="text" [(ngModel)]="userRequest.firstName" name="firstName"
+             autocomplete="given-name" required />
+    </div>
+
+    <div>
+      <label for="lastName">Nom</label>
+      <input id="lastName" type="text" [(ngModel)]="userRequest.lastName" name="lastName"
+             autocomplete="family-name" required />
+    </div>
+  }
 
   <div>
-    <label for="email">Email</label>
-    <input id="email" type="email" [(ngModel)]="userRequest.email" name="email" />
+    <label for="email">E-mail</label>
+    <input id="email" type="email" [(ngModel)]="userRequest.email" name="email"
+           autocomplete="email" required />
   </div>
 
   <div>
     <label for="password">Mot de passe</label>
-    <input id="password" type="password" [(ngModel)]="userRequest.password" name="password" />
+    <input id="password" type="password" [(ngModel)]="userRequest.password" name="password"
+           [attr.autocomplete]="isLogin ? 'current-password' : 'new-password'" required />
+    @if (!isLogin) {
+      <small class="help">8 caractères minimum.</small>
+    }
   </div>
 
-  <button type="submit">{{ isLogin ? 'Se connecter' : 'S\'inscrire' }}</button>
+  <button type="submit" [disabled]="loading()">
+    @if (loading()) {
+      Un instant…
+    } @else {
+      {{ isLogin ? 'Se connecter' : 'Créer mon compte' }}
+    }
+  </button>
 
   <p class="switch-link">
-    {{ isLogin ? 'Pas encore inscrit ?' : 'Déjà inscrit ?' }}
+    {{ isLogin ? 'Pas encore de compte ?' : 'Déjà un compte ?' }}
     <a [routerLink]="isLogin ? '/register' : '/login'">{{ isLogin ? 'Créer un compte' : 'Se connecter' }}</a>
+  </p>
+
+  <p class="switch-link recruiter">
+    Vous recrutez ?
+    <a routerLink="/inscription-entreprise">Créer un espace entreprise</a>
   </p>
 </form>

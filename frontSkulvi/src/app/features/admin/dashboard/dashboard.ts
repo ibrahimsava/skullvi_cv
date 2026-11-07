@@ -7,11 +7,13 @@ import { ApplicationSummary, DashboardStats } from '../admin.models';
 import { RouterLink } from '@angular/router';
 
 
-interface Kpi { label: string; value: number | string; alert?: boolean; filter?: string; }
-
-// dans @Component :  imports: [BaseChartDirective, RouterLink],
-
-
+interface Kpi {
+  label: string;
+  value: number | string;
+  alert?: boolean;
+  /** Filtre à appliquer sur la page des candidatures quand l'indicateur est cliquable. */
+  filter?: string;
+}
 
 @Component({
   standalone: true,
@@ -33,17 +35,37 @@ export class Dashboard implements OnInit {
     if (!s) return [];
     return [
       { label: 'Candidatures reçues', value: s.applications },
-      { label: 'Offres', value: s.offers },
+      { label: 'Offres ouvertes', value: s.openOffers },
       { label: 'Candidatures analysées', value: s.scored },
       { label: 'Haute priorité', value: s.highPriority },
       {
         label: 'Score moyen',
         value: s.scored > 0 ? String(Math.round((s.averageScore ?? 0) * 10) / 10) : '—',
       },
-      // dans kpis, la dernière ligne devient :
       { label: 'Analyses en échec', value: s.failed, alert: s.failed > 0, filter: 'echec' },
     ];
   });
+
+  /** Analyses consommées ce mois, face au quota du plan. */
+  readonly quota = computed(() => {
+    const s = this.stats();
+    if (!s) return null;
+    return {
+      used: s.analysesUsed,
+      limit: s.analysesLimit,
+      label: s.analysesLimit == null ? 'Illimité' : String(s.analysesLimit),
+      percent: s.analysesLimit ? Math.min(100, Math.round((s.analysesUsed / s.analysesLimit) * 100)) : 0,
+    };
+  });
+
+  /**
+   * Nombre d'analyses en attente ou en cours.
+   *
+   * <p>Affiché parce que l'attente est réelle : un seul CV est analysé à la fois, et chaque
+   * analyse prend de l'ordre d'une minute. Sans ce chiffre, un recruteur qui vient de recevoir
+   * dix candidatures croit que le service est en panne.
+   */
+  readonly pending = computed(() => this.stats()?.analysesPending ?? 0);
 
   chartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,

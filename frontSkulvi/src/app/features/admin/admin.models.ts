@@ -1,10 +1,17 @@
+import { OrgRole, OrgStatus, PlanCode } from '../auth/model';
+
 export interface DashboardStats {
   offers: number;
+  openOffers: number;
   applications: number;
   scored: number;
   failed: number;
   highPriority: number;
-  averageScore: number;
+  averageScore: number | null;
+  analysesPending: number;
+  analysesUsed: number;
+  /** Null si le plan ne plafonne pas les analyses. */
+  analysesLimit: number | null;
 }
 
 export interface Criterion {
@@ -13,9 +20,10 @@ export interface Criterion {
   type: string;
   mandatory: boolean;
   weight: number;
-  threshold: number;
+  threshold: number | null;
 }
 
+/** Vue recruteur d'une offre : contient la grille de notation. */
 export interface Offer {
   id: string;
   title: string;
@@ -23,10 +31,31 @@ export interface Offer {
   domain: string;
   level: string;
   minExperienceYears: number;
-  startDate: string;
-  closingDate: string;
+  startDate: string | null;
+  closingDate: string | null;
   status: string;
   criteria: Criterion[];
+  applications: number;
+}
+
+/**
+ * Vue publique d'une offre.
+ *
+ * <p>Sans les critères : le serveur ne les envoie plus aux visiteurs, pour ne pas publier la
+ * grille de notation que les candidats n'auraient plus qu'à recopier dans leur CV.
+ */
+export interface PublicOffer {
+  id: string;
+  title: string;
+  description: string;
+  domain: string;
+  level: string;
+  minExperienceYears: number;
+  startDate: string | null;
+  closingDate: string | null;
+  status: string;
+  organizationName: string;
+  organizationSlug: string;
 }
 
 export interface ApplicationSummary {
@@ -68,4 +97,78 @@ export interface ScoreResponse {
   capped: boolean;
   priority: string;
   details: MatchItem[];
+}
+
+// ---------------------------------------------------------------- organisation
+
+export interface Organization {
+  id: string;
+  name: string;
+  slug: string;
+  plan: PlanCode;
+  planLabel: string;
+  status: OrgStatus;
+  trialEndsAt: string | null;
+  writable: boolean;
+  createdAt: string;
+}
+
+/** Consommation du mois face aux limites du plan. Les limites nulles valent « illimité ». */
+export interface UsageSnapshot {
+  plan: PlanCode;
+  planLabel: string;
+  status: OrgStatus;
+  trialEndsAt: string | null;
+  trialDaysLeft: number | null;
+  period: string;
+  analysesUsed: number;
+  analysesLimit: number | null;
+  overageCount: number;
+  overageCents: number;
+  activeOffers: number;
+  activeOffersLimit: number | null;
+  seats: number;
+  seatsLimit: number | null;
+  writable: boolean;
+}
+
+export interface PlanOption {
+  plan: PlanCode;
+  label: string;
+  priceCents: number;
+  maxActiveOffers: number | null;
+  maxAnalysesPerMonth: number | null;
+  maxSeats: number | null;
+  allowsOverage: boolean;
+  overageCents: number;
+  current: boolean;
+}
+
+export interface PlanCatalog {
+  plans: PlanOption[];
+}
+
+export interface Member {
+  membershipId: string;
+  userId: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: OrgRole;
+  me: boolean;
+  joinedAt: string;
+}
+
+export interface MemberList {
+  members: Member[];
+  seats: number;
+  seatsLimit: number | null;
+}
+
+export interface InviteRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  role: OrgRole;
 }

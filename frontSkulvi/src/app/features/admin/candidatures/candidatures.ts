@@ -91,8 +91,12 @@ cvViewer = signal<{ url: string; safeUrl: SafeResourceUrl; name: string } | null
 
   // ---------- Affichage ----------
 
+  /**
+   * Le statut réel est `ANALYSIS_FAILED`, pas `FAILED` : ce test ne reposait donc que sur la
+   * présence d'un motif d'échec, et une analyse échouée sans motif passait pour « en cours ».
+   */
   isFailed(r: ApplicationSummary): boolean {
-    return !!r.failureReason || r.status === 'FAILED';
+    return !!r.failureReason || r.status === 'ANALYSIS_FAILED';
   }
 
   hasScore(r: ApplicationSummary): boolean {
@@ -185,9 +189,9 @@ closeCv(): void {
       error: (err) => {
         this.busyId.set(null);
         this.flash(
-          err.status === 404 || err.status === 405
-            ? "Suppression indisponible : l'endpoint DELETE n'existe pas encore côté serveur."
-            : 'Suppression impossible.',
+          err.status === 404 ? 'Cette candidature a déjà été supprimée.'
+          : err.status === 403 ? 'Votre rôle ne permet pas de supprimer une candidature.'
+          : 'Suppression impossible.',
           true
         );
       },

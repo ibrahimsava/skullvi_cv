@@ -1,11 +1,29 @@
+/** Rôle global du compte. */
+export type GlobalRole = 'CANDIDAT' | 'RECRUTEUR' | 'ADMIN';
 
+/** Rôle à l'intérieur d'une organisation. */
+export type OrgRole = 'OWNER' | 'RECRUITER' | 'VIEWER';
 
+export type PlanCode = 'TRIAL' | 'STARTER' | 'PRO' | 'BUSINESS';
+
+export type OrgStatus = 'TRIAL' | 'ACTIVE' | 'PAST_DUE' | 'SUSPENDED';
+
+/**
+ * Identité du compte connecté.
+ *
+ * <p>`organizationId` est nul pour un candidat : c'est ce qui distingue les deux espaces, sans
+ * avoir à deviner depuis le rôle.
+ */
 export interface User {
   id: string;
   email: string;
   firstName: string;
   lastName: string;
-  role: string;
+  role: GlobalRole;
+  organizationId: string | null;
+  organizationName: string | null;
+  orgRole: OrgRole | null;
+  plan: PlanCode | null;
 }
 
 export interface AuthResponse {
@@ -15,10 +33,19 @@ export interface AuthResponse {
   user: User;
 }
 
- export interface UserRequest {
+/** Inscription d'un candidat. */
+export interface UserRequest {
   firstName: string;
   lastName: string;
   email: string;
   password: string;
 }
 
+/** Création d'un espace recruteur : le compte et son organisation d'un coup. */
+export interface OrgSignupRequest {
+  organizationName: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+}

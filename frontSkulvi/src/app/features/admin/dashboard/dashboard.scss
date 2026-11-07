@@ -15,12 +15,18 @@
   gap: 4px;
   padding: 18px 22px;
   background: var(--surface);
+  text-decoration: none;
 
   strong { font-size: 28px; font-weight: 650; letter-spacing: -0.02em; color: var(--ink); }
   span { font-size: 13px; color: var(--muted); }
   span::first-letter { text-transform: uppercase; }
 
   &.primary strong { color: var(--accent); }
+
+  /* Était écrit à la racine du fichier, en dehors de `.stat` : un `&` au premier niveau
+     n'a pas de parent à résoudre et la règle ne s'appliquait à rien. */
+  &.alert strong { color: var(--danger); }
+  &.alert:hover { background: var(--danger-soft); }
 }
 
 .panel {
@@ -29,8 +35,30 @@
   border: 1px solid var(--line);
   border-radius: var(--radius);
 
+  & + .panel { margin-top: 20px; }
+
   h2 { margin: 0 0 18px; font-size: 16px; font-weight: 600; color: var(--ink); }
   .chart { height: 320px; }
   .empty { margin: 0; padding: 32px 0; font-size: 14px; color: var(--muted); }
 }
-  &.alert strong { color: var(--danger); }
+
+/* ---------------------------------------------------------------- quota */
+
+.quota {
+  margin-bottom: 20px;
+
+  h2 { margin: 0 0 4px; }
+}
+
+.quota-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+  margin-bottom: 14px;
+
+  p {
+    margin: 0;
+    font-size: 14px; color: var(--muted);
+
+    strong { font-size: 15px; font-weight: 700; color: var(--ink); }
+  }
+}

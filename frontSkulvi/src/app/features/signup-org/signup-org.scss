@@ -1,0 +1,106 @@
+.signup-page {
+  min-height: 100vh;
+  background: var(--canvas);
+  padding: 64px 20px 48px;
+  font-family: var(--font);
+}
+
+.wrap {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: grid;
+  gap: 48px;
+  grid-template-columns: 1fr 420px;
+  align-items: start;
+}
+
+/* ---------------------------------------------------------------- argumentaire */
+
+.pitch {
+  padding-top: 8px;
+
+  .eyebrow {
+    margin: 0 0 12px;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  h1 {
+    margin: 0 0 16px;
+    font-size: 38px; line-height: 1.1; font-weight: 700; letter-spacing: -0.03em;
+    color: var(--ink);
+  }
+
+  .lead {
+    margin: 0 0 28px;
+    font-size: 16px; line-height: 1.6; color: var(--ink-2);
+    max-width: 48ch;
+  }
+
+  .fine {
+    margin: 24px 0 0;
+    font-size: 13px; color: var(--muted);
+  }
+}
+
+.points {
+  list-style: none;
+  margin: 0; padding: 0;
+  display: grid; gap: 18px;
+
+  li {
+    position: relative;
+    padding-left: 26px;
+    font-size: 14px; line-height: 1.6; color: var(--ink-2);
+    max-width: 52ch;
+
+    /* Puce dessinée plutôt qu'un caractère : elle reste alignée sur la première ligne
+       quel que soit le corps de texte. */
+    &::before {
+      content: '';
+      position: absolute; left: 2px; top: 7px;
+      width: 8px; height: 8px;
+      border-radius: 2px;
+      background: var(--accent);
+    }
+
+    strong { display: block; color: var(--ink); font-weight: 650; margin-bottom: 2px; }
+  }
+}
+
+/* ---------------------------------------------------------------- formulaire */
+
+.form-side .sk-card {
+  display: grid;
+  gap: 16px;
+  box-shadow: 0 14px 40px rgba(20, 33, 61, 0.07);
+}
+
+.two {
+  display: grid; gap: 14px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.sk-btn.block {
+  width: 100%;
+  margin-top: 4px;
+  padding: 12px 16px;
+}
+
+.alt {
+  margin: 0;
+  font-size: 13px; color: var(--muted); text-align: center;
+
+  a { color: var(--accent); font-weight: 600; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+}
+
+@media (max-width: 900px) {
+  .wrap { grid-template-columns: 1fr; gap: 36px; }
+  .signup-page { padding-top: 40px; }
+  .pitch h1 { font-size: 30px; }
+}
+
+@media (max-width: 480px) {
+  .two { grid-template-columns: 1fr; }
+}

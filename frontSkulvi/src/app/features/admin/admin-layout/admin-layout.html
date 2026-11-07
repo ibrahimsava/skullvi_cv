@@ -1,9 +1,12 @@
 <div class="shell" [class.collapsed]="collapsed()">
-  <aside class="sidebar" aria-label="Navigation administrateur">
+  <aside class="sidebar" aria-label="Navigation de l'espace recruteur">
 
     <div class="brand">
       <span class="mark" aria-hidden="true">S</span>
-      <span class="brand-text">Skulvi</span>
+      <span class="brand-text">
+        <strong>{{ organizationName() || 'Skulvi' }}</strong>
+        @if (usage()) { <small>Plan {{ usage()!.planLabel }}</small> }
+      </span>
       <button type="button" class="toggle" (click)="toggle()"
               [attr.aria-label]="collapsed() ? 'Déplier le menu' : 'Replier le menu'">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -23,6 +26,14 @@
         <span>Tableau de bord</span>
       </a>
 
+      <a routerLink="offres" routerLinkActive="active" title="Mes offres">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>
+          <path d="M3 12h18"/>
+        </svg>
+        <span>Mes offres</span>
+      </a>
+
       <a routerLink="candidatures" routerLinkActive="active" title="Candidatures">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/>
@@ -38,13 +49,37 @@
         </svg>
         <span>Nouvelle offre</span>
       </a>
+
+      <p class="group">Mon compte</p>
+
+      <a routerLink="equipe" routerLinkActive="active" title="Équipe">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="8" cy="9" r="3"/><circle cx="17" cy="10" r="2.5"/>
+          <path d="M2 19c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5M16.5 15c2.6 0 4.5 1.8 4.5 4.5"/>
+        </svg>
+        <span>Équipe</span>
+      </a>
+
+      <a routerLink="abonnement" routerLinkActive="active" title="Abonnement">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6 15h4"/>
+        </svg>
+        <span>Abonnement</span>
+      </a>
+
+      <a routerLink="/mon-espace" routerLinkActive="active" title="Mon espace personnel">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5"/>
+        </svg>
+        <span>Mon profil</span>
+      </a>
     </nav>
 
     <div class="account">
-      <span class="avatar" aria-hidden="true">{{ initial }}</span>
+      <span class="avatar" aria-hidden="true">{{ initial() }}</span>
       <div class="who">
-        <strong>Administrateur</strong>
-        <small>{{ email }}</small>
+        <strong>{{ roleLabel() }}</strong>
+        <small>{{ email() }}</small>
       </div>
       <button type="button" class="logout" (click)="logout()" title="Se déconnecter" aria-label="Se déconnecter">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -56,6 +91,17 @@
   </aside>
 
   <main class="content">
+    @if (banner(); as message) {
+      @if (message) {
+        <div class="trial-banner" [class.urgent]="bannerUrgent()" role="status">
+          <span>{{ message }}</span>
+          @if (canManage()) {
+            <a routerLink="abonnement">Voir les abonnements</a>
+          }
+        </div>
+      }
+    }
+
     <router-outlet />
   </main>
 </div>

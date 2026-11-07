@@ -5,13 +5,14 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Observable, of, switchMap, tap } from 'rxjs';
 import { AuthService } from '../auth/auth';
-import { Offer } from '../admin/admin.models';
-import { ApplicationApi, MeResponse } from './application-api';
+import { User } from '../auth/model';
+import { PublicOffer } from '../admin/admin.models';
+import { ApplicationApi } from './application-api';
 
 type Mode = 'loggedIn' | 'create' | 'login';
 
 const URL_RE = /^https?:\/\/\S+$/i;
-const MAX_FILE_SIZE = 5 * 1024 * 1024;   // 5 Mo
+const MAX_FILE_SIZE = 5 * 1024 * 1024;   // 5 Mo, aligné sur la limite du serveur
 
 @Component({
   standalone: true,
@@ -27,10 +28,10 @@ export class Postuler implements OnInit {
 
   private readonly offerId = this.route.snapshot.paramMap.get('offerId') ?? '';
 
-  offer = signal<Offer | null>(null);
+  offer = signal<PublicOffer | null>(null);
   loadError = signal(false);
   mode = signal<Mode>('create');
-  me = signal<MeResponse | null>(null);
+  me = signal<User | null>(null);
   loading = signal(false);
   error = signal('');
   done = signal(false);
@@ -48,11 +49,19 @@ export class Postuler implements OnInit {
     cv: new FormControl<File | null>(null, Validators.required),
   });
 
+  /**
+   * L'offre refuse-t-elle les candidatures ?
+   *
+   * <p>Le cas « pas de date de clôture » était traité comme une date dépassée : `undefined`
+   * comparé à une chaîne renvoie faux, mais le serveur accepte ces offres indéfiniment. Elles
+   * sont donc ouvertes, et non fermées.
+   */
   closed = computed(() => {
     const o = this.offer();
     if (!o) return false;
-    const today = new Date().toLocaleDateString('en-CA');   // YYYY-MM-DD
-    return o.status === 'CLOSED' || o.closingDate < today;
+    if (o.status !== 'OPEN') return true;
+    if (!o.closingDate) return false;
+    return o.closingDate.substring(0, 10) < new Date().toLocaleDateString('en-CA');
   });
 
   get submitLabel(): string {
@@ -62,8 +71,8 @@ export class Postuler implements OnInit {
 
   ngOnInit(): void {
     const logged = this.auth.isLoggedIn();
-    // Un jeton expiré envoyé à /auth/* ferait échouer la requête : on le retire
-    if (!logged) localStorage.removeItem('accessToken');
+    // Un jeton expiré resté dans le navigateur ferait échouer les appels : on nettoie.
+    if (!logged) this.auth.logout();
 
     this.setMode(logged ? 'loggedIn' : 'create');
 
@@ -72,7 +81,12 @@ export class Postuler implements OnInit {
       error: () => this.loadError.set(true),
     });
 
-    if (logged) this.api.getMe().subscribe((me) => this.me.set(me));
+    if (logged) {
+      this.api.getMe().subscribe({
+        next: (me) => this.me.set(me),
+        error: () => this.setMode('login'),
+      });
+    }
   }
 
   setMode(m: Mode): void {
@@ -95,8 +109,7 @@ export class Postuler implements OnInit {
   }
 
   switchAccount(): void {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('user');
+    this.auth.logout();
     this.me.set(null);
     this.setMode('login');
   }
@@ -113,15 +126,29 @@ export class Postuler implements OnInit {
 
     if (file && file.size > MAX_FILE_SIZE) {
       this.error.set('Ce fichier dépasse 5 Mo. Choisissez un CV plus léger.');
-      input.value = '';
-      this.form.controls.cv.setValue(null);
-      this.fileName.set('');
+      this.clearFile(input);
+      return;
+    }
+
+    /*
+     * Le serveur n'accepte que du PDF : il vérifie la signature du fichier, pas son extension.
+     * Autant le dire tout de suite plutôt que de laisser l'envoi échouer après l'upload.
+     */
+    if (file && !file.name.toLowerCase().endsWith('.pdf')) {
+      this.error.set('Seuls les fichiers PDF sont acceptés. Exportez votre CV en PDF.');
+      this.clearFile(input);
       return;
     }
 
     this.form.controls.cv.setValue(file);
     this.form.controls.cv.markAsTouched();
     this.fileName.set(file?.name ?? '');
+  }
+
+  private clearFile(input: HTMLInputElement): void {
+    input.value = '';
+    this.form.controls.cv.setValue(null);
+    this.fileName.set('');
   }
 
   submit(): void {
@@ -140,15 +167,15 @@ export class Postuler implements OnInit {
 
     const ready$: Observable<unknown> =
       mode === 'create'
-        ? this.auth
-            .createUser({ firstName: v.firstName, lastName: v.lastName, email: v.email, password: v.password })
-            .pipe(switchMap(() => this.login(v.email, v.password)))
+        ? this.auth.createUser({
+            firstName: v.firstName, lastName: v.lastName, email: v.email, password: v.password,
+          })
         : mode === 'login'
-          ? this.login(v.email, v.password)
+          ? this.auth.login(v.email, v.password)
           : of(null);
 
     ready$.pipe(
-      // Le compte existe et la session est ouverte : un nouvel essai ne recréera pas le compte
+      // Le compte existe et la session est ouverte : un nouvel essai ne recréera pas le compte.
       tap(() => { if (mode !== 'loggedIn') this.setMode('loggedIn'); }),
       switchMap(() => this.api.getMe()),
       tap((me) => { this.me.set(me); stage = 'application'; }),
@@ -159,26 +186,14 @@ export class Postuler implements OnInit {
         this.done.set(true);
       },
       error: (err: HttpErrorResponse) => {
-        console.error('Erreur candidature :', err);
         this.loading.set(false);
-        this.handleError(err, stage, mode);
+        this.error.set(this.messageFor(err, stage, mode));
       },
     });
   }
 
-  private login(email: string, password: string) {
-    return this.auth.login(email, password).pipe(
-      tap((res) => {
-        try {
-          localStorage.setItem('accessToken', res.accessToken);
-          if (res.user) localStorage.setItem('user', JSON.stringify(res.user));
-        } catch {}
-      })
-    );
-  }
-
   private buildFormData(
-    me: MeResponse,
+    me: User,
     v: { phone: string; linkedinUrl: string; githubUrl: string; portfolioUrl: string; cv: File | null }
   ): FormData {
     const fd = new FormData();
@@ -197,21 +212,38 @@ export class Postuler implements OnInit {
     return fd;
   }
 
-  private handleError(err: HttpErrorResponse, stage: 'account' | 'application', mode: Mode): void {
+  /**
+   * Message d'erreur utile au candidat.
+   *
+   * <p>Deux nouveaux cas depuis le passage en abonnement, et ils ne sont pas de son fait :
+   * 402 quand l'entreprise a épuisé son quota d'analyses, 429 quand trop de candidatures sont
+   * parties de la même connexion. Les présenter comme un problème de formulaire l'enverrait
+   * corriger un CV qui n'a rien à se reprocher.
+   */
+  private messageFor(err: HttpErrorResponse, stage: 'account' | 'application', mode: Mode): string {
     if (stage === 'account') {
       if (mode === 'create' && err.status === 409) {
         this.setMode('login');
-        this.error.set('Un compte existe déjà avec cette adresse e-mail. Connectez-vous avec votre mot de passe.');
-      } else if (err.status === 401) {
-        this.error.set('E-mail ou mot de passe incorrect.');
-      } else {
-        this.error.set('Connexion impossible pour le moment. Réessayez dans un instant.');
+        return 'Un compte existe déjà avec cette adresse e-mail. Connectez-vous avec votre mot de passe.';
       }
-      return;
+      if (err.status === 401) return 'E-mail ou mot de passe incorrect.';
+      return 'Connexion impossible pour le moment. Réessayez dans un instant.';
     }
 
-    if (err.status === 409) this.error.set('Vous avez déjà postulé à cette offre.');
-    else if (err.status === 413) this.error.set('Le fichier est trop volumineux.');
-    else this.error.set("Votre candidature n'a pas pu être envoyée. Vérifiez le formulaire et réessayez.");
+    switch (err.status) {
+      case 409:
+        return 'Vous avez déjà postulé à cette offre.';
+      case 413:
+        return 'Le fichier est trop volumineux (5 Mo maximum).';
+      case 402:
+        return "Cette entreprise ne peut plus recevoir de candidatures pour le moment. "
+          + 'Réessayez dans quelques jours, ou contactez-la directement.';
+      case 429:
+        return 'Trop de candidatures envoyées depuis cette connexion. Patientez quelques minutes.';
+      case 400:
+        return 'Votre CV doit être un fichier PDF valide. Exportez-le à nouveau depuis votre traitement de texte.';
+      default:
+        return "Votre candidature n'a pas pu être envoyée. Vérifiez le formulaire et réessayez.";
+    }
   }
 }
