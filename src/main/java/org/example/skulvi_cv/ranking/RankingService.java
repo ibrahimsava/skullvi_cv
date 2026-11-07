@@ -1,11 +1,14 @@
 package org.example.skulvi_cv.ranking;
 
 import lombok.RequiredArgsConstructor;
+import org.example.skulvi_cv.analysis.AnalysisJobStore;
 import org.example.skulvi_cv.application.Application;
 import org.example.skulvi_cv.application.ApplicationRepository;
 import org.example.skulvi_cv.application.ApplicationStatus;
+import org.example.skulvi_cv.billing.QuotaService;
 import org.example.skulvi_cv.offer.OfferRepository;
 import org.example.skulvi_cv.offer.OfferService;
+import org.example.skulvi_cv.offer.OfferStatus;
 import org.example.skulvi_cv.ranking.RankingDtos.*;
 import org.example.skulvi_cv.scoring.Priority;
 import org.springframework.stereotype.Service;
@@ -22,11 +25,16 @@ public class RankingService {
     private final ApplicationRepository applications;
     private final OfferRepository offerRepository;
     private final OfferService offers;
+    private final QuotaService quotas;
+    private final AnalysisJobStore jobs;
 
     @Transactional(readOnly = true)
-    public List<RankedCandidate> ranking(UUID offerId, Integer minScore, Priority priority) {
-        offers.getEntity(offerId);
-        List<Application> scored = applications.findByOfferIdAndStatusOrderByScoreTotalDesc(offerId, ApplicationStatus.SCORED);
+    public List<RankedCandidate> ranking(UUID orgId, UUID offerId, Integer minScore, Priority priority) {
+        offers.getEntity(orgId, offerId);   // 404 si l'offre n'est pas à cette organisation
+
+        List<Application> scored = applications.findByOfferIdAndOrganizationIdAndStatusOrderByScoreTotalDesc(
+                offerId, orgId, ApplicationStatus.SCORED);
+
         List<RankedCandidate> result = new ArrayList<>();
         for (Application a : scored) {
             if (minScore != null && a.getScoreTotal() < minScore) continue;
@@ -39,13 +47,18 @@ public class RankingService {
     }
 
     @Transactional(readOnly = true)
-    public DashboardStats stats() {
+    public DashboardStats stats(UUID orgId) {
+        var usage = quotas.snapshot(orgId);
         return new DashboardStats(
-                offerRepository.count(),
-                applications.count(),
-                applications.countByStatus(ApplicationStatus.SCORED),
-                applications.countByStatus(ApplicationStatus.ANALYSIS_FAILED),
-                applications.countByPriority(Priority.HIGH),
-                applications.averageScore());
+                offerRepository.countByOrganizationId(orgId),
+                offerRepository.countByOrganizationIdAndStatus(orgId, OfferStatus.OPEN),
+                applications.countByOrganizationId(orgId),
+                applications.countByOrganizationIdAndStatus(orgId, ApplicationStatus.SCORED),
+                applications.countByOrganizationIdAndStatus(orgId, ApplicationStatus.ANALYSIS_FAILED),
+                applications.countByOrganizationIdAndPriority(orgId, Priority.HIGH),
+                applications.averageScore(orgId),
+                jobs.pendingFor(orgId),
+                usage.analysesUsed(),
+                usage.analysesLimit());
     }
 }

@@ -3,6 +3,7 @@ package org.example.skulvi_cv.ranking;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.example.skulvi_cv.auth.CurrentUser;
 import org.example.skulvi_cv.ranking.RankingDtos.*;
 import org.example.skulvi_cv.scoring.Priority;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +22,7 @@ import java.util.UUID;
 public class RankingController {
 
     private final RankingService service;
+    private final CurrentUser current;
 
     @Operation(summary = "Classement des candidats d'une offre",
             description = "Filtres optionnels : minScore et priority.")
@@ -28,12 +30,12 @@ public class RankingController {
     public List<RankedCandidate> ranking(@PathVariable UUID offerId,
                                          @RequestParam(required = false) Integer minScore,
                                          @RequestParam(required = false) Priority priority) {
-        return service.ranking(offerId, minScore, priority);
+        return service.ranking(current.orgId(), offerId, minScore, priority);
     }
 
     @Operation(summary = "Statistiques du tableau de bord")
     @GetMapping("/dashboard")
     public DashboardStats dashboard() {
-        return service.stats();
+        return service.stats(current.orgId());
     }
 }

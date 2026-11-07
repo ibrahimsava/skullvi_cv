@@ -15,10 +15,21 @@ public final class RankingDtos {
                                   int score,
                                   Priority priority) {}
 
+    /**
+     * Chiffres du tableau de bord, pour la seule organisation du jeton.
+     *
+     * <p>Les compteurs portaient auparavant sur toute la base : un nouveau client voyait les
+     * candidatures de tous les autres dans ses statistiques.
+     */
     public record DashboardStats(long offers,
+                                 long openOffers,
                                  long applications,
                                  long scored,
                                  long failed,
                                  long highPriority,
-                                 Double averageScore) {}
+                                 Double averageScore,
+                                 long analysesPending,
+                                 int analysesUsed,
+                                 /** {@code null} si le plan ne plafonne pas les analyses. */
+                                 Integer analysesLimit) {}
 }

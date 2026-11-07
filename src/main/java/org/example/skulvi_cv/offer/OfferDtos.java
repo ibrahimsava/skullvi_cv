@@ -39,6 +39,7 @@ public final class OfferDtos {
                                     int weight,
                                     Integer threshold) {}
 
+    /** Vue recruteur : contient la grille de notation. Jamais servie à un visiteur. */
     public record OfferResponse(
             UUID id,
             String title,
@@ -48,5 +49,28 @@ public final class OfferDtos {
             Integer minExperienceYears,
             LocalDate startDate,
             LocalDate closingDate,
-            OfferStatus status, List<CriterionResponse> criteria) {}
+            OfferStatus status,
+            List<CriterionResponse> criteria,
+            long applications) {}
+
+    /**
+     * Vue publique d'une offre.
+     *
+     * <p>Sans les critères, et c'est le point important : publier les compétences attendues avec
+     * leur poids revient à publier le corrigé. Un candidat n'aurait plus qu'à recopier les
+     * intitulés dans son CV pour faire monter son score, et le classement ne voudrait plus rien
+     * dire. Le nom de l'entreprise est ajouté, puisqu'une offre ne vient plus d'un site unique.
+     */
+    public record PublicOfferResponse(
+            UUID id,
+            String title,
+            String description,
+            String domain,
+            String level,
+            Integer minExperienceYears,
+            LocalDate startDate,
+            LocalDate closingDate,
+            OfferStatus status,
+            String organizationName,
+            String organizationSlug) {}
 }

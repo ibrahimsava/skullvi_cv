@@ -7,13 +7,16 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.example.skulvi_cv.candidate.Candidate;
 import org.example.skulvi_cv.offer.Offer;
+import org.example.skulvi_cv.org.Organization;
 import org.example.skulvi_cv.scoring.Priority;
 
 import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"offer_id", "candidate_id"}))
+@Table(
+        uniqueConstraints = @UniqueConstraint(columnNames = {"offer_id", "candidate_id"}),
+        indexes = @Index(name = "ix_application_org_status", columnList = "organization_id, status"))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -22,6 +25,17 @@ public class Application {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    /**
+     * Organisation propriétaire, recopiée depuis l'offre.
+     *
+     * <p>Dénormalisée volontairement : le tableau de bord et les compteurs de quota filtrent
+     * presque toujours par organisation, et passer par une jointure sur l'offre à chaque fois
+     * coûterait cher pour une valeur qui ne change jamais.
+     */
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "organization_id", nullable = false)
+    private Organization organization;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "offer_id")

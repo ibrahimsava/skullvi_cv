@@ -39,10 +39,7 @@ public class CvStorageService {
     }
 
     public byte[] read(String name) {
-        Path p = base.resolve(name).normalize();
-        if (!p.startsWith(base)) {
-            throw new IllegalArgumentException("Chemin invalide");
-        }
+        Path p = resolve(name);
         try {
             return Files.readAllBytes(p);
         } catch (NoSuchFileException e) {
@@ -50,6 +47,45 @@ public class CvStorageService {
         } catch (IOException e) {
             throw new UncheckedIOException("Lecture du CV impossible : " + name, e);
         }
+    }
+
+    /**
+     * Chemin du fichier sur le disque, pour le servir en flux sans le charger en mémoire.
+     *
+     * @return {@code null} si le nom est vide ou si le fichier n'existe pas
+     */
+    public Path locate(String name) {
+        if (name == null || name.isBlank()) {
+            return null;
+        }
+        Path p = resolve(name);
+        return Files.isRegularFile(p) ? p : null;
+    }
+
+    /**
+     * Efface un CV. Silencieux si le fichier a déjà disparu.
+     *
+     * <p>Appelé à chaque suppression de candidature : un PDF orphelin sur le disque est une
+     * donnée personnelle conservée sans raison, et personne ne pensera à aller le chercher.
+     */
+    public void delete(String name) {
+        if (name == null || name.isBlank()) {
+            return;
+        }
+        try {
+            Files.deleteIfExists(resolve(name));
+        } catch (IOException e) {
+            throw new UncheckedIOException("Suppression du CV impossible : " + name, e);
+        }
+    }
+
+    /** Empêche de sortir du dossier de stockage avec un nom contenant « .. ». */
+    private Path resolve(String name) {
+        Path p = base.resolve(name).normalize();
+        if (!p.startsWith(base)) {
+            throw new IllegalArgumentException("Chemin invalide");
+        }
+        return p;
     }
 
     /** Un PDF commence toujours par "%PDF". */

@@ -6,5 +6,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface CandidateRepository extends JpaRepository<Candidate, UUID> {
-    Optional<Candidate> findByEmailIgnoreCase(String email);
+
+    /** Un candidat est identifié par son email <b>au sein d'une organisation</b>. */
+    Optional<Candidate> findByOrganizationIdAndEmailIgnoreCase(UUID organizationId, String email);
 }

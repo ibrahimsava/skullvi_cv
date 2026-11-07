@@ -8,6 +8,8 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
+      # En production, retirer cette publication : la base n'a aucune raison d'être
+      # joignable depuis l'extérieur. Pour un accès ponctuel, passer par un tunnel SSH.
       - "${DB_EXPOSED_PORT:-5433}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -21,8 +23,11 @@ services:
     image: ollama/ollama
     container_name: ollama
     restart: unless-stopped
-    ports:
-      - "11434:11434"
+    # Aucun port publié : Ollama n'a pas d'authentification, exposer 11434 revient à offrir
+    # un service d'inférence ouvert à tous. Le backend l'atteint par le réseau interne du
+    # compose, sous le nom « ollama ».
+    expose:
+      - "11434"
     volumes:
       - ollama_data:/root/.ollama
 

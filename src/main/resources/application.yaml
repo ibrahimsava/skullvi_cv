@@ -1,6 +1,7 @@
 spring:
   application:
     name: Skulvi_cv
+
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME}
     username: ${DB_USER}
@@ -9,15 +10,26 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      # « validate » et non « update » : c'est Flyway qui fait évoluer le schéma, Hibernate se
+      # contente de vérifier au démarrage que la base correspond bien aux entités. Une migration
+      # oubliée fait échouer le démarrage, au lieu de laisser Hibernate modifier la base d'un
+      # client en silence.
+      ddl-auto: validate
     open-in-view: false
+
+  flyway:
+    enabled: true
+    # La base de production existe déjà, créée par Hibernate et sans historique de migration.
+    # Flyway la marque comme étant à la version 1 et n'applique que les suivantes. Une base
+    # vide, elle, déroule toutes les migrations depuis le début.
+    baseline-on-migrate: true
+    baseline-version: 1
+    baseline-description: Schema cree par Hibernate avant Flyway
+
   servlet:
     multipart:
       max-file-size: 5MB
       max-request-size: 6MB
-
-
-
 
 
 talent:
@@ -26,24 +38,40 @@ talent:
     base-url: ${OLLAMA_URL:http://localhost:11434}
     model: ${OLLAMA_MODEL:qwen2.5:3b}
     timeout-seconds: 180
+
   scoring:
-      high-threshold: 80
-      review-threshold: 60
-      secondary-threshold: 40
-      mandatory-missing-cap: 59
+    high-threshold: 80
+    review-threshold: 60
+    secondary-threshold: 40
+    mandatory-missing-cap: 59
+
   storage:
-      dir: ${CV_STORAGE_DIR:./data/cvs}
+    dir: ${CV_STORAGE_DIR:./data/cvs}
 
+  queue:
+    # Fréquence de réveil du worker d'analyse. Le délai initial laisse à Ollama le temps de
+    # démarrer : sans lui, les premières analyses après un redéploiement échouent toutes.
+    poll-ms: ${QUEUE_POLL_MS:3000}
+    initial-delay-ms: ${QUEUE_INITIAL_DELAY_MS:10000}
 
+  billing:
+    trial-sweep-ms: ${TRIAL_SWEEP_MS:3600000}
+    trial-sweep-initial-ms: 60000
 
 
 app:
   security:
     jwt-secret: ${JWT_SECRET}
-    jwt-expiration-minutes: 60
+    jwt-expiration-minutes: ${JWT_EXPIRATION_MINUTES:480}
     admin-email: ${ADMIN_EMAIL:}
     admin-password: ${ADMIN_PASSWORD:}
+    # Plusieurs origines séparées par des virgules.
     cors-origin: ${CORS_ORIGIN:http://localhost:4200}
 
-volumes:
-  cvs:
+
+springdoc:
+  api-docs:
+    # Documentation coupée en production : elle décrit toute la surface d'attaque de l'API.
+    enabled: ${SWAGGER_ENABLED:true}
+  swagger-ui:
+    enabled: ${SWAGGER_ENABLED:true}

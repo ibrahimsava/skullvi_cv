@@ -55,6 +55,24 @@
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
+
+        <!--
+          Migrations versionnées. Indispensable dès qu'un client paie : « ddl-auto: update »
+          laissait Hibernate deviner les changements de schéma au démarrage, sans trace ni
+          retour en arrière possible.
+
+          Le starter, et non « flyway-core » seul : depuis Spring Boot 4, les autoconfigurations
+          vivent dans des modules dédiés. Avec la seule bibliothèque sur le classpath, Flyway
+          est présent mais jamais déclenché — les migrations ne s'appliquent pas, en silence.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

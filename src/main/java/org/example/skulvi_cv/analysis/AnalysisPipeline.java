@@ -12,8 +12,6 @@ import org.example.skulvi_cv.matching.MatchItem;
 import org.example.skulvi_cv.matching.MatchingService;
 import org.example.skulvi_cv.scoring.ScoreResult;
 import org.example.skulvi_cv.scoring.ScoringService;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,11 +19,15 @@ import java.util.UUID;
 
 /**
  * Pipeline : PDF → texte → profil (IA) → vérification → matching → score.
- * Volontairement non transactionnel : l'appel à l'IA peut durer, on ne garde pas de transaction ouverte.
+ *
+ * <p>Volontairement non transactionnel : l'appel à l'IA peut durer plus d'une minute, on ne garde
+ * pas de transaction ouverte pendant ce temps.
+ *
+ * <p>L'ordonnancement ne se fait plus ici. C'est {@link AnalysisQueue} qui décide quand et dans
+ * quel ordre une analyse part, en fonction du plan de l'organisation.
  */
 @Slf4j
 @Service
-@EnableAsync
 @RequiredArgsConstructor
 public class AnalysisPipeline {
 
@@ -37,16 +39,17 @@ public class AnalysisPipeline {
     private final MatchingService matching;
     private final ScoringService scoring;
 
-
-    @Async("analysisExecutor")
-    public void runAsync(UUID applicationId) {
-        run(applicationId);
-    }
-
-    public void run(UUID applicationId) {
-        log.info("Analyse {} sur le thread {}", applicationId, Thread.currentThread().getName());
+    /**
+     * Analyse une candidature de bout en bout.
+     *
+     * @return {@code true} si la candidature est passée en {@code SCORED}
+     */
+    public boolean run(UUID applicationId) {
         Application app = applications.findById(applicationId).orElse(null);
-        if (app == null) return;
+        if (app == null) {
+            log.warn("Candidature {} introuvable : analyse abandonnée", applicationId);
+            return true;   // rien à retenter, la candidature a été supprimée
+        }
         try {
             app.setStatus(ApplicationStatus.ANALYZING);
             app.setFailureReason(null);
@@ -68,13 +71,16 @@ public class AnalysisPipeline {
             app.setBreakdownJson(Json.write(score));
             app.setStatus(ApplicationStatus.SCORED);
             applications.save(app);
+
             log.info("Candidature {} analysée : {}/100 ({})", applicationId, score.total(), score.priority());
+            return true;
         } catch (Exception e) {
-            log.warn("Échec de l'analyse de {} : {}", applicationId, e.getMessage());
-            app.setStatus(ApplicationStatus.ANALYSIS_FAILED);
             String msg = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
+            log.warn("Échec de l'analyse de {} : {}", applicationId, msg);
+            app.setStatus(ApplicationStatus.ANALYSIS_FAILED);
             app.setFailureReason(msg.length() > 480 ? msg.substring(0, 480) : msg);
             applications.save(app);
+            return false;
         }
     }
 }

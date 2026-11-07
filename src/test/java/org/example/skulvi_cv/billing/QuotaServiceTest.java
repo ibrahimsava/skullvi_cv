@@ -1,0 +1,299 @@
+package org.example.skulvi_cv.billing;
+
+import org.example.skulvi_cv.common.ApiException;
+import org.example.skulvi_cv.offer.OfferRepository;
+import org.example.skulvi_cv.offer.OfferStatus;
+import org.example.skulvi_cv.org.MembershipRepository;
+import org.example.skulvi_cv.org.OrgStatus;
+import org.example.skulvi_cv.org.Organization;
+import org.example.skulvi_cv.org.OrganizationRepository;
+import org.example.skulvi_cv.org.Plan;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import org.springframework.http.HttpStatus;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+
+/**
+ * Tests des règles de quota.
+ *
+ * <p>C'est la logique qui décide si un client peut consommer ou non une ressource payante : une
+ * erreur ici se traduit soit par du service offert gratuitement, soit par un client qui paie et
+ * se retrouve bloqué. Les deux coûtent cher, d'où une couverture détaillée.
+ */
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+class QuotaServiceTest {
+
+    private static final UUID ORG = UUID.randomUUID();
+
+    @Mock private OrganizationRepository organizations;
+    @Mock private UsageRepository usage;
+    @Mock private OfferRepository offers;
+    @Mock private MembershipRepository memberships;
+
+    private QuotaService service;
+    private Organization org;
+
+    @BeforeEach
+    void setUp() {
+        service = new QuotaService(organizations, usage, offers, memberships);
+
+        org = new Organization();
+        org.setId(ORG);
+        org.setName("Cabinet Test");
+        org.setSlug("cabinet-test");
+        org.setPlan(Plan.TRIAL);
+        org.setStatus(OrgStatus.TRIAL);
+        org.setTrialEndsAt(Instant.now().plus(10, ChronoUnit.DAYS));
+
+        when(organizations.findById(ORG)).thenReturn(Optional.of(org));
+    }
+
+    /** Fixe la consommation d'analyses du mois en cours. */
+    private void analysesUsed(int count) {
+        UsageRecord record = new UsageRecord();
+        record.setOrganizationId(ORG);
+        record.setKind(UsageKind.CV_ANALYSIS);
+        record.setUsed(count);
+        when(usage.findByOrganizationIdAndPeriodAndKind(eq(ORG), any(), eq(UsageKind.CV_ANALYSIS)))
+                .thenReturn(Optional.of(record));
+    }
+
+    @Nested
+    @DisplayName("Analyses de CV")
+    class Analyses {
+
+        @Test
+        void autorise_sous_le_quota() {
+            analysesUsed(19);   // limite de l'essai : 20
+            assertThatCode(() -> service.assertCanAnalyze(ORG)).doesNotThrowAnyException();
+        }
+
+        @Test
+        @DisplayName("l'essai gratuit s'arrête net au quota : c'est ce qui le convertit en abonnement")
+        void bloque_l_essai_au_quota() {
+            analysesUsed(20);
+
+            assertThatThrownBy(() -> service.assertCanAnalyze(ORG))
+                    .isInstanceOf(ApiException.class)
+                    .hasMessageContaining("Quota d'essai atteint")
+                    .extracting(e -> ((ApiException) e).getStatus())
+                    .isEqualTo(HttpStatus.PAYMENT_REQUIRED);
+        }
+
+        @Test
+        @DisplayName("un plan payant continue au-delà du quota : on ne coupe pas un client en pleine campagne")
+        void laisse_passer_le_depassement_sur_un_plan_payant() {
+            org.setPlan(Plan.STARTER);
+            org.setStatus(OrgStatus.ACTIVE);
+            org.setTrialEndsAt(null);
+            analysesUsed(500);   // très au-delà des 150 incluses
+
+            assertThatCode(() -> service.assertCanAnalyze(ORG)).doesNotThrowAnyException();
+        }
+
+        @Test
+        @DisplayName("un essai expiré bloque, même si le quota n'est pas atteint")
+        void bloque_un_essai_expire() {
+            org.setTrialEndsAt(Instant.now().minus(1, ChronoUnit.DAYS));
+            analysesUsed(0);
+
+            assertThatThrownBy(() -> service.assertCanAnalyze(ORG))
+                    .isInstanceOf(ApiException.class)
+                    .hasMessageContaining("période d'essai est terminée");
+        }
+
+        @Test
+        void bloque_un_compte_suspendu() {
+            org.setStatus(OrgStatus.SUSPENDED);
+            org.setTrialEndsAt(null);
+            analysesUsed(0);
+
+            assertThatThrownBy(() -> service.assertCanAnalyze(ORG))
+                    .isInstanceOf(ApiException.class)
+                    .hasMessageContaining("lecture seule");
+        }
+
+        @Test
+        void bloque_un_impaye() {
+            org.setPlan(Plan.PRO);
+            org.setStatus(OrgStatus.PAST_DUE);
+            org.setTrialEndsAt(null);
+            analysesUsed(0);
+
+            assertThatThrownBy(() -> service.assertCanAnalyze(ORG))
+                    .isInstanceOf(ApiException.class)
+                    .hasMessageContaining("lecture seule");
+        }
+    }
+
+    @Nested
+    @DisplayName("Offres ouvertes")
+    class Offres {
+
+        @Test
+        void autorise_sous_la_limite() {
+            when(offers.countByOrganizationIdAndStatus(ORG, OfferStatus.OPEN)).thenReturn(0L);
+            assertThatCode(() -> service.assertCanCreateOffer(ORG)).doesNotThrowAnyException();
+        }
+
+        @Test
+        void bloque_a_la_limite_du_plan() {
+            when(offers.countByOrganizationIdAndStatus(ORG, OfferStatus.OPEN)).thenReturn(1L);
+
+            assertThatThrownBy(() -> service.assertCanCreateOffer(ORG))
+                    .isInstanceOf(ApiException.class)
+                    .hasMessageContaining("1 offre(s) ouverte(s)");
+        }
+
+        @Test
+        @DisplayName("seules les offres OUVERTES comptent : clôturer en libère un emplacement")
+        void ne_compte_que_les_offres_ouvertes() {
+            when(offers.countByOrganizationIdAndStatus(ORG, OfferStatus.OPEN)).thenReturn(0L);
+            when(offers.countByOrganizationId(ORG)).thenReturn(12L);
+
+            assertThatCode(() -> service.assertCanCreateOffer(ORG)).doesNotThrowAnyException();
+        }
+    }
+
+    @Nested
+    @DisplayName("Sièges")
+    class Sieges {
+
+        @Test
+        void bloque_a_la_limite_du_plan() {
+            when(memberships.countByOrganizationId(ORG)).thenReturn(1L);
+
+            assertThatThrownBy(() -> service.assertCanAddSeat(ORG))
+                    .isInstanceOf(ApiException.class)
+                    .hasMessageContaining("1 utilisateur(s)");
+        }
+
+        @Test
+        void autorise_sur_un_plan_plus_large() {
+            org.setPlan(Plan.PRO);
+            org.setStatus(OrgStatus.ACTIVE);
+            org.setTrialEndsAt(null);
+            when(memberships.countByOrganizationId(ORG)).thenReturn(4L);
+
+            assertThatCode(() -> service.assertCanAddSeat(ORG)).doesNotThrowAnyException();
+        }
+    }
+
+    @Nested
+    @DisplayName("Photo de la consommation")
+    class Snapshot {
+
+        @Test
+        void calcule_le_depassement_et_son_montant() {
+            org.setPlan(Plan.STARTER);
+            org.setStatus(OrgStatus.ACTIVE);
+            org.setTrialEndsAt(null);
+            analysesUsed(163);   // 150 incluses, donc 13 en trop
+            when(offers.countByOrganizationIdAndStatus(ORG, OfferStatus.OPEN)).thenReturn(2L);
+            when(memberships.countByOrganizationId(ORG)).thenReturn(2L);
+
+            var snapshot = service.snapshot(ORG);
+
+            assertThat(snapshot.analysesUsed()).isEqualTo(163);
+            assertThat(snapshot.analysesLimit()).isEqualTo(150);
+            assertThat(snapshot.overageCount()).isEqualTo(13);
+            assertThat(snapshot.overageCents()).isEqualTo(13 * Plan.OVERAGE_CENTS);
+            assertThat(snapshot.writable()).isTrue();
+        }
+
+        @Test
+        void n_affiche_pas_de_depassement_sous_le_quota() {
+            analysesUsed(5);
+            when(offers.countByOrganizationIdAndStatus(ORG, OfferStatus.OPEN)).thenReturn(1L);
+            when(memberships.countByOrganizationId(ORG)).thenReturn(1L);
+
+            var snapshot = service.snapshot(ORG);
+
+            assertThat(snapshot.overageCount()).isZero();
+            assertThat(snapshot.overageCents()).isZero();
+        }
+
+        @Test
+        @DisplayName("une limite illimitée vaut null, pas Integer.MAX_VALUE")
+        void traduit_l_illimite_en_null() {
+            org.setPlan(Plan.BUSINESS);
+            org.setStatus(OrgStatus.ACTIVE);
+            org.setTrialEndsAt(null);
+            analysesUsed(10);
+            when(offers.countByOrganizationIdAndStatus(ORG, OfferStatus.OPEN)).thenReturn(20L);
+            when(memberships.countByOrganizationId(ORG)).thenReturn(30L);
+
+            var snapshot = service.snapshot(ORG);
+
+            assertThat(snapshot.activeOffersLimit()).isNull();
+            assertThat(snapshot.seatsLimit()).isNull();
+            // Le Business plafonne quand même les analyses : cette limite reste un chiffre.
+            assertThat(snapshot.analysesLimit()).isEqualTo(3_000);
+        }
+
+        @Test
+        void compte_les_jours_d_essai_restants() {
+            org.setTrialEndsAt(Instant.now().plus(7, ChronoUnit.DAYS).plusSeconds(60));
+            analysesUsed(0);
+            when(offers.countByOrganizationIdAndStatus(ORG, OfferStatus.OPEN)).thenReturn(0L);
+            when(memberships.countByOrganizationId(ORG)).thenReturn(1L);
+
+            assertThat(service.snapshot(ORG).trialDaysLeft()).isEqualTo(7);
+        }
+    }
+
+    @Test
+    @DisplayName("la grille publique n'est liée à aucune organisation")
+    void catalogue_public_sans_organisation() {
+        var catalog = service.catalog(null);
+
+        assertThat(catalog.plans()).hasSize(Plan.values().length);
+        assertThat(catalog.plans()).noneMatch(p -> p.current());
+        assertThat(catalog.plans()).anySatisfy(p -> {
+            assertThat(p.plan()).isEqualTo(Plan.TRIAL);
+            assertThat(p.priceCents()).isZero();
+            assertThat(p.allowsOverage()).isFalse();
+        });
+    }
+
+    @Test
+    void catalogue_marque_le_plan_en_cours() {
+        org.setPlan(Plan.PRO);
+
+        var catalog = service.catalog(ORG);
+
+        assertThat(catalog.plans()).filteredOn(p -> p.current())
+                .singleElement()
+                .satisfies(p -> assertThat(p.plan()).isEqualTo(Plan.PRO));
+    }
+
+    @Test
+    void refuse_une_organisation_inconnue() {
+        UUID inconnue = UUID.randomUUID();
+        when(organizations.findById(inconnue)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.assertCanAnalyze(inconnue))
+                .isInstanceOf(ApiException.class)
+                .extracting(e -> ((ApiException) e).getStatus())
+                .isEqualTo(HttpStatus.NOT_FOUND);
+    }
+}
