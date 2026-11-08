@@ -41,10 +41,15 @@ class MemberRoleTest {
     }
 
     @Test
-    void un_statut_en_lecture_seule_interdit_l_ecriture() {
-        assertThat(OrgStatus.TRIAL.allowsWrite()).isTrue();
-        assertThat(OrgStatus.ACTIVE.allowsWrite()).isTrue();
-        assertThat(OrgStatus.PAST_DUE.allowsWrite()).isFalse();
-        assertThat(OrgStatus.SUSPENDED.allowsWrite()).isFalse();
+    @DisplayName("aucun statut ne bloque l'écriture : c'est le quota du plan qui limite")
+    void le_statut_ne_bloque_jamais_l_ecriture() {
+        // Un client dont la carte a expiré redescend sur les limites du gratuit, il ne perd
+        // pas l'accès. Couper entièrement le service fait perdre le client, pas gagner le
+        // paiement.
+        for (OrgStatus status : OrgStatus.values()) {
+            assertThat(status.allowsWrite())
+                    .as("le statut %s doit laisser écrire", status)
+                    .isTrue();
+        }
     }
 }

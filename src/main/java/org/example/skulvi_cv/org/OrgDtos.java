@@ -28,7 +28,10 @@ public final class OrgDtos {
             Plan plan,
             String planLabel,
             OrgStatus status,
-            Instant trialEndsAt,
+            boolean paid,
+            /** Fin de la période déjà réglée. Null sur le plan gratuit. */
+            Instant currentPeriodEnd,
+            boolean cancelAtPeriodEnd,
             boolean writable,
             Instant createdAt) {}
 

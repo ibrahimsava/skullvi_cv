@@ -1,17 +1,40 @@
+.panel {
+  padding: 24px 26px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--sh-1);
+  margin-bottom: 20px;
+
+  > h2 { margin: 0 0 5px; font-size: 17px; font-weight: 700; letter-spacing: -0.015em; color: var(--ink); }
+  > .sub { margin: 0 0 22px; font-size: 13.5px; line-height: 1.55; color: var(--muted); max-width: 70ch; }
+}
+
 .card-head {
   display: flex; align-items: flex-start; justify-content: space-between;
   gap: 16px; flex-wrap: wrap;
-  margin-bottom: 22px;
+  margin-bottom: 24px;
 
-  h2 { margin: 0 0 4px; }
-  .sub { margin: 0; }
+  h2 { margin: 0 0 4px; font-size: 19px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink); }
+  .sub { margin: 0; font-size: 13.5px; color: var(--muted); }
+}
+
+.head-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+/* Bouton d'actualisation posé dans un message : garde l'allure d'un lien. */
+.inline-link {
+  padding: 0;
+  border: none; background: none;
+  font: inherit; font-weight: 700;
+  color: inherit; text-decoration: underline;
+  cursor: pointer;
 }
 
 /* ---------------------------------------------------------------- jauges */
 
-.meters { display: grid; gap: 18px; }
+.meters { display: grid; gap: 19px; }
 
-.meter-row { display: grid; gap: 7px; }
+.meter-row { display: grid; gap: 8px; }
 
 .meter-label {
   display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
@@ -22,58 +45,74 @@
 }
 
 .overage {
-  margin: 20px 0 0;
-  padding: 12px 14px;
+  margin: 22px 0 0;
+  padding: 13px 15px;
   border-radius: var(--radius-sm);
-  background: var(--warn-soft); border: 1px solid #ebd4a4;
+  background: var(--warn-soft); border: 1px solid #ead5a6;
+  border-left: 3px solid var(--warn);
   font-size: 14px; color: var(--warn);
 
   strong { font-weight: 700; }
 }
 
-/* ---------------------------------------------------------------- grille tarifaire */
+/* ---------------------------------------------------------------- plans */
 
 .plans {
   display: grid; gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(216px, 1fr));
+  align-items: stretch;
 }
 
 .plan {
-  display: flex; flex-direction: column; gap: 14px;
-  padding: 18px;
+  display: flex; flex-direction: column; gap: 15px;
+  padding: 20px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
+  transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease);
+
+  &:hover { border-color: var(--blue-200); box-shadow: var(--sh-2); }
 
   /* Le plan en cours est repéré par la bordure ET par une étiquette : la couleur seule
      ne suffirait pas à le distinguer. */
-  &.current { border-color: var(--accent); background: var(--accent-soft); }
+  &.current {
+    border-color: var(--blue-400);
+    background: var(--blue-50);
+    box-shadow: none;
+  }
 
   header {
     display: flex; align-items: center; justify-content: space-between; gap: 8px;
-
-    h3 { margin: 0; font-size: 15px; font-weight: 650; color: var(--ink); }
+    h3 { margin: 0; font-size: 13px; font-weight: 700; letter-spacing: 0.08em;
+         text-transform: uppercase; color: var(--muted); }
   }
 
   .price {
-    margin: 0;
-    display: flex; align-items: baseline; gap: 4px;
+    margin: 0; padding-bottom: 14px;
+    border-bottom: 1px solid var(--line);
+    display: flex; align-items: baseline; gap: 5px;
 
-    strong { font-size: 26px; font-weight: 700; color: var(--ink); letter-spacing: -0.02em; }
-    span   { font-size: 13px; color: var(--muted); }
+    strong { font-size: 28px; font-weight: 700; color: var(--ink); letter-spacing: -0.03em; }
+    span   { font-size: 12.5px; color: var(--muted); }
   }
 
   ul {
     list-style: none; margin: 0; padding: 0;
-    display: grid; gap: 7px;
-    font-size: 13px; color: var(--ink-2);
+    display: grid; gap: 8px;
+    font-size: 13px; line-height: 1.5; color: var(--ink-2);
 
-    strong { color: var(--ink); font-weight: 650; }
-    .over { margin-top: 3px; padding-top: 7px; border-top: 1px solid var(--line); color: var(--muted); }
+    strong { color: var(--ink); font-weight: 700; }
+    .over { margin-top: 4px; padding-top: 9px; border-top: 1px solid var(--line); color: var(--muted); }
   }
 
-  /* Pousse le bouton en bas pour que toutes les cartes l'alignent. */
-  .sk-btn, button { margin-top: auto; }
+  /* Pousse l'action en bas pour aligner la rangée malgré des hauteurs inégales. */
+  .sk-btn, button, .muted-note { margin-top: auto; }
+  .sk-btn, button { justify-content: center; }
+}
+
+.muted-note {
+  font-size: 12px; line-height: 1.5; color: var(--muted);
+  padding-top: 4px;
 }
 
 /* ---------------------------------------------------------------- explications */
@@ -81,8 +120,8 @@
 .faq {
   list-style: none; margin: 0; padding: 0;
   display: grid; gap: 14px;
-  font-size: 14px; line-height: 1.6; color: var(--ink-2);
+  font-size: 14px; line-height: 1.62; color: var(--ink-2);
 
-  li { padding-left: 14px; border-left: 2px solid var(--line-strong); max-width: 72ch; }
+  li { padding-left: 14px; border-left: 2px solid var(--blue-200); max-width: 76ch; }
   strong { color: var(--ink); font-weight: 650; }
 }

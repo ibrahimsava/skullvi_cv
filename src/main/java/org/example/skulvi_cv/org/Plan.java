@@ -12,14 +12,21 @@ package org.example.skulvi_cv.org;
  */
 public enum Plan {
 
-    /** Essai gratuit de 14 jours, de quoi tester sur un vrai recrutement. */
-    TRIAL("Essai", 0, 1, 20, 1, 0),
+    /**
+     * Gratuit, sans limite de durée.
+     *
+     * <p>Remplace l'ancien essai de 14 jours. Un essai qui expire oblige à décider avant
+     * d'avoir eu un vrai besoin ; un palier gratuit permanent laisse l'entreprise s'installer
+     * et ne paie que le jour où elle recrute pour de bon. C'est le quota mensuel d'analyses
+     * qui déclenche la conversion, pas un compte à rebours.
+     */
+    FREE("Gratuit", 0, 2, 40, 2, 0),
 
-    STARTER("Starter", 2_900, 3, 150, 2, 1),
+    STARTER("Starter", 2_900, 5, 200, 4, 1),
 
-    PRO("Pro", 9_900, 15, 750, 10, 2),
+    PRO("Pro", 9_900, 20, 900, 12, 2),
 
-    BUSINESS("Business", 29_900, Integer.MAX_VALUE, 3_000, Integer.MAX_VALUE, 3);
+    BUSINESS("Business", 29_900, Integer.MAX_VALUE, 4_000, Integer.MAX_VALUE, 3);
 
     /**
      * Valeur sentinelle pour « pas de limite » : évite un Integer null à tester partout.
@@ -62,6 +69,15 @@ public enum Plan {
 
     /** Le dépassement est facturé à l'analyse : réservé aux plans payants. */
     public boolean allowsOverage() {
-        return this != TRIAL;
+        return this != FREE;
+    }
+
+    public boolean isPaid() {
+        return priceCents > 0;
+    }
+
+    /** Clé de configuration du tarif chez le prestataire de paiement. */
+    public String priceKey() {
+        return name().toLowerCase();
     }
 }

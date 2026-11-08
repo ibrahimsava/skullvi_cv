@@ -26,9 +26,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class OrganizationService {
 
-    /** Durée de l'essai gratuit. Assez long pour couvrir un vrai cycle de recrutement. */
-    private static final int TRIAL_DAYS = 14;
-
     private final OrganizationRepository organizations;
     private final MembershipRepository memberships;
     private final AppUserRepository users;
@@ -63,9 +60,8 @@ public class OrganizationService {
         Organization org = new Organization();
         org.setName(req.organizationName().trim());
         org.setSlug(uniqueSlug(req.organizationName()));
-        org.setPlan(Plan.TRIAL);
-        org.setStatus(OrgStatus.TRIAL);
-        org.setTrialEndsAt(Instant.now().plus(TRIAL_DAYS, ChronoUnit.DAYS));
+        org.setPlan(Plan.FREE);          // gratuit, sans date de fin
+        org.setStatus(OrgStatus.ACTIVE);
         org = organizations.save(org);
 
         log.info("Nouvelle organisation « {} » ({}) créée par {}", org.getName(), org.getSlug(), email);
@@ -89,9 +85,8 @@ public class OrganizationService {
     /**
      * Change le plan d'une organisation.
      *
-     * <p>Réservé à l'administrateur de la plateforme : tant que le prestataire de paiement n'est
-     * pas branché, un client ne doit pas pouvoir s'attribuer un plan payant tout seul. C'est le
-     * point d'accroche où viendra se poser le webhook de paiement.
+     * <p>Appelé par le webhook de paiement, et par l'administrateur de la plateforme pour les
+     * cas traités à la main (virement, geste commercial).
      */
     @Transactional
     public OrganizationResponse changePlan(UUID orgId, Plan plan) {
@@ -99,14 +94,12 @@ public class OrganizationService {
         Plan previous = org.getPlan();
 
         org.setPlan(plan);
-        if (plan == Plan.TRIAL) {
-            org.setStatus(OrgStatus.TRIAL);
-            if (org.getTrialEndsAt() == null) {
-                org.setTrialEndsAt(Instant.now().plus(TRIAL_DAYS, ChronoUnit.DAYS));
-            }
-        } else {
+        if (!plan.isPaid()) {
+            // Retour au gratuit : on efface la trace de l'abonnement, pas celle du client.
+            org.setBillingSubscriptionId(null);
+            org.setCurrentPeriodEnd(null);
+            org.setCancelAtPeriodEnd(false);
             org.setStatus(OrgStatus.ACTIVE);
-            org.setTrialEndsAt(null);   // un abonnement payant n'a plus d'échéance d'essai
         }
 
         log.info("Organisation {} : plan {} → {}", orgId, previous, plan);
@@ -253,7 +246,8 @@ public class OrganizationService {
 
     static OrganizationResponse toResponse(Organization o) {
         return new OrganizationResponse(o.getId(), o.getName(), o.getSlug(), o.getPlan(),
-                o.getPlan().label(), o.getStatus(), o.getTrialEndsAt(), o.writable(), o.getCreatedAt());
+                o.getPlan().label(), o.getStatus(), o.hasPaidPlan(), o.getCurrentPeriodEnd(),
+                o.isCancelAtPeriodEnd(), o.writable(), o.getCreatedAt());
     }
 
     private static MemberResponse toMember(Membership m, UUID currentUserId) {

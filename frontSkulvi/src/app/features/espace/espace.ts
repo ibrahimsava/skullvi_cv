@@ -3,6 +3,7 @@ import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { SiteHeader } from '../../layout/site-header/site-header';
 import { AuthService } from '../auth/auth';
 import { User } from '../auth/model';
 import { CandidateStatus, EspaceApi, MyApplication, MyProfile } from './espace-api';
@@ -22,7 +23,7 @@ type Tab = 'candidatures' | 'profil' | 'compte';
 @Component({
   standalone: true,
   selector: 'app-espace',
-  imports: [ReactiveFormsModule, RouterLink, DatePipe],
+  imports: [ReactiveFormsModule, RouterLink, DatePipe, SiteHeader],
   templateUrl: './espace.html',
   styleUrl: './espace.scss',
 })

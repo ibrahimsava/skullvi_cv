@@ -43,34 +43,32 @@ export class AdminLayout implements OnInit {
   /**
    * Bandeau affiché en haut de l'espace, ou chaîne vide.
    *
-   * <p>Il n'apparaît que quand il y a une action à mener : essai bientôt fini, quota atteint,
-   * compte bloqué. Un bandeau permanent finit par ne plus être lu.
+   * <p>Il n'apparaît que quand il y a une action à mener : paiement en échec, résiliation
+   * programmée, quota atteint. Un bandeau permanent finit par ne plus être lu — et le plan
+   * gratuit, lui, n'a aucune raison d'en afficher un : il n'expire pas.
    */
   readonly banner = computed(() => {
     const u = this.usage();
     if (!u) return '';
 
-    if (u.status === 'SUSPENDED') {
-      return 'Votre compte est en lecture seule. Choisissez un abonnement pour reprendre vos recrutements.';
-    }
     if (u.status === 'PAST_DUE') {
-      return 'Votre dernier paiement a échoué. Régularisez pour éviter la suspension.';
+      return 'Votre dernier paiement a échoué. Mettez votre carte à jour — votre compte reste '
+        + 'utilisable aux limites du plan gratuit.';
     }
-    if (u.status === 'TRIAL' && u.trialDaysLeft != null && u.trialDaysLeft <= 5) {
-      return u.trialDaysLeft === 0
-        ? "Dernier jour de votre essai gratuit."
-        : `Il reste ${u.trialDaysLeft} jour(s) d'essai gratuit.`;
+    if (u.cancelAtPeriodEnd) {
+      return 'Votre abonnement prend fin prochainement. Vous repasserez au plan gratuit, sans '
+        + 'rien perdre.';
     }
     if (u.analysesLimit != null && u.analysesUsed >= u.analysesLimit) {
-      return 'Quota mensuel d\'analyses atteint.';
+      return u.paid
+        ? 'Quota mensuel atteint. Les analyses supplémentaires sont facturées à l\'unité.'
+        : 'Vous avez utilisé vos analyses gratuites du mois. Le compteur repart le 1er.';
     }
     return '';
   });
 
-  readonly bannerUrgent = computed(() => {
-    const status = this.usage()?.status;
-    return status === 'SUSPENDED' || status === 'PAST_DUE';
-  });
+  /** Rouge pour un problème de paiement, ambre pour une simple information. */
+  readonly bannerUrgent = computed(() => this.usage()?.status === 'PAST_DUE');
 
   ngOnInit(): void {
     // L'identité stockée peut dater d'une session précédente : on la resynchronise.

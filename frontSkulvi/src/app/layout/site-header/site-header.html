@@ -1,0 +1,50 @@
+<header class="bar" [class.solid]="scrolled()" [class.open]="open()">
+  <div class="sk-wrap inner">
+
+    <a class="brand" routerLink="/" aria-label="Skulvi, retour à l'accueil">
+      <span class="mark" aria-hidden="true">S</span>
+      <span class="name">Skulvi</span>
+    </a>
+
+    <nav class="nav" aria-label="Navigation principale">
+      <a routerLink="/" routerLinkActive="on" [routerLinkActiveOptions]="{ exact: true }">Le produit</a>
+      <a routerLink="/tarifs" routerLinkActive="on">Tarifs</a>
+      <a routerLink="/offres" routerLinkActive="on">Offres d'emploi</a>
+    </nav>
+
+    <div class="actions">
+      @if (connected()) {
+        <a class="sk-btn ghost sm" [routerLink]="spaceLink()">{{ spaceLabel() }}</a>
+      } @else {
+        <a class="plain" routerLink="/login">Connexion</a>
+        <a class="sk-btn primary sm" routerLink="/inscription-entreprise">Essai gratuit</a>
+      }
+    </div>
+
+    <button type="button" class="burger" (click)="toggle()"
+            [attr.aria-expanded]="open()" aria-controls="menu-mobile"
+            [attr.aria-label]="open() ? 'Fermer le menu' : 'Ouvrir le menu'">
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </button>
+
+  </div>
+
+  <!-- Menu mobile : même contenu, empilé. -->
+  <div class="sheet" id="menu-mobile" [hidden]="!open()">
+    <div class="sk-wrap">
+      <a routerLink="/" routerLinkActive="on" [routerLinkActiveOptions]="{ exact: true }">Le produit</a>
+      <a routerLink="/tarifs" routerLinkActive="on">Tarifs</a>
+      <a routerLink="/offres" routerLinkActive="on">Offres d'emploi</a>
+
+      <div class="sheet-actions">
+        @if (connected()) {
+          <a class="sk-btn primary block" [routerLink]="spaceLink()">{{ spaceLabel() }}</a>
+        } @else {
+          <a class="sk-btn ghost block" routerLink="/login">Connexion</a>
+          <a class="sk-btn primary block" routerLink="/inscription-entreprise">Démarrer l'essai gratuit</a>
+        }
+      </div>
+    </div>
+  </div>
+</header>

@@ -1,23 +1,27 @@
-<div class="espace-page">
-  <div class="wrap">
+<app-site-header />
+
+<main class="espace-page">
+  <div class="sk-wrap wrap">
 
     <header class="top">
       <div>
-        <h1>Mon espace</h1>
-        <p>
+        <p class="sk-eyebrow">Mon espace</p>
+        <h1>
           @if (me()) {
-            {{ me()!.firstName }} {{ me()!.lastName }} · {{ me()!.email }}
+            {{ me()!.firstName }} {{ me()!.lastName }}
           } @else {
             Chargement…
           }
-        </p>
+        </h1>
+        @if (me()) {
+          <p class="mail">{{ me()!.email }}</p>
+        }
       </div>
 
       <div class="top-actions">
         @if (isRecruiter()) {
           <a class="sk-btn ghost sm" routerLink="/admin/dashboard">Espace recruteur</a>
         }
-        <a class="sk-btn ghost sm" routerLink="/offres">Voir les offres</a>
         <button type="button" class="sk-btn ghost sm" (click)="logout()">Se déconnecter</button>
       </div>
     </header>
@@ -273,4 +277,4 @@
     }
 
   </div>
-</div>
+</main>

@@ -70,23 +70,28 @@ Les limites sont dans `Plan.java`, pas en base — une limite est une règle mé
 
 | Plan | Prix | Analyses / mois | Offres ouvertes | Sièges | Priorité file |
 |---|---:|---:|---:|---:|---:|
-| Essai (14 j) | 0 € | 20 | 1 | 1 | 0 |
-| Starter | 29 € | 150 | 3 | 2 | 1 |
-| Pro | 99 € | 750 | 15 | 10 | 2 |
-| Business | 299 € | 3 000 | illimité | illimité | 3 |
+| **Gratuit** | 0 € | 40 | 2 | 2 | 0 |
+| Starter | 29 € | 200 | 5 | 4 | 1 |
+| Pro | 99 € | 900 | 20 | 12 | 2 |
+| Business | 299 € | 4 000 | illimité | illimité | 3 |
 
-Dépassement : **0,20 € par analyse** (`Plan.OVERAGE_CENTS`).
+Dépassement : **0,20 € par analyse** (`Plan.OVERAGE_CENTS`). Détail du palier gratuit en
+section 10.
 
 Deux règles à retenir :
 
 - **Un plan payant ne se coupe jamais au quota.** Le dépassement est facturé à l'unité. Couper
   le service d'un client en pleine campagne de recrutement serait absurde.
-- **L'essai gratuit s'arrête net.** C'est ce qui le transforme en abonnement.
+- **Le plan gratuit s'arrête à son quota**, mais le compteur repart le 1er du mois. C'est ce
+  qui transforme le gratuit en abonnement, sans jamais bloquer définitivement un compte.
 
 `QuotaService` est la porte d'entrée unique de toutes ces règles, pour que la question
 « ce client a-t-il le droit de faire ça ? » ait toujours la même réponse.
 
-### Encaisser un client (tant que le paiement en ligne n'est pas branché)
+### Activer un plan à la main (paiement hors ligne)
+
+Le paiement en ligne est branché (section 11). Ces routes restent utiles pour un virement,
+un geste commercial, ou tant que le compte du prestataire n'est pas ouvert.
 
 ```powershell
 # 1. se connecter avec le compte admin de la plateforme
@@ -123,7 +128,7 @@ Points de conception :
   n'avait aucun moyen de le savoir.
 - **Reprise au démarrage** : `requeueInterrupted()` remet les tâches `RUNNING` en `PENDING`.
   Sans cela une candidature restait bloquée en `ANALYZING` pour toujours.
-- **Priorité par plan** : un client qui paie passe devant un essai gratuit quand la file est
+- **Priorité par plan** : un client qui paie passe devant un compte gratuit quand la file est
   chargée.
 - **Verrou `FOR UPDATE SKIP LOCKED`** : si un second conteneur backend tourne un jour, les deux
   workers ne prendront jamais la même tâche — sinon le même CV serait analysé et facturé deux fois.
@@ -153,16 +158,18 @@ order by u.used desc;
 vérifie au démarrage que la base correspond aux entités. Une migration oubliée fait échouer le
 démarrage, au lieu de laisser Hibernate modifier la base d'un client en silence.
 
-Deux fichiers dans `src/main/resources/db/migration/` :
+Trois fichiers dans `src/main/resources/db/migration/` :
 
 - **`V1__schema_initial.sql`** : le schéma *tel qu'il était avant* le multi-client.
 - **`V2__multi_client_et_facturation.sql`** : organisations, équipes, quotas, file d'analyse.
+- **`V3__plan_gratuit_paiement_et_audience.sql`** : plan gratuit permanent, colonnes de
+  paiement, table de mesure d'audience.
 
 Pourquoi partir de l'ancien schéma : la base de production a été créée par Hibernate en mode
 `update` et n'a aucun historique Flyway. Avec `baseline-on-migrate: true`, Flyway la considère
-comme déjà à la version 1 et saute V1, pour n'appliquer que V2. Une base vide, elle, exécute
-V1 puis V2 et arrive au même état. **Les deux chemins convergent**, sans jamais rejouer une
-création de table existante.
+comme déjà à la version 1 et saute V1, pour n'appliquer que les suivantes. Une base vide,
+elle, déroule V1, V2 puis V3 et arrive au même état. **Les deux chemins convergent**, sans
+jamais rejouer une création de table existante.
 
 V2 reprend aussi les données existantes : elle crée une organisation « Skulvi » en plan
 `BUSINESS`/`ACTIVE`, y rattache toutes les offres, candidats et candidatures, et fait des
@@ -171,9 +178,9 @@ retrouve donc pas bloqué par un quota du jour au lendemain.
 
 > **Avant de déployer sur la base de production** : faire une sauvegarde
 > (`scripts/backup.sh`), puis vérifier dans les logs de démarrage que Flyway affiche
-> `Migrating schema "public" to version "2"` et qu'Hibernate ne lève pas de
-> `Schema-validation`. Si `validate` échoue, c'est qu'une colonne générée par Hibernate diffère
-> de V1 — le corriger par une migration `V3`, jamais à la main.
+> `Successfully applied … migrations` et qu'Hibernate ne lève pas de `Schema-validation`.
+> Si `validate` échoue, c'est qu'une colonne générée par Hibernate diffère de V1 — le
+> corriger par une nouvelle migration, jamais à la main.
 
 Ajouter une migration :
 
@@ -218,7 +225,7 @@ compose.
 ### Tests
 
 ```powershell
-./mvnw test                       # 63 tests backend, sans base de données
+./mvnw test                       # 95 tests backend, sans base de données
 cd frontSkulvi; npx ng test --no-watch   # 26 tests front
 ```
 
@@ -269,6 +276,7 @@ ipconfig                       # trouver l'IPv4 du PC
 | Le tableau de bord affiche les chiffres de toute la plateforme | Compteurs non filtrés | `countByOrganizationId...` |
 | `2147483647 offres` affiché dans l'interface | La sentinelle `Integer.MAX_VALUE` était sérialisée telle quelle | Les DTO envoient `null` pour « illimité », le front écrit « Illimité » |
 | CORS ne marche qu'avec une seule origine | `List.of(origin)` ne découpait pas les virgules | `origins.split(",")` dans `SecurityConfig` |
+| Le front local refuse de parler au backend | Origines différentes en local, et port du serveur de développement instable | Mandataire `proxy.conf.cjs` : même origine, plus de CORS (section 9) |
 | Candidature bloquée en `ANALYZING` après un redéploiement | File en mémoire, tâches perdues | File en base + `requeueInterrupted()` au démarrage |
 | Le candidat choisit un `.docx`, l'envoi échoue | Le formulaire acceptait Word, le serveur vérifie la signature PDF | `accept="application/pdf"` et contrôle avant envoi |
 | Règle SCSS sans effet dans `dashboard.scss` | `&.alert strong` écrit à la racine du fichier, sans parent à résoudre | Remise dans `.stat` |
@@ -301,7 +309,156 @@ ipconfig                       # trouver l'IPv4 du PC
 
 ---
 
-## 9. Avant de prendre le premier euro
+## 9. Développer en local : plus aucun problème de CORS
+
+C'était le symptôme : le front local refusait de parler au backend. La cause n'était pas une
+mauvaise configuration mais une différence de chemin entre local et production.
+
+| | Origine du front | URL appelée | CORS ? |
+|---|---|---|---|
+| **Production** | `https://domaine` | `/api/v1` (relative) | non, même origine |
+| **Local, avant** | `http://localhost:<port>` | `http://localhost:8080/api/v1` | oui, et bloqué |
+
+Et le port local n'est pas stable : une variable d'environnement `PORT` présente sur la
+machine force `ng serve` ailleurs que sur 4200, donc l'origine n'était jamais dans la liste
+autorisée côté serveur.
+
+La correction supprime le CORS en local au lieu de l'élargir. Un **mandataire** dans le
+serveur de développement (`frontSkulvi/proxy.conf.cjs`) relaie `/api` vers le backend, et
+`environment.ts` utilise désormais `/api/v1` comme la production. Le navigateur n'appelle
+donc que son propre serveur.
+
+```powershell
+ng serve                                                 # backend attendu sur localhost:8080
+$env:BACKEND_URL="http://localhost:18080"; ng serve      # backend sur un autre port
+$env:BACKEND_URL="http://192.168.1.20:8080"; ng serve    # backend sur une autre machine
+```
+
+> **La production n'est pas touchée.** `environment.prod.ts` utilisait déjà `/api/v1`, le
+> mandataire ne concerne que `ng serve`, et `CORS_ORIGIN` garde exactement le même
+> comportement pour une origine exacte.
+
+En complément, `CORS_ORIGIN` accepte maintenant des motifs : une entrée contenant une étoile
+(`http://localhost:*`) passe par `setAllowedOriginPatterns`. Utile pour tester depuis un
+téléphone sur le même réseau sans lister les ports un par un. Sans danger ici parce que
+`allowCredentials` reste désactivé — le jeton voyage dans un en-tête, pas dans un cookie.
+
+---
+
+## 10. Plan gratuit permanent
+
+L'essai de 14 jours a disparu. À la place, un **palier gratuit sans échéance** :
+
+| Plan | Prix | Analyses / mois | Offres ouvertes | Sièges |
+|---|---:|---:|---:|---:|
+| **Gratuit** | 0 € | 40 | 2 | 2 |
+| Starter | 29 € | 200 | 5 | 4 |
+| Pro | 99 € | 900 | 20 | 12 |
+| Business | 299 € | 4 000 | illimité | illimité |
+
+Le raisonnement : un essai qui expire oblige à décider avant d'avoir eu un vrai besoin. Un
+palier gratuit permanent laisse l'entreprise s'installer, et c'est le quota mensuel qui
+déclenche la conversion — pas un compte à rebours.
+
+Conséquences dans le code :
+
+- `OrgStatus` se réduit à `ACTIVE` / `PAST_DUE` / `CANCELED`, et **aucun statut ne bloque
+  l'accès**. Un impayé redescend aux limites du gratuit, il ne coupe pas le service : couper
+  fait perdre le client, pas gagner le paiement.
+- `TrialSweeper` a été supprimé, il n'y a plus d'échéance à surveiller.
+- La migration `V3` passe les organisations `TRIAL` en `FREE` et les `SUSPENDED` en `ACTIVE`,
+  sans rien supprimer.
+
+---
+
+## 11. Paiement par abonnement
+
+Branché de bout en bout, et **inactif tant que les clés ne sont pas renseignées** :
+`StripeProperties.usable()` répond faux, l'interface affiche un contact au lieu d'un bouton
+qui échouerait, et l'application démarre normalement.
+
+```
+STRIPE_ENABLED=true
+STRIPE_SECRET_KEY=sk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_PRICE_STARTER=price_...
+STRIPE_PRICE_PRO=price_...
+STRIPE_PRICE_BUSINESS=price_...
+PUBLIC_URL=https://votre-domaine
+```
+
+| Brique | Rôle |
+|---|---|
+| `StripeService` | parle au prestataire : session de paiement, portail, signature des webhooks |
+| `SubscriptionService` | applique l'état sur l'organisation — seul endroit qui écrit le plan |
+| `PriceCatalog` | correspondance tarif vers plan, construite une fois au démarrage |
+| `StripeWebhookController` | reçoit les événements signés |
+| `BillingController` | routes client : `checkout`, `portal`, `status` |
+
+Trois points structurants :
+
+1. **Passage en caisse hébergé.** Le client saisit sa carte sur une page du prestataire.
+   Aucune donnée bancaire ne traverse ce serveur, ce qui nous met hors du périmètre PCI-DSS.
+2. **Le webhook est la seule source de vérité.** Le retour du navigateur après paiement ne
+   fait pas foi : l'utilisateur peut fermer l'onglet avant la redirection, ou forger l'URL de
+   succès. Seul l'événement signé change le plan.
+3. **L'identifiant d'organisation voyage en métadonnée** de l'abonnement, et non dans l'URL.
+   Au renouvellement, des mois plus tard, c'est la seule chose dont on a besoin.
+
+Tester les webhooks en local :
+
+```powershell
+stripe login
+stripe listen --forward-to http://localhost:8080/api/v1/webhooks/stripe
+# recopier le whsec_... affiché dans STRIPE_WEBHOOK_SECRET, puis relancer le backend
+stripe trigger checkout.session.completed
+```
+
+> **Obstacle à connaître.** Stripe ne couvre pas la Côte d'Ivoire : on ne peut pas y ouvrir
+> de compte marchand pour une structure ivoirienne (à vérifier sur `stripe.com/global`, la
+> liste évolue). Le champ est volontairement nommé `billingCustomerId` et non
+> `stripeCustomerId`, et `SubscriptionService` est séparé de `StripeService` : brancher
+> CinetPay ou Flutterwave — qui gèrent Orange Money, Wave et MTN — ne demande de réécrire
+> que la passerelle, pas la logique d'abonnement.
+
+---
+
+## 12. Mesure d'audience
+
+Nouvelle page `/admin/audience` : visites, visiteurs distincts, série journalière,
+histogramme des pages, répartition des appareils, provenances et entonnoir de candidature.
+L'administrateur de la plateforme y voit tout le trafic et les inscriptions ; un recruteur
+ne voit que ses propres pages carrière et ses offres.
+
+**Sans cookie et sans adresse IP conservée.** Le visiteur est réduit à une empreinte SHA-256
+sur (adresse + navigateur + sel secret + date du jour) :
+
+- *non réversible* : l'adresse IP n'est pas retrouvable depuis ce qui est stocké ;
+- *non attaquable par dictionnaire* : sans le sel, on pourrait hacher les quatre milliards
+  d'adresses IPv4 et comparer les empreintes. Le sel aléatoire, jamais écrit en base, rend
+  ce calcul inutile ;
+- *non durable* : le sel inclut la date, donc deux visites du même navigateur à deux jours
+  d'écart donnent deux empreintes sans lien.
+
+C'est ce qui permet de se passer de bandeau de consentement : la mesure est strictement
+anonyme. Contrepartie assumée — un visiteur qui revient demain est compté comme nouveau.
+
+Les événements de plus de 400 jours sont supprimés chaque nuit
+(`AnalyticsService.purgeOldEvents`).
+
+```sql
+-- visites par jour
+select day, count(*) as visites, count(distinct visitor_hash) as visiteurs
+from visit_event where kind = 'PAGE'
+group by day order by day desc limit 14;
+
+-- entonnoir de candidature
+select kind, count(*) from visit_event group by kind;
+```
+
+---
+
+## 13. Avant de prendre le premier euro
 
 - [x] Multi-client avec cloisonnement vérifié
 - [x] Quotas et compteur de consommation
@@ -309,15 +466,18 @@ ipconfig                       # trouver l'IPv4 du PC
 - [x] Limiteur de débit sur le dépôt public de candidatures
 - [x] File d'analyse persistée
 - [x] Swagger désactivable (`SWAGGER_ENABLED=false` en production)
+- [x] Plan gratuit permanent : aucun compte bloqué par un impayé
+- [x] Mesure d'audience sans cookie ni adresse IP conservée
+- [ ] **Trancher le prestataire de paiement** : Stripe ne couvre pas la Côte d'Ivoire
 - [ ] **Planifier `scripts/backup.sh` par cron, et tester une restauration complète**
 - [ ] Copie des sauvegardes hors du serveur
-- [ ] Paiement en ligne (le point d'accroche est `PlatformController.changePlan`)
+- [x] Paiement par abonnement branché (reste à ouvrir le compte et renseigner les clés)
 - [ ] E-mails transactionnels (confirmation candidat, fin d'essai, invitation d'un collègue)
 - [ ] Mentions légales, CGV, politique de conservation des CV
 
 ---
 
-## 10. Ce qui reste à faire côté produit
+## 14. Ce qui reste à faire côté produit
 
 - Upload de CV en masse (besoin n° 1 des cabinets, et ce qui justifie le plan Pro).
 - Export CSV/PDF du classement.

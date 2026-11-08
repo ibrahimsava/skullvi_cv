@@ -1,5 +1,7 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { SiteFooter } from '../../layout/site-footer/site-footer';
+import { SiteHeader } from '../../layout/site-header/site-header';
 import { PublicOffer } from '../admin/admin.models';
 import { OffresService, PublicOrganization } from './offres.service';
 
@@ -15,7 +17,7 @@ import { OffresService, PublicOrganization } from './offres.service';
  */
 @Component({
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, SiteHeader, SiteFooter],
   selector: 'app-offres',
   styleUrl: './offres.scss',
   templateUrl: './offres.html',

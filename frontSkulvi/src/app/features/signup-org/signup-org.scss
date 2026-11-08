@@ -1,70 +1,59 @@
+:host { display: block; }
+
 .signup-page {
-  min-height: 100vh;
-  background: var(--canvas);
-  padding: 64px 20px 48px;
-  font-family: var(--font);
+  padding: 60px 0 80px;
+  /* Pas de hauteur minimale de 100vh : avec l'en-tête fixe, elle créait une page
+     systématiquement défilable même quand le contenu tenait à l'écran. */
 }
 
 .wrap {
-  max-width: 1080px;
-  margin: 0 auto;
   display: grid;
-  gap: 48px;
-  grid-template-columns: 1fr 420px;
+  gap: 64px;
+  grid-template-columns: 1fr 432px;
   align-items: start;
 }
 
 /* ---------------------------------------------------------------- argumentaire */
 
 .pitch {
-  padding-top: 8px;
-
-  .eyebrow {
-    margin: 0 0 12px;
-    font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--accent);
-  }
-
   h1 {
-    margin: 0 0 16px;
-    font-size: 38px; line-height: 1.1; font-weight: 700; letter-spacing: -0.03em;
+    margin: 0 0 18px;
+    max-width: 18ch;
+    font-family: var(--font-display);
+    font-size: clamp(36px, 4.4vw, 54px);
+    font-weight: 700; line-height: 1.05; letter-spacing: -0.022em;
     color: var(--ink);
   }
 
   .lead {
-    margin: 0 0 28px;
-    font-size: 16px; line-height: 1.6; color: var(--ink-2);
-    max-width: 48ch;
+    margin: 0 0 34px;
+    max-width: 46ch;
+    font-size: 16.5px; line-height: 1.64; color: var(--ink-2);
   }
 
   .fine {
-    margin: 24px 0 0;
-    font-size: 13px; color: var(--muted);
+    margin: 30px 0 0;
+    padding-top: 20px;
+    border-top: 1px solid var(--rule);
+    font-size: 13.5px; color: var(--muted);
   }
 }
 
 .points {
-  list-style: none;
-  margin: 0; padding: 0;
-  display: grid; gap: 18px;
+  list-style: none; margin: 0; padding: 0;
 
   li {
-    position: relative;
-    padding-left: 26px;
-    font-size: 14px; line-height: 1.6; color: var(--ink-2);
-    max-width: 52ch;
+    padding: 18px 0;
+    border-top: 1px solid var(--rule);
+    font-size: 14.5px; line-height: 1.62; color: var(--ink-2);
+    max-width: 50ch;
 
-    /* Puce dessinée plutôt qu'un caractère : elle reste alignée sur la première ligne
-       quel que soit le corps de texte. */
-    &::before {
-      content: '';
-      position: absolute; left: 2px; top: 7px;
-      width: 8px; height: 8px;
-      border-radius: 2px;
-      background: var(--accent);
+    &:last-child { border-bottom: 1px solid var(--rule); }
+
+    strong {
+      display: block; margin-bottom: 3px;
+      font-size: 15px; font-weight: 650; color: var(--ink);
     }
-
-    strong { display: block; color: var(--ink); font-weight: 650; margin-bottom: 2px; }
   }
 }
 
@@ -72,35 +61,35 @@
 
 .form-side .sk-card {
   display: grid;
-  gap: 16px;
-  box-shadow: 0 14px 40px rgba(20, 33, 61, 0.07);
-}
+  gap: 18px;
+  padding: 30px 28px;
+  /* Encadré net, sans ombre portée : c'est le fond blanc sur le papier qui le détache. */
+  border-color: var(--rule-strong);
 
-.two {
-  display: grid; gap: 14px;
-  grid-template-columns: 1fr 1fr;
-}
-
-.sk-btn.block {
-  width: 100%;
-  margin-top: 4px;
-  padding: 12px 16px;
+  h2 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 25px; font-weight: 700; letter-spacing: -0.015em;
+  }
+  .sub { margin: -10px 0 4px; }
 }
 
 .alt {
-  margin: 0;
-  font-size: 13px; color: var(--muted); text-align: center;
+  margin: 2px 0 0;
+  font-size: 13px; line-height: 1.7; color: var(--muted); text-align: center;
 
-  a { color: var(--accent); font-weight: 600; text-decoration: none; }
-  a:hover { text-decoration: underline; }
+  .sep { margin: 0 7px; color: var(--rule-strong); }
 }
 
-@media (max-width: 900px) {
-  .wrap { grid-template-columns: 1fr; gap: 36px; }
-  .signup-page { padding-top: 40px; }
-  .pitch h1 { font-size: 30px; }
+@media (max-width: 980px) {
+  .wrap { grid-template-columns: 1fr; gap: 40px; }
+  /* Sur une colonne, le formulaire passe devant l'argumentaire : quelqu'un qui arrive
+     par un lien d'inscription veut le formulaire, pas le discours. */
+  .form-side { order: -1; }
+  .pitch h1 { max-width: 24ch; }
 }
 
-@media (max-width: 480px) {
-  .two { grid-template-columns: 1fr; }
+@media (max-width: 640px) {
+  .signup-page { padding: 32px 0 56px; }
+  .form-side .sk-card { padding: 24px 20px; }
 }

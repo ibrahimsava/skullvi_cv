@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.example.skulvi_cv.Utilisateur.AppUser;
 import org.example.skulvi_cv.Utilisateur.AppUserRepository;
 import org.example.skulvi_cv.analysis.AnalysisQueue;
+import org.example.skulvi_cv.analytics.TrackingService;
+import org.example.skulvi_cv.analytics.VisitKind;
 import org.example.skulvi_cv.analysis.StructuredProfile;
 import org.example.skulvi_cv.application.ApplicationDtos.*;
 import org.example.skulvi_cv.billing.QuotaService;
@@ -37,6 +39,7 @@ public class ApplicationService {
     private final AppUserRepository users;
     private final QuotaService quotas;
     private final AnalysisQueue queue;
+    private final TrackingService tracking;
 
     // ---------------------------------------------------------------- dépôt
 
@@ -96,6 +99,10 @@ public class ApplicationService {
         app = applications.save(app);
 
         queue.enqueue(app, org.getPlan().queuePriority(), true);
+
+        // Fin de l'entonnoir : c'est ce chiffre, rapporté aux vues d'offre, qui dit si
+        // la page de candidature fait perdre des candidats en route.
+        tracking.recordServerSide(VisitKind.APPLY_DONE, org.getId(), "/postuler/:id");
         return app;
     }
 

@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { SiteHeader } from '../../../layout/site-header/site-header';
 import { AuthService } from '../auth';
 import { AuthResponse, UserRequest } from '../model';
 
@@ -14,7 +15,7 @@ import { AuthResponse, UserRequest } from '../model';
  */
 @Component({
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, SiteHeader],
   selector: 'app-auth',
   styleUrl: './auth.scss',
   templateUrl: './auth.html',

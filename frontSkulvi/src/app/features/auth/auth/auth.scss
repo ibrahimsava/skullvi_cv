@@ -1,131 +1,55 @@
-:host {
-  display: block;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #f4f7fb 0%, #eaf2ff 100%);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+:host { display: block; }
+
+.auth-page {
+  padding: 72px 0 96px;
 }
 
-form {
-  width: min(100%, 440px);
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 18px;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
-  padding: 2rem;
+/* Colonne unique et étroite, centrée : rien ne dispute l'attention au formulaire. */
+.panel {
+  max-width: 452px;
+  margin: 0 auto;
+  padding: 36px 34px 30px;
+  background: var(--surface);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
 }
 
-h2 {
-  margin: 0 0 1.4rem;
-  text-align: center;
-  color: #0d1f42;
+.panel-head {
+  margin-bottom: 26px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--rule);
+
+  h1 {
+    margin: 0 0 8px;
+    font-family: var(--font-display);
+    font-size: 32px; font-weight: 700; line-height: 1.1; letter-spacing: -0.018em;
+    color: var(--ink);
+  }
+
+  .sub { margin: 0; font-size: 14px; line-height: 1.55; color: var(--muted); }
 }
 
-form > div {
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-  margin-bottom: 1rem;
+.sk-btn.block { margin-top: 4px; }
+
+.panel-foot {
+  margin-top: 26px;
+  padding-top: 20px;
+  border-top: 1px solid var(--rule);
+
+  p {
+    margin: 0;
+    font-size: 13.5px; line-height: 1.6; color: var(--muted);
+  }
+
+  .recruiter {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--rule);
+  }
 }
 
-label {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #1f2937;
+@media (max-width: 520px) {
+  .auth-page { padding: 36px 0 64px; }
+  .panel { padding: 26px 20px 24px; border-left: none; border-right: none; border-radius: 0; }
+  .panel-head h1 { font-size: 27px; }
 }
-
-input {
-  border: 1px solid #d1d5db;
-  border-radius: 10px;
-  background: #f9fafb;
-  padding: 0.85rem 0.9rem;
-  font-size: 1rem;
-  color: #111827;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-input:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-  background: #ffffff;
-}
-
-button {
-  width: 100%;
-  border: none;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  color: #ffffff;
-  font-weight: 600;
-  font-size: 1rem;
-  padding: 0.9rem 1rem;
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.25);
-}
-
-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-}
-
-button:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-.switch-link {
-  margin-top: 1rem;
-  margin-bottom: 0;
-  text-align: center;
-  color: #4a5875;
-  font-size: 0.95rem;
-}
-
-.switch-link a {
-  color: #1d4ed8;
-  text-decoration: none;
-  font-weight: 700;
-}
-
-.switch-link a:hover {
-  text-decoration: underline;
-}
-
-/* Passerelle vers le parcours recruteur, séparée par un trait : les deux inscriptions
-   n'ont rien à voir et ne doivent pas se confondre visuellement. */
-.switch-link.recruiter {
-  margin-top: 0.9rem;
-  padding-top: 0.9rem;
-  border-top: 1px solid #e5e7eb;
-  font-size: 0.88rem;
-}
-
-.feedback {
-  margin: 0 0 1.1rem;
-  padding: 0.7rem 0.85rem;
-  border-radius: 10px;
-  background: #eef5ff;
-  border: 1px solid #c9ddfb;
-  color: #1d4ed8;
-  font-size: 0.9rem;
-}
-
-.feedback.error {
-  background: #fdeceb;
-  border-color: #f2c4bf;
-  color: #b3372c;
-}
-
-.help {
-  font-size: 0.8rem;
-  color: #6b7a90;
-}
-

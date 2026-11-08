@@ -5,9 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -29,9 +26,9 @@ class PlanTest {
     }
 
     @Test
-    @DisplayName("chaque palier payant est plus généreux que le précédent")
+    @DisplayName("chaque palier est plus généreux que le précédent")
     void les_paliers_sont_croissants() {
-        Plan[] echelle = { Plan.TRIAL, Plan.STARTER, Plan.PRO, Plan.BUSINESS };
+        Plan[] echelle = { Plan.FREE, Plan.STARTER, Plan.PRO, Plan.BUSINESS };
 
         for (int i = 1; i < echelle.length; i++) {
             Plan bas = echelle[i - 1];
@@ -56,16 +53,28 @@ class PlanTest {
     }
 
     @Test
-    @DisplayName("seul l'essai est gratuit, et seul l'essai refuse le dépassement")
-    void l_essai_est_le_seul_plan_sans_depassement() {
-        assertThat(Plan.TRIAL.priceCents()).isZero();
-        assertThat(Plan.TRIAL.allowsOverage()).isFalse();
+    @DisplayName("le gratuit est le seul plan sans prix, et le seul à refuser le dépassement")
+    void le_gratuit_est_le_seul_plan_sans_depassement() {
+        assertThat(Plan.FREE.priceCents()).isZero();
+        assertThat(Plan.FREE.isPaid()).isFalse();
+        assertThat(Plan.FREE.allowsOverage()).isFalse();
 
         for (Plan plan : Plan.values()) {
-            if (plan == Plan.TRIAL) continue;
+            if (plan == Plan.FREE) continue;
             assertThat(plan.priceCents()).as("%s doit être payant", plan).isPositive();
+            assertThat(plan.isPaid()).as("%s doit être marqué payant", plan).isTrue();
             assertThat(plan.allowsOverage()).as("%s doit accepter le dépassement", plan).isTrue();
         }
+    }
+
+    @Test
+    @DisplayName("le plan gratuit laisse de quoi faire un vrai recrutement")
+    void le_gratuit_est_utilisable() {
+        // Un palier gratuit trop étroit ne sert à rien : il faut pouvoir mener une offre
+        // jusqu'au bout pour avoir envie de payer la suivante.
+        assertThat(Plan.FREE.maxAnalysesPerMonth()).isGreaterThanOrEqualTo(20);
+        assertThat(Plan.FREE.maxActiveOffers()).isGreaterThanOrEqualTo(1);
+        assertThat(Plan.FREE.maxSeats()).isGreaterThanOrEqualTo(1);
     }
 
     @Test
@@ -93,37 +102,44 @@ class PlanTest {
     }
 
     @Test
-    @DisplayName("un essai échu bloque l'écriture, un abonnement actif ne l'est jamais")
-    void etat_d_ecriture_de_l_organisation() {
-        Organization essaiEnCours = organisation(Plan.TRIAL, OrgStatus.TRIAL, Instant.now().plus(3, ChronoUnit.DAYS));
-        Organization essaiEchu = organisation(Plan.TRIAL, OrgStatus.TRIAL, Instant.now().minus(1, ChronoUnit.DAYS));
-        Organization actif = organisation(Plan.PRO, OrgStatus.ACTIVE, null);
-        Organization impaye = organisation(Plan.PRO, OrgStatus.PAST_DUE, null);
-        Organization suspendu = organisation(Plan.PRO, OrgStatus.SUSPENDED, null);
-
-        assertThat(essaiEnCours.writable()).isTrue();
-        assertThat(essaiEchu.writable()).isFalse();
-        assertThat(essaiEchu.trialExpired()).isTrue();
-        assertThat(actif.writable()).isTrue();
-        assertThat(impaye.writable()).isFalse();
-        assertThat(suspendu.writable()).isFalse();
+    @DisplayName("la clé de tarif correspond au nom du plan en minuscules")
+    void la_cle_de_tarif_est_stable() {
+        // Le webhook retrouve le plan depuis cette clé : la changer casserait la
+        // correspondance avec la configuration des tarifs.
+        assertThat(Plan.STARTER.priceKey()).isEqualTo("starter");
+        assertThat(Plan.PRO.priceKey()).isEqualTo("pro");
+        assertThat(Plan.BUSINESS.priceKey()).isEqualTo("business");
     }
 
     @Test
-    @DisplayName("un abonnement payant n'a plus d'échéance d'essai à surveiller")
-    void un_plan_paye_ignore_la_date_d_essai() {
-        Organization actif = organisation(Plan.PRO, OrgStatus.ACTIVE, Instant.now().minus(30, ChronoUnit.DAYS));
-
-        // Le statut ACTIVE l'emporte : trialExpired() ne vise que les comptes encore en essai.
-        assertThat(actif.trialExpired()).isFalse();
-        assertThat(actif.writable()).isTrue();
+    @DisplayName("aucun statut ne coupe l'accès : le gratuit reste toujours utilisable")
+    void l_acces_n_est_jamais_coupe() {
+        for (OrgStatus status : OrgStatus.values()) {
+            Organization org = organisation(Plan.FREE, status);
+            assertThat(org.writable())
+                    .as("une organisation en %s doit rester utilisable", status)
+                    .isTrue();
+        }
     }
 
-    private static Organization organisation(Plan plan, OrgStatus status, Instant trialEnd) {
+    @Test
+    @DisplayName("seul l'impayé demande une intervention")
+    void seul_l_impaye_est_signale() {
+        assertThat(OrgStatus.ACTIVE.needsAttention()).isFalse();
+        assertThat(OrgStatus.CANCELED.needsAttention()).isFalse();
+        assertThat(OrgStatus.PAST_DUE.needsAttention()).isTrue();
+    }
+
+    @Test
+    void le_plan_paye_est_reconnu_sur_l_organisation() {
+        assertThat(organisation(Plan.FREE, OrgStatus.ACTIVE).hasPaidPlan()).isFalse();
+        assertThat(organisation(Plan.PRO, OrgStatus.ACTIVE).hasPaidPlan()).isTrue();
+    }
+
+    private static Organization organisation(Plan plan, OrgStatus status) {
         Organization org = new Organization();
         org.setPlan(plan);
         org.setStatus(status);
-        org.setTrialEndsAt(trialEnd);
         return org;
     }
 }

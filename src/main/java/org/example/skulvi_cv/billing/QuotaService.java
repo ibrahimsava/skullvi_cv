@@ -17,8 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
 import java.util.Arrays;
@@ -49,22 +47,22 @@ public class QuotaService {
      *
      * <p>Au-delà du quota, un plan payant continue de fonctionner : le dépassement est facturé
      * à l'analyse. Couper le service d'un client qui paie parce qu'il recrute beaucoup serait
-     * absurde. L'essai gratuit, lui, s'arrête net : c'est ce qui le transforme en abonnement.
+     * absurde. Le plan gratuit, lui, s'arrête net : c'est ce qui le transforme en abonnement.
      */
     @Transactional(readOnly = true)
     public void assertCanAnalyze(UUID orgId) {
         Organization org = require(orgId);
-        assertWritable(org);
-
         Plan plan = org.getPlan();
+
         int used = analysesUsed(orgId);
         if (used < plan.maxAnalysesPerMonth()) {
             return;
         }
         if (!plan.allowsOverage()) {
             throw new ApiException(HttpStatus.PAYMENT_REQUIRED,
-                    "Quota d'essai atteint (" + plan.maxAnalysesPerMonth() + " analyses). "
-                            + "Choisissez un abonnement pour continuer.");
+                    "Vous avez utilisé vos " + plan.maxAnalysesPerMonth()
+                            + " analyses gratuites de ce mois-ci. Le compteur repart le 1er, "
+                            + "ou choisissez un abonnement pour continuer tout de suite.");
         }
         log.info("Organisation {} en dépassement : {} analyses ce mois ({} incluses)",
                 orgId, used, plan.maxAnalysesPerMonth());
@@ -74,14 +72,14 @@ public class QuotaService {
     @Transactional(readOnly = true)
     public void assertCanCreateOffer(UUID orgId) {
         Organization org = require(orgId);
-        assertWritable(org);
 
         int limit = org.getPlan().maxActiveOffers();
         long open = offers.countByOrganizationIdAndStatus(orgId, OfferStatus.OPEN);
         if (open >= limit) {
             throw new ApiException(HttpStatus.PAYMENT_REQUIRED,
-                    "Votre plan " + org.getPlan().label() + " autorise " + limit
-                            + " offre(s) ouverte(s). Clôturez une offre ou changez de plan.");
+                    "Le plan " + org.getPlan().label() + " autorise " + limit
+                            + " offre(s) ouverte(s) en même temps. Clôturez une offre pourvue, "
+                            + "ou passez à un plan supérieur.");
         }
     }
 
@@ -89,26 +87,13 @@ public class QuotaService {
     @Transactional(readOnly = true)
     public void assertCanAddSeat(UUID orgId) {
         Organization org = require(orgId);
-        assertWritable(org);
 
         int limit = org.getPlan().maxSeats();
         long seats = memberships.countByOrganizationId(orgId);
         if (seats >= limit) {
             throw new ApiException(HttpStatus.PAYMENT_REQUIRED,
-                    "Votre plan " + org.getPlan().label() + " autorise " + limit
-                            + " utilisateur(s). Changez de plan pour agrandir l'équipe.");
-        }
-    }
-
-    private void assertWritable(Organization org) {
-        if (org.trialExpired()) {
-            throw new ApiException(HttpStatus.PAYMENT_REQUIRED,
-                    "Votre période d'essai est terminée. Choisissez un abonnement pour continuer.");
-        }
-        if (!org.getStatus().allowsWrite()) {
-            throw new ApiException(HttpStatus.PAYMENT_REQUIRED,
-                    "Votre compte est en lecture seule (" + org.getStatus() + "). "
-                            + "Régularisez votre abonnement pour reprendre.");
+                    "Le plan " + org.getPlan().label() + " autorise " + limit
+                            + " utilisateur(s). Passez à un plan supérieur pour agrandir l'équipe.");
         }
     }
 
@@ -148,8 +133,9 @@ public class QuotaService {
                 plan,
                 plan.label(),
                 org.getStatus(),
-                org.getTrialEndsAt(),
-                trialDaysLeft(org),
+                plan.isPaid(),
+                org.getCurrentPeriodEnd(),
+                org.isCancelAtPeriodEnd(),
                 currentPeriod(),
                 used,
                 capped(limit),
@@ -176,13 +162,6 @@ public class QuotaService {
     /** Traduit la sentinelle « pas de limite » en {@code null} pour l'interface. */
     private static Integer capped(int limit) {
         return limit == Plan.UNLIMITED ? null : limit;
-    }
-
-    private Integer trialDaysLeft(Organization org) {
-        Instant end = org.getTrialEndsAt();
-        if (end == null) return null;
-        long days = Duration.between(Instant.now(clock), end).toDays();
-        return (int) Math.max(0, days);
     }
 
     private Organization require(UUID orgId) {

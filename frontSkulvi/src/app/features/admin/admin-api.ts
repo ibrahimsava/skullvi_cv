@@ -3,9 +3,10 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { OrgRole } from '../auth/model';
+import { PlanCode } from '../auth/model';
 import {
-  ApplicationSummary, DashboardStats, InviteRequest, MemberList, Offer,
-  Organization, PlanCatalog, RankedCandidate, ScoreResponse, UsageSnapshot,
+  ApplicationSummary, BillingStatus, CheckoutResponse, DashboardStats, InviteRequest,
+  MemberList, Offer, Organization, PlanCatalog, RankedCandidate, ScoreResponse, UsageSnapshot,
 } from './admin.models';
 
 /** Appels de l'espace recruteur. Toutes ces routes sont filtrées côté serveur par l'organisation du jeton. */
@@ -63,6 +64,28 @@ export class AdminApi {
   }
   getPlans(): Observable<PlanCatalog> {
     return this.http.get<PlanCatalog>(`${this.api}/org/plans`);
+  }
+
+  // ---------------------------------------------------------------- paiement
+
+  /** Le paiement en ligne est-il configuré ? Évite d'afficher un bouton inopérant. */
+  billingStatus(): Observable<BillingStatus> {
+    return this.http.get<BillingStatus>(`${this.api}/org/billing/status`);
+  }
+
+  /**
+   * Ouvre une session de paiement.
+   *
+   * <p>Renvoie l'adresse de la page hébergée du prestataire, vers laquelle il faut rediriger
+   * le navigateur. Aucune donnée de carte ne passe par l'application.
+   */
+  startCheckout(plan: PlanCode): Observable<CheckoutResponse> {
+    return this.http.post<CheckoutResponse>(`${this.api}/org/billing/checkout`, { plan });
+  }
+
+  /** Portail du prestataire : changement de carte, factures, résiliation. */
+  openBillingPortal(): Observable<CheckoutResponse> {
+    return this.http.post<CheckoutResponse>(`${this.api}/org/billing/portal`, {});
   }
 
   // ---------------------------------------------------------------- équipe

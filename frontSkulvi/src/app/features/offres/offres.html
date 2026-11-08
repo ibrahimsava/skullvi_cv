@@ -1,101 +1,117 @@
-<div class="offres-page">
-  <div class="wrap">
+<app-site-header />
+
+<main class="offres-page">
+  <div class="sk-wrap">
 
     <header class="head">
       @if (company()) {
+        <p class="sk-eyebrow">Page carrière</p>
         <h1>{{ company()!.name }}</h1>
-        <p>
+        <p class="lead">
           @if (company()!.openOffers === 1) {
-            1 poste ouvert en ce moment. Déposez votre CV, il est analysé automatiquement.
+            Un poste ouvert en ce moment. Déposez votre CV, il est analysé automatiquement.
           } @else if (company()!.openOffers > 1) {
-            {{ company()!.openOffers }} postes ouverts en ce moment. Déposez votre CV, il est analysé automatiquement.
+            {{ company()!.openOffers }} postes ouverts en ce moment. Déposez votre CV,
+            il est analysé automatiquement.
           } @else {
             Aucun poste ouvert en ce moment.
           }
         </p>
       } @else {
-        <h1>Offres d'emploi</h1>
-        <p>Trouvez le poste qui correspond à votre profil et postulez en quelques minutes.</p>
+        <p class="sk-eyebrow">Offres d'emploi</p>
+        <h1>Le poste qui correspond à ce que vous savez faire.</h1>
+        <p class="lead">
+          Chaque CV déposé est lu et comparé aux compétences attendues par le recruteur.
+          Votre candidature est suivie depuis votre espace personnel.
+        </p>
       }
     </header>
 
     <div class="toolbar">
       <label class="search">
         <span class="sk-sr">Rechercher une offre</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
         </svg>
-        <input type="search" placeholder="Rechercher par poste, entreprise, domaine ou niveau"
+        <input type="search" placeholder="Poste, entreprise, domaine ou niveau"
                [value]="search()" (input)="search.set($any($event.target).value)">
       </label>
 
       @if (!loading() && !loadError()) {
-        <p class="count"><strong class="num">{{ visibleOffres().length }}</strong> offre(s)</p>
+        <p class="count">
+          <strong class="num">{{ visibleOffres().length }}</strong>
+          {{ visibleOffres().length === 1 ? 'offre' : 'offres' }}
+        </p>
       }
     </div>
 
     @if (loading()) {
-      <p class="state">Chargement des offres…</p>
+      <p class="sk-empty">Chargement des offres…</p>
 
     } @else if (loadError()) {
-      <div class="state error" role="alert">
+      <div class="sk-alert error" role="alert">
         <p>Impossible de charger les offres ({{ errorMessage() }}).</p>
         <button type="button" class="sk-btn ghost sm" (click)="load()">Réessayer</button>
       </div>
 
     } @else if (visibleOffres().length === 0) {
-      <p class="state">
+      <p class="sk-empty">
         @if (search()) {
           Aucune offre ne correspond à « {{ search() }} ». Essayez un autre mot-clé.
         } @else {
-          Aucune offre pour le moment. Revenez bientôt, de nouveaux postes sont publiés régulièrement.
+          Aucune offre pour le moment. De nouveaux postes sont publiés régulièrement.
         }
       </p>
 
     } @else {
-      <div class="list">
+      <ul class="list">
         @for (o of visibleOffres(); track o.id) {
-          <article class="offre" [class.closed]="!isOpen(o)">
+          <li class="offre" [class.closed]="!isOpen(o)">
 
-            <h2>{{ o.title }}</h2>
+            <div class="offre-main">
+              @if (!company()) {
+                <a class="company" [routerLink]="['/c', o.organizationSlug]">{{ o.organizationName }}</a>
+              }
 
-            @if (!company()) {
-              <a class="company" [routerLink]="['/c', o.organizationSlug]">{{ o.organizationName }}</a>
-            }
+              <h2>{{ o.title }}</h2>
 
-            <ul class="facts">
-              @if (o.domain) { <li>{{ o.domain }}</li> }
-              @if (o.level) { <li>{{ o.level }}</li> }
-              <li>
-                @if (o.minExperienceYears > 0) {
-                  {{ o.minExperienceYears }} an(s) d'expérience minimum
-                } @else {
-                  Sans expérience requise
-                }
-              </li>
-            </ul>
+              <p class="facts">
+                @if (o.domain) { <span>{{ o.domain }}</span> }
+                @if (o.level) { <span>{{ o.level }}</span> }
+                <span>
+                  @if (o.minExperienceYears > 0) {
+                    {{ o.minExperienceYears }} an(s) d'expérience
+                  } @else {
+                    Sans expérience requise
+                  }
+                </span>
+              </p>
 
-            @if (o.description) {
-              <p class="description">{{ o.description }}</p>
-            }
+              @if (o.description) {
+                <p class="description">{{ o.description }}</p>
+              }
+            </div>
 
-            <footer class="foot">
-              <div class="when">
+            <div class="offre-side">
+              <p class="when">
                 <strong [class.urgent]="isUrgent(o)">{{ deadlineLabel(o) }}</strong>
                 <small>{{ period(o) }}</small>
-              </div>
+              </p>
 
               @if (isOpen(o)) {
-                <a class="sk-btn primary" [routerLink]="['/postuler', o.id]">Postuler à cette offre</a>
+                <a class="sk-btn primary" [routerLink]="['/postuler', o.id]">Postuler</a>
               } @else {
                 <button type="button" class="sk-btn ghost" disabled>Candidatures fermées</button>
               }
-            </footer>
+            </div>
 
-          </article>
+          </li>
         }
-      </div>
+      </ul>
     }
 
   </div>
-</div>
+</main>
+
+<app-site-footer />

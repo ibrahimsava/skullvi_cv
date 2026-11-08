@@ -28,7 +28,7 @@ function tokenResponse(organizationId: string | null): AuthResponse {
       organizationId,
       organizationName: organizationId ? 'Cabinet Leon' : null,
       orgRole: organizationId ? 'OWNER' : null,
-      plan: organizationId ? 'TRIAL' : null,
+      plan: organizationId ? 'FREE' : null,
     },
   };
 }

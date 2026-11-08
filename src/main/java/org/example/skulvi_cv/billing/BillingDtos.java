@@ -22,8 +22,10 @@ public final class BillingDtos {
             Plan plan,
             String planLabel,
             OrgStatus status,
-            Instant trialEndsAt,
-            Integer trialDaysLeft,
+            boolean paid,
+            /** Fin de la période déjà payée. Null sur le plan gratuit. */
+            Instant currentPeriodEnd,
+            boolean cancelAtPeriodEnd,
             String period,
             int analysesUsed,
             Integer analysesLimit,
@@ -49,6 +51,17 @@ public final class BillingDtos {
 
     public record PlanCatalog(List<PlanOption> plans) {}
 
-    /** Demande de changement de plan. Le paiement réel viendra du prestataire. */
+    /** Demande de souscription à un plan. */
     public record ChangePlanRequest(Plan plan) {}
+
+    /** Adresse de redirection vers une page hébergée par le prestataire de paiement. */
+    public record CheckoutResponse(String url) {}
+
+    /**
+     * Le paiement en ligne est-il configuré sur cette instance ?
+     *
+     * <p>Permet à l'interface d'afficher un bouton de souscription ou, à défaut, une invitation
+     * à nous écrire. Un bouton qui renvoie une erreur de configuration fait fuir le client.
+     */
+    public record BillingStatus(boolean online) {}
 }

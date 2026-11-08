@@ -1,8 +1,10 @@
-<div class="signup-page">
-  <div class="wrap">
+<app-site-header />
+
+<main class="signup-page">
+  <div class="sk-wrap wrap">
 
     <section class="pitch">
-      <p class="eyebrow">Essai gratuit, 14 jours</p>
+      <p class="sk-eyebrow">Essai gratuit, 14 jours</p>
       <h1>Triez vos CV sans les lire tous</h1>
       <p class="lead">
         Vous décrivez le poste et les compétences attendues. Chaque CV déposé est analysé, puis
@@ -51,44 +53,51 @@
           <small class="help">Il apparaîtra sur vos offres et sur votre page carrière.</small>
         </div>
 
-        <div class="two">
+        <div class="sk-row">
           <div class="sk-field">
             <label for="firstName">Prénom</label>
-            <input id="firstName" type="text" formControlName="firstName" autocomplete="given-name">
+            <input id="firstName" type="text" formControlName="firstName" autocomplete="given-name"
+                   [attr.aria-invalid]="invalid('firstName') || null">
             @if (invalid('firstName')) { <small class="error">Champ requis.</small> }
           </div>
 
           <div class="sk-field">
             <label for="lastName">Nom</label>
-            <input id="lastName" type="text" formControlName="lastName" autocomplete="family-name">
+            <input id="lastName" type="text" formControlName="lastName" autocomplete="family-name"
+                   [attr.aria-invalid]="invalid('lastName') || null">
             @if (invalid('lastName')) { <small class="error">Champ requis.</small> }
           </div>
         </div>
 
         <div class="sk-field">
           <label for="email">E-mail professionnel</label>
-          <input id="email" type="email" formControlName="email" autocomplete="email">
+          <input id="email" type="email" formControlName="email" autocomplete="email"
+                 [attr.aria-invalid]="invalid('email') || null">
           @if (invalid('email')) { <small class="error">Saisissez une adresse e-mail valide.</small> }
         </div>
 
         <div class="sk-field">
           <label for="password">Mot de passe</label>
-          <input id="password" type="password" formControlName="password" autocomplete="new-password">
-          @if (invalid('password')) { <small class="error">8 caractères minimum.</small> }
+          <input id="password" type="password" formControlName="password" autocomplete="new-password"
+                 [attr.aria-invalid]="invalid('password') || null">
+          @if (invalid('password')) {
+            <small class="error">8 caractères minimum.</small>
+          } @else {
+            <small class="help">8 caractères minimum.</small>
+          }
         </div>
 
-        <button type="submit" class="sk-btn primary block" [disabled]="loading()">
+        <button type="submit" class="sk-btn primary block lg" [disabled]="loading()">
           {{ loading() ? 'Création de votre espace…' : 'Démarrer mon essai gratuit' }}
         </button>
 
         <p class="alt">
-          Vous avez déjà un espace ? <a routerLink="/login">Se connecter</a>
-        </p>
-        <p class="alt">
-          Vous cherchez un emploi ? <a routerLink="/offres">Voir les offres</a>
+          Déjà un espace ? <a class="sk-link" routerLink="/login">Se connecter</a>
+          <span class="sep" aria-hidden="true">·</span>
+          Vous cherchez un emploi ? <a class="sk-link" routerLink="/offres">Voir les offres</a>
         </p>
       </form>
     </section>
 
   </div>
-</div>
+</main>

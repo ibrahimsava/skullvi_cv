@@ -1,5 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { SiteFooter } from '../../layout/site-footer/site-footer';
+import { SiteHeader } from '../../layout/site-header/site-header';
 import { PlanOption } from '../admin/admin.models';
 import { OffresService } from '../offres/offres.service';
 
@@ -13,7 +15,7 @@ import { OffresService } from '../offres/offres.service';
 @Component({
   standalone: true,
   selector: 'app-tarifs',
-  imports: [RouterLink],
+  imports: [RouterLink, SiteHeader, SiteFooter],
   templateUrl: './tarifs.html',
   styleUrl: './tarifs.scss',
 })

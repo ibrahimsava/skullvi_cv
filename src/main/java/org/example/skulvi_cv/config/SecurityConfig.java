@@ -74,6 +74,22 @@ public class SecurityConfig {
                             // Visiteurs : offres, pages carrière, tarifs
                             .requestMatchers(HttpMethod.GET, "/api/v1/public/**").permitAll()
 
+                            /*
+                             * Mesure d'audience. Public par nécessité : la page d'accueil est
+                             * vue par des visiteurs non connectés, qui sont précisément ceux
+                             * qu'on veut compter. Protégé par une limite de débit, et aucune
+                             * donnée reçue n'est crue sur parole.
+                             */
+                            .requestMatchers(HttpMethod.POST, "/api/v1/public/track").permitAll()
+
+                            /*
+                             * Webhook de paiement. Non authentifiable par jeton — l'appelant
+                             * est le prestataire, pas un utilisateur. La sécurité repose
+                             * entièrement sur la vérification de la signature cryptographique
+                             * du corps de la requête, faite dans le contrôleur.
+                             */
+                            .requestMatchers(HttpMethod.POST, "/api/v1/webhooks/stripe").permitAll()
+
                             // Postuler sans compte reste possible (limité en débit par adresse IP)
                             .requestMatchers(HttpMethod.POST, "/api/v1/offers/*/applications").permitAll()
 
@@ -123,21 +139,46 @@ public class SecurityConfig {
     }
 
     /**
-     * Origines autorisées.
+     * Origines autorisées par le navigateur.
      *
-     * <p>La valeur est découpée sur les virgules : {@code List.of(origin)} n'en acceptait qu'une
-     * seule, ce qui rendait impossible de servir à la fois le domaine de production et un
-     * environnement de test — ou, demain, un sous-domaine par client.
+     * <p>La valeur est découpée sur les virgules, et chaque entrée est classée selon qu'elle
+     * contient une étoile :
+     *
+     * <ul>
+     *   <li><b>sans étoile</b> → origine exacte. C'est ce qu'utilise la production, et son
+     *       comportement est strictement inchangé ;
+     *   <li><b>avec étoile</b> → motif, par exemple {@code http://localhost:*}. Indispensable
+     *       en développement : le serveur de développement ne garde pas toujours le port 4200
+     *       (une variable d'environnement {@code PORT} peut le forcer ailleurs), et lister les
+     *       ports un par un ne tient pas.
+     * </ul>
+     *
+     * <p>En temps normal le CORS ne joue même pas en local : le front passe par le mandataire
+     * du serveur de développement ({@code proxy.conf.cjs}) et reste donc sur la même origine.
+     * Les motifs ne servent qu'aux appels directs — depuis un téléphone sur le même réseau,
+     * typiquement.
+     *
+     * <p>{@code allowCredentials} reste désactivé. C'est ce qui rend les motifs sans danger
+     * ici : le jeton voyage dans un en-tête {@code Authorization}, pas dans un cookie, donc
+     * aucune requête d'un site tiers ne peut emprunter la session de l'utilisateur.
      */
     @Bean
     CorsConfigurationSource corsConfigurationSource(@Value("${app.security.cors-origin}") String origins) {
-        List<String> allowed = Arrays.stream(origins.split(","))
+        List<String> entries = Arrays.stream(origins.split(","))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .toList();
 
+        List<String> exact = entries.stream().filter(o -> !o.contains("*")).toList();
+        List<String> patterns = entries.stream().filter(o -> o.contains("*")).toList();
+
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(allowed);
+        if (!exact.isEmpty()) {
+            config.setAllowedOrigins(exact);
+        }
+        if (!patterns.isEmpty()) {
+            config.setAllowedOriginPatterns(patterns);
+        }
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("Content-Disposition"));   // pour nommer le CV téléchargé

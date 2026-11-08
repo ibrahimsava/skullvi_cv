@@ -9,7 +9,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Le client qui paie : une entreprise ou un cabinet de recrutement.
+ * Le client : une entreprise ou un cabinet de recrutement.
  *
  * <p>C'est la racine de cloisonnement de toutes les données métier. Offres, candidatures et
  * candidats portent un {@code organization_id} : deux clients ne voient jamais les données
@@ -35,32 +35,46 @@ public class Organization {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private Plan plan = Plan.TRIAL;
+    private Plan plan = Plan.FREE;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private OrgStatus status = OrgStatus.TRIAL;
+    private OrgStatus status = OrgStatus.ACTIVE;
 
-    /** Fin de la période d'essai. Null dès que l'organisation a un abonnement payant. */
-    private Instant trialEndsAt;
-
-    /**
-     * Identifiant client chez le prestataire de paiement.
-     * Rempli au premier paiement ; laissé libre ici pour ne pas coupler le modèle à Stripe.
-     */
+    /** Identifiant client chez le prestataire de paiement. Créé au premier passage en caisse. */
     @Column(length = 80)
     private String billingCustomerId;
+
+    /** Identifiant de l'abonnement en cours. Null sur le plan gratuit. */
+    @Column(length = 80)
+    private String billingSubscriptionId;
+
+    /**
+     * Fin de la période déjà payée.
+     *
+     * <p>Sert à annoncer « votre abonnement reste actif jusqu'au … » après une résiliation :
+     * le client a payé le mois, il le garde.
+     */
+    private Instant currentPeriodEnd;
+
+    /** Résiliation demandée : l'abonnement s'arrête à la fin de la période en cours. */
+    @Column(nullable = false)
+    private boolean cancelAtPeriodEnd = false;
 
     @Column(nullable = false)
     private Instant createdAt = Instant.now();
 
-    /** L'essai est-il arrivé à échéance ? */
-    public boolean trialExpired() {
-        return status == OrgStatus.TRIAL && trialEndsAt != null && trialEndsAt.isBefore(Instant.now());
+    /**
+     * L'organisation peut-elle écrire ?
+     *
+     * <p>Toujours oui : le plan gratuit reste accessible en toutes circonstances. Ce sont les
+     * quotas qui limitent, jamais le statut.
+     */
+    public boolean writable() {
+        return status.allowsWrite();
     }
 
-    /** L'organisation peut-elle encore écrire (créer une offre, consommer une analyse) ? */
-    public boolean writable() {
-        return status.allowsWrite() && !trialExpired();
+    public boolean hasPaidPlan() {
+        return plan.isPaid();
     }
 }

@@ -1,0 +1,157 @@
+.bar {
+  position: sticky; top: 0; z-index: 60;
+  /* Fond opaque d'abord : si le navigateur ignore color-mix, la barre reste lisible
+     au lieu de devenir transparente. */
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(14px) saturate(140%);
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease),
+              background var(--t) var(--ease);
+
+  /* Le filet et l'ombre n'apparaissent qu'au défilement : en haut de page, rien
+     ne vient couper le héros. */
+  &.solid {
+    background: rgba(255, 255, 255, 0.94);
+    border-bottom-color: var(--line);
+    box-shadow: var(--sh-1);
+  }
+}
+
+.inner {
+  display: flex; align-items: center; gap: 30px;
+  height: 70px;
+}
+
+/* ---------------------------------------------------------------- marque */
+
+.brand {
+  display: inline-flex; align-items: center; gap: 10px;
+  text-decoration: none; color: var(--ink);
+  margin-right: auto;
+
+  .mark {
+    display: grid; place-items: center;
+    width: 32px; height: 32px;
+    border-radius: 9px;
+    background: var(--grad); color: #fff;
+    font-size: 16px; font-weight: 800; line-height: 1;
+    box-shadow: var(--sh-blue);
+    transition: transform var(--t) var(--ease);
+  }
+
+  .name { font-size: 20px; font-weight: 700; letter-spacing: -0.03em; }
+
+  &:hover .mark { transform: rotate(-6deg) scale(1.05); }
+}
+
+/* ---------------------------------------------------------------- navigation */
+
+.nav {
+  display: flex; align-items: center; gap: 4px;
+
+  a {
+    position: relative;
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    color: var(--ink-2);
+    font-size: 14.5px; font-weight: 600;
+    text-decoration: none;
+    transition: color var(--t-fast), background var(--t-fast);
+
+    &:hover { color: var(--accent-hover); background: var(--blue-50); }
+
+    /* Barre sous la page courante, qui se déploie depuis le centre. */
+    &.on {
+      color: var(--accent-hover);
+
+      &::after {
+        content: '';
+        position: absolute; left: 14px; right: 14px; bottom: 2px;
+        height: 2px; border-radius: 2px;
+        background: var(--grad);
+        animation: nav-in var(--t) var(--ease);
+      }
+    }
+  }
+}
+
+@keyframes nav-in {
+  from { transform: scaleX(0.3); opacity: 0; }
+  to   { transform: scaleX(1); opacity: 1; }
+}
+
+.actions {
+  display: flex; align-items: center; gap: 14px;
+
+  .plain {
+    color: var(--ink-2);
+    font-size: 14.5px; font-weight: 600;
+    text-decoration: none;
+    transition: color var(--t-fast);
+
+    &:hover { color: var(--accent-hover); }
+  }
+}
+
+/* ---------------------------------------------------------------- menu mobile */
+
+.burger {
+  display: none;
+  width: 40px; height: 40px;
+  padding: 0;
+  border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
+  background: var(--surface);
+  cursor: pointer;
+  box-shadow: var(--sh-1);
+
+  span {
+    display: block;
+    width: 17px; height: 2px;
+    margin: 3.5px auto;
+    border-radius: 2px;
+    background: var(--ink);
+    transition: transform var(--t) var(--ease), opacity var(--t-fast);
+  }
+
+  /* Les deux traits se croisent en X à l'ouverture. */
+  .open & {
+    span:first-child { transform: translateY(2.75px) rotate(45deg); }
+    span:last-child  { transform: translateY(-2.75px) rotate(-45deg); }
+  }
+}
+
+.sheet {
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+  padding: 8px 0 22px;
+  box-shadow: var(--sh-2);
+  animation: sheet-in var(--t) var(--ease);
+
+  a {
+    display: block;
+    padding: 14px 2px;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink);
+    font-size: 16px; font-weight: 600;
+    text-decoration: none;
+
+    &.on { color: var(--accent-hover); }
+  }
+}
+
+@keyframes sheet-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.sheet-actions { display: grid; gap: 10px; margin-top: 20px; }
+
+@media (max-width: 880px) {
+  .nav, .actions { display: none; }
+  .burger { display: block; }
+}
+
+@media (min-width: 881px) {
+  /* Le panneau mobile ne doit jamais réapparaître sur grand écran, même laissé ouvert. */
+  .sheet { display: none; }
+}

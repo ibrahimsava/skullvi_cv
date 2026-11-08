@@ -4,6 +4,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Observable, of, switchMap, tap } from 'rxjs';
+import { SiteHeader } from '../../layout/site-header/site-header';
 import { AuthService } from '../auth/auth';
 import { User } from '../auth/model';
 import { PublicOffer } from '../admin/admin.models';
@@ -17,7 +18,7 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024;   // 5 Mo, aligné sur la limite du serve
 @Component({
   standalone: true,
   selector: 'app-postuler',
-  imports: [ReactiveFormsModule, RouterLink, DatePipe],
+  imports: [ReactiveFormsModule, RouterLink, DatePipe, SiteHeader],
   templateUrl: './postuler.html',
   styleUrl: './postuler.scss',
 })

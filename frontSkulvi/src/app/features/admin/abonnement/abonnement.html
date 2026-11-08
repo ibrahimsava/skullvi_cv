@@ -5,6 +5,21 @@
   </div>
 </header>
 
+@if (outcome() === 'ok') {
+  <p class="sk-alert ok" role="status">
+    Paiement reçu, merci. L'activation se fait à la confirmation de notre prestataire,
+    en général immédiate. <button type="button" class="inline-link" (click)="reload()">Actualiser</button>
+  </p>
+} @else if (outcome() === 'annule') {
+  <p class="sk-alert" role="status">
+    Paiement abandonné. Rien n'a été débité, et votre plan n'a pas changé.
+  </p>
+}
+
+@if (error()) {
+  <p class="sk-alert error" role="alert">{{ error() }}</p>
+}
+
 @if (loading()) {
   <p class="sk-empty">Chargement…</p>
 
@@ -19,23 +34,35 @@
     }
   }
 
-  <!-- ------------------------------------------------------- plan en cours -->
-  <section class="sk-card">
+  <!-- ───────────────────────────────────────── plan en cours ───────── -->
+  <section class="panel">
     <div class="card-head">
       <div>
         <h2>Plan {{ usage()!.planLabel }}</h2>
         <p class="sub">
-          Période du {{ usage()!.period }}
-          @if (usage()!.status === 'TRIAL' && usage()!.trialEndsAt) {
-            · essai jusqu'au {{ usage()!.trialEndsAt | date:'dd/MM/yyyy' }}
+          Consommation du mois {{ usage()!.period }}
+          @if (usage()!.currentPeriodEnd) {
+            @if (usage()!.cancelAtPeriodEnd) {
+              · se termine le {{ usage()!.currentPeriodEnd | date:'dd/MM/yyyy' }}
+            } @else {
+              · renouvellement le {{ usage()!.currentPeriodEnd | date:'dd/MM/yyyy' }}
+            }
           }
         </p>
       </div>
-      <span class="sk-badge"
-            [class.ok]="statusTone(usage()!) === 'ok'"
-            [class.warn]="statusTone(usage()!) === 'warn'"
-            [class.danger]="statusTone(usage()!) === 'danger'"
-            [class.accent]="statusTone(usage()!) === 'accent'">{{ statusLabel(usage()!) }}</span>
+
+      <div class="head-right">
+        <span class="sk-badge"
+              [class.ok]="statusTone(usage()!) === 'ok'"
+              [class.warn]="statusTone(usage()!) === 'warn'"
+              [class.accent]="statusTone(usage()!) === 'accent'">{{ statusLabel(usage()!) }}</span>
+
+        @if (canManage() && usage()!.paid && paymentOnline()) {
+          <button type="button" class="sk-btn ghost sm" (click)="openPortal()">
+            Gérer mon paiement
+          </button>
+        }
+      </div>
     </div>
 
     <div class="meters">
@@ -89,15 +116,18 @@
     }
   </section>
 
-  <!-- ------------------------------------------------------- grille -->
-  <section class="sk-card">
-    <h2>Changer de plan</h2>
+  <!-- ───────────────────────────────────────── grille ──────────────── -->
+  <section class="panel">
+    <h2>Les plans</h2>
     <p class="sub">
-      @if (canManage()) {
-        Le paiement en ligne arrive. En attendant, écrivez-nous et nous activons votre plan
-        sous 24 h ouvrées.
-      } @else {
+      @if (!canManage()) {
         Seul le propriétaire du compte peut modifier l'abonnement.
+      } @else if (paymentOnline()) {
+        Le changement prend effet immédiatement après le paiement. Vous pouvez arrêter
+        à tout moment depuis le portail de facturation.
+      } @else {
+        Le paiement en ligne n'est pas encore activé. Écrivez-nous et nous activons votre
+        plan sous 24 h ouvrées.
       }
     </p>
 
@@ -123,30 +153,48 @@
             <li><strong class="num">{{ limitLabel(p.maxSeats) }}</strong> utilisateur(s)</li>
             <li class="over">
               @if (p.allowsOverage) {
-                Au-delà : {{ euros(p.overageCents) }} € par analyse
+                Au-delà : {{ euros(p.overageCents) }} € par analyse, le service continue
               } @else {
-                Le service s'arrête une fois le quota atteint
+                Le compteur repart le 1er de chaque mois
               }
             </li>
           </ul>
 
-          @if (!p.current && p.priceCents > 0 && canManage()) {
-            <a class="sk-btn primary sm" [href]="mailto(p)">Passer au {{ p.label }}</a>
-          } @else if (p.current) {
+          @if (p.current) {
             <button type="button" class="sk-btn ghost sm" disabled>Plan actuel</button>
+          } @else if (!canManage()) {
+            <span class="muted-note">Réservé au propriétaire</span>
+          } @else if (p.priceCents === 0) {
+            <span class="muted-note">
+              Résiliez depuis le portail pour revenir au gratuit
+            </span>
+          } @else if (paymentOnline()) {
+            <button type="button" class="sk-btn sm"
+                    [class.primary]="isUpgrade(p)" [class.ghost]="!isUpgrade(p)"
+                    [disabled]="busyPlan() !== null" (click)="subscribe(p)">
+              {{ busyPlan() === p.plan ? 'Redirection…' : (isUpgrade(p) ? 'Passer au ' + p.label : 'Choisir ' + p.label) }}
+            </button>
+          } @else {
+            <a class="sk-btn ghost sm" [href]="mailto(p)">Nous écrire</a>
           }
         </article>
       }
     </div>
   </section>
 
-  <section class="sk-card">
+  <!-- ───────────────────────────────────────── explications ────────── -->
+  <section class="panel">
     <h2>Comment la facturation fonctionne</h2>
     <ul class="faq">
       <li>
+        <strong>Le plan gratuit n'expire jamais.</strong>
+        Vous pouvez mener un recrutement complet sans payer. C'est le quota mensuel
+        d'analyses qui vous dira quand passer à l'abonnement, pas un compte à rebours.
+      </li>
+      <li>
         <strong>L'unité facturée est l'analyse de CV.</strong>
-        Une candidature déposée consomme une analyse. Relancer une analyse qui a échoué de notre
-        côté n'en consomme pas de nouvelle.
+        Une candidature déposée consomme une analyse. Relancer une analyse qui a échoué de
+        notre côté n'en consomme pas de nouvelle.
       </li>
       <li>
         <strong>Le compteur repart à zéro chaque mois.</strong>
@@ -154,12 +202,18 @@
       </li>
       <li>
         <strong>Dépasser le quota ne coupe pas le service</strong>
-        sur un plan payant : les analyses supplémentaires sont facturées à l'unité. Seul l'essai
-        gratuit s'arrête net.
+        sur un plan payant : les analyses supplémentaires sont facturées à l'unité. Seul le
+        plan gratuit s'arrête à son quota.
       </li>
       <li>
-        <strong>Un impayé ne supprime rien.</strong>
-        Le compte passe en lecture seule. Vos offres, vos candidatures et vos CV restent en place.
+        <strong>Un impayé ne supprime rien et ne bloque pas l'accès.</strong>
+        Vous repassez simplement aux limites du plan gratuit. Offres, candidatures et CV
+        restent en place.
+      </li>
+      <li>
+        <strong>Aucune donnée de carte ne passe par Skulvi.</strong>
+        Le paiement se fait sur les pages de notre prestataire, qui gère aussi vos factures
+        et la résiliation.
       </li>
     </ul>
   </section>

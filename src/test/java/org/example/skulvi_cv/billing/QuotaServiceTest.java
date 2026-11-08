@@ -19,8 +19,6 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.http.HttpStatus;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -60,9 +58,8 @@ class QuotaServiceTest {
         org.setId(ORG);
         org.setName("Cabinet Test");
         org.setSlug("cabinet-test");
-        org.setPlan(Plan.TRIAL);
-        org.setStatus(OrgStatus.TRIAL);
-        org.setTrialEndsAt(Instant.now().plus(10, ChronoUnit.DAYS));
+        org.setPlan(Plan.FREE);
+        org.setStatus(OrgStatus.ACTIVE);
 
         when(organizations.findById(ORG)).thenReturn(Optional.of(org));
     }
@@ -77,71 +74,67 @@ class QuotaServiceTest {
                 .thenReturn(Optional.of(record));
     }
 
+    private void onPaidPlan() {
+        org.setPlan(Plan.PRO);
+        org.setStatus(OrgStatus.ACTIVE);
+    }
+
     @Nested
     @DisplayName("Analyses de CV")
     class Analyses {
 
         @Test
         void autorise_sous_le_quota() {
-            analysesUsed(19);   // limite de l'essai : 20
+            analysesUsed(Plan.FREE.maxAnalysesPerMonth() - 1);
             assertThatCode(() -> service.assertCanAnalyze(ORG)).doesNotThrowAnyException();
         }
 
         @Test
-        @DisplayName("l'essai gratuit s'arrête net au quota : c'est ce qui le convertit en abonnement")
-        void bloque_l_essai_au_quota() {
-            analysesUsed(20);
+        @DisplayName("le gratuit s'arrête au quota : c'est ce qui le convertit en abonnement")
+        void bloque_le_gratuit_au_quota() {
+            analysesUsed(Plan.FREE.maxAnalysesPerMonth());
 
             assertThatThrownBy(() -> service.assertCanAnalyze(ORG))
                     .isInstanceOf(ApiException.class)
-                    .hasMessageContaining("Quota d'essai atteint")
+                    .hasMessageContaining("analyses gratuites")
                     .extracting(e -> ((ApiException) e).getStatus())
                     .isEqualTo(HttpStatus.PAYMENT_REQUIRED);
         }
 
         @Test
+        @DisplayName("le message dit quand le compteur repart : sinon le client croit être bloqué")
+        void le_message_indique_la_remise_a_zero() {
+            analysesUsed(Plan.FREE.maxAnalysesPerMonth());
+
+            assertThatThrownBy(() -> service.assertCanAnalyze(ORG))
+                    .hasMessageContaining("repart");
+        }
+
+        @Test
         @DisplayName("un plan payant continue au-delà du quota : on ne coupe pas un client en pleine campagne")
         void laisse_passer_le_depassement_sur_un_plan_payant() {
-            org.setPlan(Plan.STARTER);
-            org.setStatus(OrgStatus.ACTIVE);
-            org.setTrialEndsAt(null);
-            analysesUsed(500);   // très au-delà des 150 incluses
+            onPaidPlan();
+            analysesUsed(Plan.PRO.maxAnalysesPerMonth() * 3);
 
             assertThatCode(() -> service.assertCanAnalyze(ORG)).doesNotThrowAnyException();
         }
 
         @Test
-        @DisplayName("un essai expiré bloque, même si le quota n'est pas atteint")
-        void bloque_un_essai_expire() {
-            org.setTrialEndsAt(Instant.now().minus(1, ChronoUnit.DAYS));
-            analysesUsed(0);
-
-            assertThatThrownBy(() -> service.assertCanAnalyze(ORG))
-                    .isInstanceOf(ApiException.class)
-                    .hasMessageContaining("période d'essai est terminée");
-        }
-
-        @Test
-        void bloque_un_compte_suspendu() {
-            org.setStatus(OrgStatus.SUSPENDED);
-            org.setTrialEndsAt(null);
-            analysesUsed(0);
-
-            assertThatThrownBy(() -> service.assertCanAnalyze(ORG))
-                    .isInstanceOf(ApiException.class)
-                    .hasMessageContaining("lecture seule");
-        }
-
-        @Test
-        void bloque_un_impaye() {
-            org.setPlan(Plan.PRO);
+        @DisplayName("un impayé n'empêche pas d'analyser : les quotas limitent, pas le statut")
+        void un_impaye_ne_bloque_pas() {
+            onPaidPlan();
             org.setStatus(OrgStatus.PAST_DUE);
-            org.setTrialEndsAt(null);
             analysesUsed(0);
 
-            assertThatThrownBy(() -> service.assertCanAnalyze(ORG))
-                    .isInstanceOf(ApiException.class)
-                    .hasMessageContaining("lecture seule");
+            assertThatCode(() -> service.assertCanAnalyze(ORG)).doesNotThrowAnyException();
+        }
+
+        @Test
+        void une_resiliation_ne_bloque_pas_non_plus() {
+            org.setStatus(OrgStatus.CANCELED);
+            analysesUsed(0);
+
+            assertThatCode(() -> service.assertCanAnalyze(ORG)).doesNotThrowAnyException();
         }
     }
 
@@ -157,11 +150,12 @@ class QuotaServiceTest {
 
         @Test
         void bloque_a_la_limite_du_plan() {
-            when(offers.countByOrganizationIdAndStatus(ORG, OfferStatus.OPEN)).thenReturn(1L);
+            when(offers.countByOrganizationIdAndStatus(ORG, OfferStatus.OPEN))
+                    .thenReturn((long) Plan.FREE.maxActiveOffers());
 
             assertThatThrownBy(() -> service.assertCanCreateOffer(ORG))
                     .isInstanceOf(ApiException.class)
-                    .hasMessageContaining("1 offre(s) ouverte(s)");
+                    .hasMessageContaining("offre(s) ouverte(s)");
         }
 
         @Test
@@ -180,18 +174,17 @@ class QuotaServiceTest {
 
         @Test
         void bloque_a_la_limite_du_plan() {
-            when(memberships.countByOrganizationId(ORG)).thenReturn(1L);
+            when(memberships.countByOrganizationId(ORG))
+                    .thenReturn((long) Plan.FREE.maxSeats());
 
             assertThatThrownBy(() -> service.assertCanAddSeat(ORG))
                     .isInstanceOf(ApiException.class)
-                    .hasMessageContaining("1 utilisateur(s)");
+                    .hasMessageContaining("utilisateur(s)");
         }
 
         @Test
         void autorise_sur_un_plan_plus_large() {
-            org.setPlan(Plan.PRO);
-            org.setStatus(OrgStatus.ACTIVE);
-            org.setTrialEndsAt(null);
+            onPaidPlan();
             when(memberships.countByOrganizationId(ORG)).thenReturn(4L);
 
             assertThatCode(() -> service.assertCanAddSeat(ORG)).doesNotThrowAnyException();
@@ -204,19 +197,19 @@ class QuotaServiceTest {
 
         @Test
         void calcule_le_depassement_et_son_montant() {
-            org.setPlan(Plan.STARTER);
-            org.setStatus(OrgStatus.ACTIVE);
-            org.setTrialEndsAt(null);
-            analysesUsed(163);   // 150 incluses, donc 13 en trop
+            onPaidPlan();
+            int limite = Plan.PRO.maxAnalysesPerMonth();
+            analysesUsed(limite + 13);
             when(offers.countByOrganizationIdAndStatus(ORG, OfferStatus.OPEN)).thenReturn(2L);
             when(memberships.countByOrganizationId(ORG)).thenReturn(2L);
 
             var snapshot = service.snapshot(ORG);
 
-            assertThat(snapshot.analysesUsed()).isEqualTo(163);
-            assertThat(snapshot.analysesLimit()).isEqualTo(150);
+            assertThat(snapshot.analysesUsed()).isEqualTo(limite + 13);
+            assertThat(snapshot.analysesLimit()).isEqualTo(limite);
             assertThat(snapshot.overageCount()).isEqualTo(13);
             assertThat(snapshot.overageCents()).isEqualTo(13 * Plan.OVERAGE_CENTS);
+            assertThat(snapshot.paid()).isTrue();
             assertThat(snapshot.writable()).isTrue();
         }
 
@@ -230,14 +223,13 @@ class QuotaServiceTest {
 
             assertThat(snapshot.overageCount()).isZero();
             assertThat(snapshot.overageCents()).isZero();
+            assertThat(snapshot.paid()).isFalse();
         }
 
         @Test
         @DisplayName("une limite illimitée vaut null, pas Integer.MAX_VALUE")
         void traduit_l_illimite_en_null() {
             org.setPlan(Plan.BUSINESS);
-            org.setStatus(OrgStatus.ACTIVE);
-            org.setTrialEndsAt(null);
             analysesUsed(10);
             when(offers.countByOrganizationIdAndStatus(ORG, OfferStatus.OPEN)).thenReturn(20L);
             when(memberships.countByOrganizationId(ORG)).thenReturn(30L);
@@ -247,17 +239,7 @@ class QuotaServiceTest {
             assertThat(snapshot.activeOffersLimit()).isNull();
             assertThat(snapshot.seatsLimit()).isNull();
             // Le Business plafonne quand même les analyses : cette limite reste un chiffre.
-            assertThat(snapshot.analysesLimit()).isEqualTo(3_000);
-        }
-
-        @Test
-        void compte_les_jours_d_essai_restants() {
-            org.setTrialEndsAt(Instant.now().plus(7, ChronoUnit.DAYS).plusSeconds(60));
-            analysesUsed(0);
-            when(offers.countByOrganizationIdAndStatus(ORG, OfferStatus.OPEN)).thenReturn(0L);
-            when(memberships.countByOrganizationId(ORG)).thenReturn(1L);
-
-            assertThat(service.snapshot(ORG).trialDaysLeft()).isEqualTo(7);
+            assertThat(snapshot.analysesLimit()).isEqualTo(Plan.BUSINESS.maxAnalysesPerMonth());
         }
     }
 
@@ -269,7 +251,7 @@ class QuotaServiceTest {
         assertThat(catalog.plans()).hasSize(Plan.values().length);
         assertThat(catalog.plans()).noneMatch(p -> p.current());
         assertThat(catalog.plans()).anySatisfy(p -> {
-            assertThat(p.plan()).isEqualTo(Plan.TRIAL);
+            assertThat(p.plan()).isEqualTo(Plan.FREE);
             assertThat(p.priceCents()).isZero();
             assertThat(p.allowsOverage()).isFalse();
         });

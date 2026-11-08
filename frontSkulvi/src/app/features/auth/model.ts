@@ -4,9 +4,9 @@ export type GlobalRole = 'CANDIDAT' | 'RECRUTEUR' | 'ADMIN';
 /** Rôle à l'intérieur d'une organisation. */
 export type OrgRole = 'OWNER' | 'RECRUITER' | 'VIEWER';
 
-export type PlanCode = 'TRIAL' | 'STARTER' | 'PRO' | 'BUSINESS';
+export type PlanCode = 'FREE' | 'STARTER' | 'PRO' | 'BUSINESS';
 
-export type OrgStatus = 'TRIAL' | 'ACTIVE' | 'PAST_DUE' | 'SUSPENDED';
+export type OrgStatus = 'ACTIVE' | 'PAST_DUE' | 'CANCELED';
 
 /**
  * Identité du compte connecté.

@@ -1,24 +1,124 @@
-/* Styles globaux et primitives partagées par les écrans. */
+/* =============================================================================
+   Système de design Skulvi — bleu & blanc
+   -----------------------------------------------------------------------------
+   Parti pris : l'apparence d'un logiciel professionnel, pas d'une page
+   d'atterrissage. Quatre règles, et elles se tiennent entre elles :
+
+   1. Des aplats. Aucun dégradé, aucun halo flou, aucune lueur colorée sous un
+      bouton. Ce sont les marqueurs les plus reconnaissables d'un gabarit.
+   2. Des bordures nettes plutôt que des ombres. L'ombre ne sert qu'à détacher
+      ce qui flotte vraiment au-dessus du contenu, et reste neutre.
+   3. Un seul bleu qui signale. L'accent dit ce qui est actif, mesuré ou
+      cliquable — il ne décore jamais.
+   4. Du mouvement discret. Il accompagne l'arrivée d'un contenu ou la
+      progression d'une valeur. Rien ne clignote, rien ne respire, rien ne
+      lévite au survol.
+   ========================================================================== */
+
 :root {
-  --canvas: #f4f7fc;
+  /* ---- surfaces ---- */
   --surface: #ffffff;
-  --ink: #14213d;
-  --ink-2: #3d4f6b;
-  --muted: #6b7a90;
-  --line: #e1e8f3;
-  --line-strong: #c7d3e6;
-  --accent: #2563eb;
-  --accent-hover: #1d4ed8;
-  --accent-soft: #eaf1ff;
-  --ok: #176b4d;
-  --ok-soft: #e4f5ec;
-  --warn: #a9650b;
-  --warn-soft: #fdf2dd;
-  --danger: #b3372c;
-  --danger-soft: #fae6e3;
-  --radius: 10px;
+  --canvas: #f4f7fe;          /* blanc bleuté, fond de page */
+  --canvas-2: #eaf0fd;        /* bande alternée */
+  --canvas-3: #dde7fb;        /* fond encastré, rails de jauge */
+  --paper: var(--canvas);     /* alias historique */
+
+  /* ---- marine, pour les bandes d'emphase ---- */
+  --navy: #07132e;
+  --navy-2: #0d1f45;
+  --navy-3: #16305f;
+
+  /* ---- encre ---- */
+  --ink: #0b1b3a;
+  --ink-2: #3c4c69;
+  --muted: #6e7f9c;
+  --on-navy: #c3d2ee;
+  --on-navy-muted: #8fa3c7;
+
+  /* ---- filets ---- */
+  --line: #dbe4f5;
+  --line-strong: #bfcdea;
+  --rule: var(--line);
+  --rule-strong: var(--line-strong);
+
+  /* ---- bleu de marque ---- */
+  --blue-50: #eff4ff;
+  --blue-100: #dde8ff;
+  --blue-200: #c0d2ff;
+  --blue-400: #5b8def;
+  --blue-500: #2f6bea;
+  --blue-600: #1d4ed8;
+  --blue-700: #1739a8;
+  --blue-900: #0f2566;
+
+  --accent: var(--blue-600);
+  --accent-hover: var(--blue-700);
+  --accent-ink: var(--blue-900);
+  --accent-soft: var(--blue-50);
+
+  /* Aplats, pas de dégradés. Un bouton en dégradé surmonté d'une ombre colorée est le
+     marqueur le plus sûr d'un gabarit ; un aplat franc fait logiciel. Les deux alias
+     restent définis pour ne rien casser dans les feuilles qui s'en servent encore. */
+  --grad: var(--blue-600);
+  --grad-soft: var(--blue-50);
+
+  /* ---- états ---- */
+  --ok: #0b6b4f;
+  --ok-soft: #e2f6ee;
+  --warn: #8a5a0b;
+  --warn-soft: #fdf3e0;
+  --danger: #a8281f;
+  --danger-soft: #fceae7;
+  --signal: var(--blue-600);
+
+  /* ---- élévation : neutre et discrète ----
+     Pas d'ombre colorée : une lueur bleue sous un bouton est purement décorative et ne
+     dit rien de la hiérarchie. L'ombre ne sert qu'à détacher ce qui flotte réellement
+     au-dessus du contenu, et reste presque invisible partout ailleurs. */
+  --sh-1: 0 1px 2px rgba(11, 27, 58, 0.06);
+  --sh-2: 0 1px 2px rgba(11, 27, 58, 0.06), 0 2px 6px rgba(11, 27, 58, 0.05);
+  --sh-3: 0 2px 4px rgba(11, 27, 58, 0.06), 0 8px 20px rgba(11, 27, 58, 0.07);
+  --sh-4: 0 4px 10px rgba(11, 27, 58, 0.07), 0 18px 40px rgba(11, 27, 58, 0.10);
+  --sh-blue: var(--sh-2);
+
+  /* ---- géométrie ---- */
+  --radius: 8px;
   --radius-sm: 6px;
+  --radius-lg: 10px;
+  --radius-pill: 999px;
+
+  /* ---- typographie ---- */
   --font: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: var(--font);
+
+  /* ---- rythme ---- */
+  --page: 1200px;
+  --gutter: 24px;
+
+  /* ---- mouvement ---- */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);        /* sortie franche puis repos */
+  --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+  --t-fast: 0.18s;
+  --t: 0.32s;
+  --t-slow: 0.6s;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 .num { font-variant-numeric: tabular-nums; }
@@ -28,151 +128,410 @@
   clip: rect(0 0 0 0); white-space: nowrap;
 }
 
+.sk-skip {
+  position: absolute; left: -9999px; top: 0; z-index: 200;
+  padding: 11px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--accent); color: #fff;
+  font-size: 14px; font-weight: 600; text-decoration: none;
+
+  &:focus { left: 10px; top: 10px; }
+}
+
+/* ---------------------------------------------------------------- structure */
+
+.sk-wrap {
+  width: 100%;
+  max-width: var(--page);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+.sk-measure { max-width: 62ch; }
+
 .sk-page-head {
   display: flex; align-items: flex-start; justify-content: space-between;
-  gap: 16px; margin-bottom: 28px;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 28px;
 
-  h1 { margin: 0 0 6px; font-size: 26px; font-weight: 650; letter-spacing: -0.02em; color: var(--ink); }
-  p  { margin: 0; font-size: 14px; color: var(--muted); }
+  h1 {
+    margin: 0 0 6px;
+    font-size: 29px; font-weight: 700; line-height: 1.15; letter-spacing: -0.025em;
+    color: var(--ink);
+  }
+  p { margin: 0; font-size: 14.5px; color: var(--muted); max-width: 62ch; }
 }
+
+/* Surtitre : une majuscule espacée en bleu, rien de plus. Le point lumineux qui
+   « respirait » attirait l'œil sur une décoration au lieu du titre qu'elle annonce. */
+.sk-eyebrow {
+  display: block;
+  margin: 0 0 14px;
+  font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--accent);
+
+  &.on-navy { color: #7fa6ef; }
+}
+
+/* ---------------------------------------------------------------- boutons */
 
 .sk-btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 10px 16px;
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  padding: 12px 22px;
   border: 1px solid transparent; border-radius: var(--radius-sm);
-  font: inherit; font-size: 14px; font-weight: 600;
-  text-decoration: none;
+  font: inherit; font-size: 14.5px; font-weight: 650; line-height: 1.2;
+  text-decoration: none; white-space: nowrap;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease),
+              color var(--t-fast) var(--ease);
 
-  &.sm { padding: 6px 12px; font-size: 13px; }
+  &.sm { padding: 8px 15px; font-size: 13.5px; }
+  &.lg { padding: 14px 26px; font-size: 15px; }
+  &.block { width: 100%; }
 
-  &.primary {
-    background: var(--accent); color: #fff;
-    &:hover:not(:disabled) { background: var(--accent-hover); }
+  /* Pas de lévitation au survol : un bouton qui se soulève sous le curseur est un tic
+     de maquette. Le changement de teinte suffit à dire qu'il réagit. */
+  &.primary,
+  &.accent {
+    background: var(--blue-600); color: #fff;
+    &:hover:not(:disabled) { background: var(--blue-700); }
   }
+
   &.ghost {
-    background: transparent; color: var(--ink-2); border-color: var(--line-strong);
-    &:hover:not(:disabled) { background: var(--canvas); }
+    background: var(--surface); color: var(--ink);
+    border-color: var(--line-strong);
+
+    &:hover:not(:disabled) {
+      background: var(--blue-50); border-color: var(--blue-400); color: var(--accent-hover);
+    }
   }
+
+  &.light {
+    background: #fff; color: var(--accent-hover);
+    &:hover:not(:disabled) { background: var(--blue-50); }
+  }
+
+  &.outline-light {
+    background: rgba(255, 255, 255, 0.06); color: #fff;
+    border-color: rgba(255, 255, 255, 0.34);
+    &:hover:not(:disabled) { background: rgba(255, 255, 255, 0.13); border-color: #fff; }
+  }
+
   &.danger {
-    color: var(--danger); border-color: #e5bdb8;
+    background: var(--surface); color: var(--danger); border-color: #edc4bf;
     &:hover:not(:disabled) { background: var(--danger-soft); }
   }
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  &:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
 }
 
-.sk-btn:focus-visible,
-.sidebar a:focus-visible,
-.sidebar button:focus-visible {
-  outline: 2px solid var(--accent);
+.sk-link {
+  display: inline-flex; align-items: center; gap: 5px;
+  color: var(--accent);
+  font-weight: 650;
+  text-decoration: none;
+  border-bottom: 1px solid var(--blue-200);
+  transition: border-color var(--t-fast), color var(--t-fast);
+
+  &:hover { color: var(--accent-hover); border-bottom-color: var(--accent); }
+
+  /* La flèche avance au survol : indique une suite, sans ajouter de mot. */
+  &::after {
+    content: '→';
+    transition: transform var(--t) var(--ease);
+  }
+  &:hover::after { transform: translateX(3px); }
+
+  &.plain::after { content: none; }
+}
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--blue-500);
   outline-offset: 2px;
+  border-radius: 3px;
 }
 
-/* ---------------------------------------------------------------- primitives */
+/* ---------------------------------------------------------------- cartes */
 
-/* Panneau blanc : la brique de base de tous les écrans de gestion. */
 .sk-card {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 22px;
+  padding: 28px;
+  box-shadow: var(--sh-1);
 
   & + .sk-card { margin-top: 18px; }
 
   > h2 {
-    margin: 0 0 4px;
-    font-size: 17px; font-weight: 650; letter-spacing: -0.01em; color: var(--ink);
+    margin: 0 0 6px;
+    font-size: 18px; font-weight: 700; letter-spacing: -0.015em; color: var(--ink);
   }
-  > .sub { margin: 0 0 18px; font-size: 13px; color: var(--muted); }
+  > .sub { margin: 0 0 22px; font-size: 14px; color: var(--muted); max-width: 64ch; }
 }
 
-/* Étiquette d'état. Le ton porte le sens, jamais la couleur seule : le texte suffit à lire. */
+/* Carte qui réagit : légère montée et ombre plus large au survol. */
+.sk-lift {
+  transition: transform var(--t) var(--ease), box-shadow var(--t) var(--ease),
+              border-color var(--t) var(--ease);
+
+  &:hover {
+    border-color: var(--blue-400);
+    box-shadow: var(--sh-2);
+  }
+}
+
+/* ---------------------------------------------------------------- étiquettes */
+
 .sk-badge {
   display: inline-flex; align-items: center; gap: 6px;
-  padding: 3px 9px;
-  border-radius: 999px;
-  font-size: 12px; font-weight: 650; letter-spacing: 0.01em;
-  background: var(--canvas); color: var(--ink-2); border: 1px solid var(--line-strong);
+  padding: 4px 11px;
+  border-radius: var(--radius-pill);
+  font-size: 12px; font-weight: 650;
+  background: var(--canvas-2); color: var(--ink-2); border: 1px solid var(--line-strong);
 
-  &.ok     { background: var(--ok-soft);     color: var(--ok);     border-color: #b9ddc9; }
-  &.warn   { background: var(--warn-soft);   color: var(--warn);   border-color: #ebd4a4; }
-  &.danger { background: var(--danger-soft); color: var(--danger); border-color: #e5bdb8; }
-  &.accent { background: var(--accent-soft); color: var(--accent-hover); border-color: #bdd3fb; }
+  &.ok     { background: var(--ok-soft);     color: var(--ok);     border-color: #b4e3d0; }
+  &.warn   { background: var(--warn-soft);   color: var(--warn);   border-color: #ead5a6; }
+  &.danger { background: var(--danger-soft); color: var(--danger); border-color: #edc4bf; }
+  &.accent { background: var(--blue-50);     color: var(--accent-hover); border-color: var(--blue-200); }
 }
 
-/* Champ de formulaire */
+/* ---------------------------------------------------------------- formulaires */
+
 .sk-field {
-  display: flex; flex-direction: column; gap: 6px;
+  display: flex; flex-direction: column; gap: 7px;
 
-  label { font-size: 13px; font-weight: 600; color: var(--ink-2); }
-
-  input, select, textarea {
-    padding: 10px 12px;
-    border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
-    background: var(--surface); color: var(--ink);
-    font: inherit; font-size: 14px;
-
-    &:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
-    &[disabled] { background: var(--canvas); color: var(--muted); }
+  > label {
+    font-size: 13.5px; font-weight: 650; color: var(--ink);
+    .opt { font-weight: 400; color: var(--muted); }
   }
 
-  .error { font-size: 12px; color: var(--danger); }
-  .help  { font-size: 12px; color: var(--muted); }
+  input, select, textarea {
+    width: 100%;
+    padding: 13px 15px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit; font-size: 15px;
+    transition: border-color var(--t-fast), box-shadow var(--t-fast), background var(--t-fast);
+
+    &::placeholder { color: #9aa8c2; }
+
+    &:hover:not([disabled]):not(:focus) { border-color: var(--blue-400); }
+
+    /* Halo bleu large : on repère son champ actif d'un coup d'œil dans un formulaire long. */
+    &:focus {
+      outline: none;
+      border-color: var(--blue-500);
+      box-shadow: 0 0 0 4px rgba(47, 107, 234, 0.14);
+    }
+
+    &[disabled] {
+      background: var(--canvas); color: var(--muted);
+      border-color: var(--line); cursor: not-allowed;
+    }
+
+    &[aria-invalid='true'] {
+      border-color: var(--danger);
+      &:focus { box-shadow: 0 0 0 4px rgba(168, 40, 31, 0.12); }
+    }
+  }
+
+  textarea { min-height: 128px; resize: vertical; line-height: 1.6; }
+
+  select {
+    appearance: none;
+    padding-right: 42px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%233c4c69' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 11px;
+  }
+
+  /* L'erreur glisse en place au lieu d'apparaître d'un coup : la hauteur du
+     formulaire ne saute pas sous le curseur. */
+  .error {
+    font-size: 12.5px; font-weight: 600; color: var(--danger);
+    animation: sk-slip var(--t) var(--ease);
+  }
+  .help { font-size: 12.5px; color: var(--muted); }
 }
 
-.sk-grid {
-  display: grid; gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+@keyframes sk-slip {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: none; }
 }
 
-/* Message d'erreur ou d'information en pleine largeur */
+.sk-row { display: grid; gap: 17px; grid-template-columns: 1fr 1fr; }
+.sk-form { display: grid; gap: 19px; }
+
+.sk-choice {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color var(--t-fast), background var(--t-fast), box-shadow var(--t-fast);
+
+  input { width: auto; margin: 2px 0 0; accent-color: var(--accent); }
+
+  .label { font-size: 14px; font-weight: 650; color: var(--ink); }
+  .desc  { display: block; margin-top: 2px; font-size: 12.5px; color: var(--muted); }
+
+  &:hover { border-color: var(--blue-400); }
+  &:has(input:checked) {
+    border-color: var(--blue-500); background: var(--blue-50);
+    box-shadow: 0 0 0 3px rgba(47, 107, 234, 0.1);
+  }
+}
+
+.sk-drop {
+  display: flex; align-items: center; gap: 14px;
+  padding: 20px;
+  border: 1.5px dashed var(--line-strong); border-radius: var(--radius-sm);
+  background: var(--blue-50);
+  cursor: pointer;
+  transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease);
+
+  &:hover {
+    border-color: var(--blue-500);
+    box-shadow: 0 0 0 4px rgba(47, 107, 234, 0.1);
+  }
+
+  .ico {
+    flex: none; width: 42px; height: 42px;
+    display: grid; place-items: center;
+    border-radius: var(--radius-sm);
+    background: var(--surface); border: 1px solid var(--line);
+    color: var(--accent);
+    box-shadow: var(--sh-1);
+
+    svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+  }
+
+  .txt { min-width: 0; }
+  strong { display: block; font-size: 14.5px; font-weight: 650; color: var(--ink);
+           overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  small  { font-size: 12.5px; color: var(--muted); }
+
+  &.has-file {
+    border-style: solid; border-color: var(--ok);
+    background: var(--ok-soft);
+    .ico { border-color: #b4e3d0; color: var(--ok); }
+  }
+}
+
+/* ---------------------------------------------------------------- messages */
+
 .sk-alert {
-  margin: 0 0 16px;
-  padding: 12px 14px;
+  margin: 0 0 18px;
+  padding: 14px 17px;
   border-radius: var(--radius-sm);
-  font-size: 14px;
   border: 1px solid var(--line-strong);
-  background: var(--canvas); color: var(--ink-2);
+  border-left-width: 3px;
+  background: var(--surface); color: var(--ink-2);
+  font-size: 14px; line-height: 1.55;
+  box-shadow: var(--sh-1);
+  animation: sk-slip var(--t) var(--ease);
 
-  &.error { background: var(--danger-soft); color: var(--danger); border-color: #e5bdb8; }
-  &.warn  { background: var(--warn-soft);   color: var(--warn);   border-color: #ebd4a4; }
-  &.ok    { background: var(--ok-soft);     color: var(--ok);     border-color: #b9ddc9; }
+  &.error { background: var(--danger-soft); color: var(--danger); border-color: #edc4bf; }
+  &.warn  { background: var(--warn-soft);   color: var(--warn);   border-color: #ead5a6; }
+  &.ok    { background: var(--ok-soft);     color: var(--ok);     border-color: #b4e3d0; }
+
+  a { color: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
 }
 
-/* Jauge de consommation. Le pourcentage est aussi écrit en clair à côté : une barre
-   seule n'est pas lisible par un lecteur d'écran ni par quelqu'un qui distingue mal les teintes. */
+/* ---------------------------------------------------------------- jauges */
+
 .sk-meter {
-  height: 8px; border-radius: 999px; overflow: hidden;
-  background: var(--line);
+  height: 7px; border-radius: var(--radius-pill); overflow: hidden;
+  background: var(--canvas-3);
 
   > span {
     display: block; height: 100%;
-    background: var(--accent);
-    transition: width 0.3s;
+    border-radius: inherit;
+    background: var(--blue-600);
+    /* Remplissage amorti : on « voit » la valeur se mesurer. */
+    transition: width 0.9s var(--ease);
   }
   &.warn > span   { background: var(--warn); }
   &.danger > span { background: var(--danger); }
+  &.ok > span     { background: var(--ok); }
 }
 
 .sk-table {
-  width: 100%; border-collapse: collapse; font-size: 14px;
+  width: 100%; border-collapse: collapse; font-size: 14.5px;
 
   th {
-    text-align: left; padding: 10px 12px;
-    font-size: 12px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.04em;
-    color: var(--muted); border-bottom: 1px solid var(--line);
+    text-align: left; padding: 12px 14px;
+    font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--muted); border-bottom: 1px solid var(--line-strong);
   }
-  td { padding: 12px; border-bottom: 1px solid var(--line); color: var(--ink-2); }
+  td { padding: 15px 14px; border-bottom: 1px solid var(--line); color: var(--ink-2); }
+  tr { transition: background var(--t-fast); }
+  tbody tr:hover { background: var(--blue-50); }
   tr:last-child td { border-bottom: none; }
   .right { text-align: right; }
 }
 
 .sk-empty {
-  margin: 0; padding: 28px 0;
-  text-align: center; font-size: 14px; color: var(--muted);
+  margin: 0; padding: 42px 0;
+  text-align: center; font-size: 14.5px; color: var(--muted);
+}
+
+/*
+  Puce de validation, en image SVG encodée dans l'URL : pas de requête réseau pour
+  une coche, et pas de police d'icônes à charger. Mutualisée ici parce qu'elle sert
+  dans plusieurs listes — dupliquer ce fragment faisait grossir chaque feuille de
+  style qui l'utilisait.
+*/
+.sk-tick::before {
+  content: '';
+  flex: none;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--blue-50);
+  border: 1px solid var(--blue-200);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 13l4 4L19 7' fill='none' stroke='%231d4ed8' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-size: 9px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* ---------------------------------------------------------------- apparition */
+
+/*
+  Pilotée par la directive appReveal, qui ajoute .is-visible quand l'élément entre
+  dans le champ de vision. Un seul déplacement, court, et jamais rejoué : une page
+  qui s'anime à chaque défilement devient pénible au deuxième écran.
+*/
+.reveal {
+  opacity: 0;
+  /* Déplacement court : l'apparition se remarque à peine, ce qui est le but. Au-delà
+     d'une quinzaine de pixels, la page semble se remonter toute seule. */
+  transform: translateY(14px);
+  transition: opacity var(--t-slow) var(--ease) var(--d, 0ms),
+              transform var(--t-slow) var(--ease) var(--d, 0ms);
+
+  &.from-left  { transform: translateX(-16px); }
+  &.from-right { transform: translateX(16px); }
+  &.zoom       { transform: scale(0.985); }
+
+  &.is-visible { opacity: 1; transform: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  * { transition: none !important; animation: none !important; }
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+  .reveal { opacity: 1; transform: none; }
+}
+
+@media (max-width: 640px) {
+  :root { --gutter: 18px; }
+  .sk-row { grid-template-columns: 1fr; }
+  .sk-page-head h1 { font-size: 25px; }
 }

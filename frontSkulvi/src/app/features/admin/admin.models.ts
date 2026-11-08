@@ -108,7 +108,10 @@ export interface Organization {
   plan: PlanCode;
   planLabel: string;
   status: OrgStatus;
-  trialEndsAt: string | null;
+  paid: boolean;
+  /** Fin de la période déjà réglée. Null sur le plan gratuit. */
+  currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
   writable: boolean;
   createdAt: string;
 }
@@ -118,8 +121,9 @@ export interface UsageSnapshot {
   plan: PlanCode;
   planLabel: string;
   status: OrgStatus;
-  trialEndsAt: string | null;
-  trialDaysLeft: number | null;
+  paid: boolean;
+  currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
   period: string;
   analysesUsed: number;
   analysesLimit: number | null;
@@ -146,6 +150,16 @@ export interface PlanOption {
 
 export interface PlanCatalog {
   plans: PlanOption[];
+}
+
+/** Adresse de redirection vers une page hébergée par le prestataire de paiement. */
+export interface CheckoutResponse {
+  url: string;
+}
+
+/** Le paiement en ligne est-il configuré sur cette instance ? */
+export interface BillingStatus {
+  online: boolean;
 }
 
 export interface Member {

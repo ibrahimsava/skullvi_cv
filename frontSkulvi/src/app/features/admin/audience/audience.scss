@@ -1,0 +1,230 @@
+/* ---------------------------------------------------------------- période */
+
+.ranges {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: var(--sh-1);
+
+  button {
+    padding: 8px 15px;
+    border: none; border-radius: 6px;
+    background: transparent;
+    font: inherit; font-size: 13.5px; font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    transition: background var(--t-fast), color var(--t-fast);
+
+    &:hover { color: var(--ink); }
+    &.on { background: var(--grad); color: #fff; box-shadow: var(--sh-blue); }
+  }
+}
+
+/* ---------------------------------------------------------------- indicateurs */
+
+.kpis {
+  display: grid; gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  margin-bottom: 20px;
+}
+
+.kpi {
+  padding: 20px 22px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--sh-1);
+
+  /* Le premier indicateur est celui qu'on regarde : un liseré le détache. */
+  &.primary { border-top: 3px solid var(--accent); }
+}
+
+.kpi-label {
+  margin: 0 0 7px;
+  font-size: 11.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--muted);
+}
+
+.kpi-value {
+  display: block;
+  font-size: 36px; font-weight: 700; letter-spacing: -0.035em; line-height: 1;
+  color: var(--ink);
+}
+
+.kpi-trend {
+  display: flex; align-items: center; gap: 5px;
+  margin: 9px 0 0;
+  font-size: 12.5px; color: var(--muted);
+
+  .arrow { font-size: 9px; }
+
+  /* La flèche double la couleur : la variation reste lisible sans percevoir la teinte. */
+  &.ok { color: var(--ok); font-weight: 600; }
+  &.danger { color: var(--danger); font-weight: 600; }
+}
+
+/* ---------------------------------------------------------------- totaux plateforme */
+
+.platform-strip {
+  display: grid; gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  padding: 22px 24px;
+  margin-bottom: 20px;
+  background: var(--navy);
+  border-radius: var(--radius);
+  text-align: center;
+
+  strong {
+    display: block;
+    font-size: 30px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.1;
+    color: #fff;
+  }
+  span { font-size: 12.5px; color: var(--on-navy-muted); }
+}
+
+/* ---------------------------------------------------------------- panneaux */
+
+.panel {
+  padding: 22px 24px 24px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--sh-1);
+  margin-bottom: 20px;
+}
+
+.panel-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+  margin-bottom: 20px;
+
+  h2 { margin: 0 0 4px; font-size: 16.5px; font-weight: 700; letter-spacing: -0.015em; color: var(--ink); }
+  p  { margin: 0; font-size: 13px; color: var(--muted); }
+}
+
+.chart { height: 260px; }
+.chart.tall { height: 330px; }
+
+.two-col {
+  display: grid; gap: 20px;
+  grid-template-columns: 1.5fr 1fr;
+  align-items: start;
+}
+
+.empty-state {
+  display: grid; gap: 8px; justify-items: center;
+  padding: 44px 0;
+  text-align: center;
+
+  p { margin: 0; font-size: 14.5px; color: var(--ink-2); }
+  small { font-size: 13px; color: var(--muted); max-width: 46ch; line-height: 1.55; }
+}
+
+/* ---------------------------------------------------------------- entonnoir */
+
+.funnel {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; gap: 20px;
+  counter-reset: none;
+
+  li { display: grid; gap: 9px; }
+}
+
+.funnel-head {
+  display: flex; align-items: center; gap: 11px;
+
+  strong { margin-left: auto; font-size: 17px; font-weight: 700; color: var(--ink); }
+}
+
+.funnel-step {
+  display: grid; place-items: center;
+  flex: none; width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--blue-50); color: var(--accent-hover);
+  border: 1px solid var(--blue-200);
+  font-size: 12px; font-weight: 700;
+}
+
+.funnel-label { font-size: 14.5px; font-weight: 600; color: var(--ink-2); }
+
+.funnel-rate {
+  font-style: normal;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--canvas-2); color: var(--ink-2);
+  font-size: 11.5px; font-weight: 700;
+}
+
+.funnel-note {
+  margin: 22px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  font-size: 13.5px; line-height: 1.6; color: var(--ink-2);
+
+  strong { font-size: 15px; font-weight: 700; color: var(--accent-hover); }
+}
+
+/* ---------------------------------------------------------------- provenances */
+
+.sources {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; gap: 16px;
+}
+
+.source-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; margin-bottom: 7px;
+}
+
+.source-label {
+  font-size: 14px; font-weight: 600; color: var(--ink);
+  /* Un domaine peut être long : on tronque plutôt que de casser la ligne. */
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.source-count {
+  flex: none;
+  font-size: 14px; font-weight: 700; color: var(--ink);
+
+  em { margin-left: 6px; font-style: normal; font-size: 12px; font-weight: 500; color: var(--muted); }
+}
+
+/* ---------------------------------------------------------------- vie privée */
+
+.privacy {
+  padding: 24px 26px;
+  background: var(--canvas-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+
+  h2 {
+    margin: 0 0 16px;
+    font-size: 14px; font-weight: 700; letter-spacing: -0.01em; color: var(--ink);
+  }
+
+  ul {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; gap: 13px;
+  }
+
+  li {
+    padding-left: 14px;
+    border-left: 2px solid var(--blue-200);
+    font-size: 13.5px; line-height: 1.62; color: var(--ink-2);
+    max-width: 78ch;
+
+    strong { color: var(--ink); font-weight: 650; }
+  }
+}
+
+@media (max-width: 1000px) {
+  .two-col { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .ranges { width: 100%; button { flex: 1; } }
+  .kpi-value { font-size: 30px; }
+  .chart, .chart.tall { height: 240px; }
+  .panel { padding: 18px 16px 20px; }
+}

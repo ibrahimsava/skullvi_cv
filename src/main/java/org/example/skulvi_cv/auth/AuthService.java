@@ -3,6 +3,8 @@ package org.example.skulvi_cv.auth;
 import lombok.RequiredArgsConstructor;
 import org.example.skulvi_cv.Utilisateur.AppUser;
 import org.example.skulvi_cv.Utilisateur.AppUserRepository;
+import org.example.skulvi_cv.analytics.TrackingService;
+import org.example.skulvi_cv.analytics.VisitKind;
 import org.example.skulvi_cv.auth.AuthDtos.*;
 import org.example.skulvi_cv.common.ApiException;
 import org.example.skulvi_cv.org.Membership;
@@ -34,6 +36,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtEncoder jwtEncoder;
     private final OrganizationService organizations;
+    private final TrackingService tracking;
 
     @Value("${app.security.jwt-expiration-minutes:60}")
     private long expirationMinutes;
@@ -51,13 +54,19 @@ public class AuthService {
         user.setLastName(req.lastName().trim());
         user.setPasswordHash(passwordEncoder.encode(req.password()));
         user.setRole(Roles.CANDIDAT);   // jamais choisi par le client
-        return tokenFor(users.save(user), null);
+        AppUser saved = users.save(user);
+
+        tracking.recordServerSide(VisitKind.SIGNUP_CANDIDATE, null, "/register");
+        return tokenFor(saved, null);
     }
 
     /** Inscription d'un recruteur : son compte et son organisation, en période d'essai. */
     @Transactional
     public TokenResponse signupOrganization(SignupRequest req) {
         Membership membership = organizations.signup(req);
+
+        tracking.recordServerSide(VisitKind.SIGNUP_ORG,
+                membership.getOrganization().getId(), "/inscription-entreprise");
         return tokenFor(membership.getUser(), membership);
     }
 

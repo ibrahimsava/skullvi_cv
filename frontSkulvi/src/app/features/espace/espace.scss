@@ -1,21 +1,26 @@
-.espace-page {
-  min-height: 100vh;
-  background: var(--canvas);
-  padding: 56px 20px 48px;
-  font-family: var(--font);
-}
+:host { display: block; }
 
-.wrap { max-width: 880px; margin: 0 auto; }
+.espace-page { padding: 48px 0 72px; }
+
+/* Colonne de largeur modérée : l'espace candidat est une page de lecture, pas un
+   tableau de bord. Au-delà, les lignes deviennent trop longues à parcourir. */
+.wrap { max-width: 880px; }
 
 /* ---------------------------------------------------------------- en-tête */
 
 .top {
-  display: flex; align-items: flex-start; justify-content: space-between;
+  display: flex; align-items: flex-end; justify-content: space-between;
   gap: 16px; flex-wrap: wrap;
-  margin-bottom: 24px;
+  margin-bottom: 30px;
 
-  h1 { margin: 0 0 4px; font-size: 26px; font-weight: 650; letter-spacing: -0.02em; color: var(--ink); }
-  p  { margin: 0; font-size: 14px; color: var(--muted); }
+  h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 36px; font-weight: 700; line-height: 1.08; letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+
+  .mail { margin: 5px 0 0; font-size: 14px; color: var(--muted); }
 }
 
 .top-actions { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -23,28 +28,33 @@
 /* ---------------------------------------------------------------- onglets */
 
 .tabs {
-  display: flex; gap: 4px;
-  margin-bottom: 18px;
-  border-bottom: 1px solid var(--line);
+  display: flex; gap: 2px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid var(--rule);
 
   button {
-    display: inline-flex; align-items: center; gap: 7px;
-    padding: 10px 14px;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 16px;
     border: none; background: none;
+    /* L'onglet actif est signalé par le trait ET par la graisse du libellé : lisible
+       même sans percevoir la teinte. */
     border-bottom: 2px solid transparent;
-    font: inherit; font-size: 14px; font-weight: 600;
+    margin-bottom: -1px;
+    font: inherit; font-size: 14.5px; font-weight: 600;
     color: var(--muted);
     cursor: pointer;
+    transition: color var(--t-fast), border-color var(--t-fast);
 
-    &:hover { color: var(--ink-2); }
-    &.active { color: var(--accent); border-bottom-color: var(--accent); }
+    &:hover { color: var(--accent-hover); }
+    &.active { color: var(--accent-hover); font-weight: 700; border-bottom-color: var(--accent); }
     &:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
   }
 
   .pill {
-    padding: 1px 7px;
-    border-radius: 999px;
-    background: var(--accent-soft); color: var(--accent-hover);
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    background: var(--blue-50); color: var(--accent-hover);
+    border: 1px solid var(--blue-200);
     font-size: 11px; font-weight: 700;
   }
 }

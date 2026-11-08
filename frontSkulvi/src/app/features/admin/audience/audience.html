@@ -1,0 +1,272 @@
+<header class="sk-page-head">
+  <div>
+    <h1>{{ isPlatformAdmin() ? 'Audience du site' : 'Qui visite vos offres' }}</h1>
+    <p>
+      @if (isPlatformAdmin()) {
+        Fréquentation de l'ensemble du site et inscriptions, {{ period() }}.
+      } @else {
+        Fréquentation de votre page carrière et de vos offres, {{ period() }}.
+      }
+    </p>
+  </div>
+
+  <div class="ranges" role="group" aria-label="Période">
+    @for (r of ranges; track r) {
+      <button type="button" [class.on]="days() === r" (click)="setRange(r)">
+        {{ rangeLabel(r) }}
+      </button>
+    }
+  </div>
+</header>
+
+@if (loading()) {
+  <p class="sk-empty">Chargement des statistiques…</p>
+
+} @else if (loadError() || !data()) {
+  <p class="sk-alert error" role="alert">
+    Impossible de charger les statistiques pour le moment.
+  </p>
+
+} @else {
+
+  <!-- ───────────────────────────────────────────── indicateurs ───────── -->
+  <section class="kpis" aria-label="Indicateurs clés">
+
+    <article class="kpi primary">
+      <p class="kpi-label">Visites</p>
+      <strong class="kpi-value num">{{ data()!.visits }}</strong>
+      <p class="kpi-trend" [class.ok]="trendTone(data()!.visitsTrend) === 'ok'"
+         [class.danger]="trendTone(data()!.visitsTrend) === 'danger'">
+        @if (data()!.visitsTrend !== null) {
+          <span class="arrow" aria-hidden="true">{{ data()!.visitsTrend! > 0 ? '▲' : '▼' }}</span>
+        }
+        {{ trendLabel(data()!.visitsTrend) }}
+      </p>
+    </article>
+
+    <article class="kpi">
+      <p class="kpi-label">Visiteurs distincts</p>
+      <strong class="kpi-value num">{{ data()!.visitors }}</strong>
+      <p class="kpi-trend" [class.ok]="trendTone(data()!.visitorsTrend) === 'ok'"
+         [class.danger]="trendTone(data()!.visitorsTrend) === 'danger'">
+        @if (data()!.visitorsTrend !== null) {
+          <span class="arrow" aria-hidden="true">{{ data()!.visitorsTrend! > 0 ? '▲' : '▼' }}</span>
+        }
+        {{ trendLabel(data()!.visitorsTrend) }}
+      </p>
+    </article>
+
+    <article class="kpi">
+      <p class="kpi-label">Candidatures envoyées</p>
+      <strong class="kpi-value num">{{ data()!.funnel.applySent }}</strong>
+      <p class="kpi-trend">sur {{ data()!.funnel.offerViews }} consultation(s) d'offre</p>
+    </article>
+
+    @if (isPlatformAdmin()) {
+      <article class="kpi">
+        <p class="kpi-label">Inscriptions</p>
+        <strong class="kpi-value num">
+          {{ data()!.organizationSignups + data()!.candidateSignups }}
+        </strong>
+        <p class="kpi-trend">
+          {{ data()!.organizationSignups }} entreprise(s) ·
+          {{ data()!.candidateSignups }} candidat(s)
+        </p>
+      </article>
+    } @else {
+      <article class="kpi">
+        <p class="kpi-label">Taux de candidature</p>
+        <strong class="kpi-value num">{{ data()!.funnel.overallRate }} %</strong>
+        <p class="kpi-trend">des visiteurs d'offre vont au bout</p>
+      </article>
+    }
+  </section>
+
+  <!-- ───────────────────────────────────────────── totaux plateforme ── -->
+  @if (isPlatformAdmin() && platform(); as t) {
+    <section class="platform-strip" aria-label="Totaux de la plateforme">
+      <div>
+        <strong class="num">{{ t.organizations }}</strong>
+        <span>entreprises inscrites</span>
+      </div>
+      <div>
+        <strong class="num">{{ t.organizationsLast30 }}</strong>
+        <span>nouvelles sur 30 jours</span>
+      </div>
+      <div>
+        <strong class="num">{{ t.users }}</strong>
+        <span>comptes au total</span>
+      </div>
+    </section>
+  }
+
+  <!-- ───────────────────────────────────────────── série temporelle ─── -->
+  <section class="panel wide">
+    <header class="panel-head">
+      <div>
+        <h2>Fréquentation jour par jour</h2>
+        <p>L'écart entre les deux courbes indique les visiteurs qui reviennent.</p>
+      </div>
+    </header>
+
+    @if (hasTraffic()) {
+      <div class="chart tall">
+        <canvas baseChart type="line" [data]="lineData()" [options]="lineOptions"></canvas>
+      </div>
+    } @else {
+      <div class="empty-state">
+        <p>Aucune visite enregistrée sur la période.</p>
+        <small>
+          @if (isPlatformAdmin()) {
+            Les visites sont comptées dès qu'un visiteur ouvre une page publique du site.
+          } @else {
+            Partagez votre page carrière ou une offre : les consultations apparaîtront ici.
+          }
+        </small>
+      </div>
+    }
+  </section>
+
+  <!-- ───────────────────────────────────────────── entonnoir ────────── -->
+  <section class="panel">
+    <header class="panel-head">
+      <div>
+        <h2>Du visiteur à la candidature</h2>
+        <p>Où les candidats abandonnent, et à quelle étape.</p>
+      </div>
+    </header>
+
+    <ol class="funnel">
+      <li>
+        <div class="funnel-head">
+          <span class="funnel-step">1</span>
+          <span class="funnel-label">Offre consultée</span>
+          <strong class="num">{{ data()!.funnel.offerViews }}</strong>
+        </div>
+        <div class="sk-meter"><span [style.width.%]="100"></span></div>
+      </li>
+
+      <li>
+        <div class="funnel-head">
+          <span class="funnel-step">2</span>
+          <span class="funnel-label">Formulaire ouvert</span>
+          <strong class="num">{{ data()!.funnel.applyStarted }}</strong>
+          <em class="funnel-rate">{{ data()!.funnel.startRate }} %</em>
+        </div>
+        <div class="sk-meter" [class.warn]="gaugeTone(data()!.funnel.startRate) === 'warn'"
+             [class.danger]="gaugeTone(data()!.funnel.startRate) === 'danger'">
+          <span [style.width.%]="gauge(data()!.funnel.startRate)"></span>
+        </div>
+      </li>
+
+      <li>
+        <div class="funnel-head">
+          <span class="funnel-step">3</span>
+          <span class="funnel-label">Candidature envoyée</span>
+          <strong class="num">{{ data()!.funnel.applySent }}</strong>
+          <em class="funnel-rate">{{ data()!.funnel.completionRate }} %</em>
+        </div>
+        <div class="sk-meter" [class.warn]="gaugeTone(data()!.funnel.completionRate) === 'warn'"
+             [class.danger]="gaugeTone(data()!.funnel.completionRate) === 'danger'">
+          <span [style.width.%]="gauge(data()!.funnel.completionRate)"></span>
+        </div>
+      </li>
+    </ol>
+
+    <p class="funnel-note">
+      @if (data()!.funnel.offerViews === 0) {
+        Aucune consultation d'offre sur la période : rien à mesurer pour l'instant.
+      } @else if (data()!.funnel.completionRate < 50 && data()!.funnel.applyStarted > 3) {
+        Plus de la moitié des candidats abandonnent le formulaire. Un CV exigé en PDF ou
+        trop de champs obligatoires sont les causes les plus fréquentes.
+      } @else {
+        <strong class="num">{{ data()!.funnel.overallRate }} %</strong>
+        des personnes qui consultent une offre envoient finalement leur candidature.
+      }
+    </p>
+  </section>
+
+  <!-- ───────────────────────────────────────────── pages et appareils ─ -->
+  <div class="two-col">
+
+    <section class="panel">
+      <header class="panel-head">
+        <div><h2>Pages les plus vues</h2></div>
+      </header>
+
+      @if (hasPages()) {
+        <div class="chart">
+          <canvas baseChart type="bar" [data]="barData()" [options]="barOptions"></canvas>
+        </div>
+      } @else {
+        <div class="empty-state"><p>Aucune page consultée sur la période.</p></div>
+      }
+    </section>
+
+    <section class="panel">
+      <header class="panel-head">
+        <div><h2>Appareils</h2></div>
+      </header>
+
+      @if (hasDevices()) {
+        <div class="chart">
+          <canvas baseChart type="doughnut" [data]="doughnutData()" [options]="doughnutOptions"></canvas>
+        </div>
+      } @else {
+        <div class="empty-state"><p>Pas encore de données.</p></div>
+      }
+    </section>
+
+  </div>
+
+  <!-- ───────────────────────────────────────────── provenances ──────── -->
+  <section class="panel">
+    <header class="panel-head">
+      <div>
+        <h2>D'où viennent les visiteurs</h2>
+        <p>Domaine de provenance uniquement — jamais l'adresse complète.</p>
+      </div>
+    </header>
+
+    @if (data()!.referrers.length) {
+      <ul class="sources">
+        @for (s of data()!.referrers; track s.label) {
+          <li>
+            <div class="source-head">
+              <span class="source-label">{{ s.label }}</span>
+              <span class="source-count num">{{ s.count }}<em>· {{ s.share }} %</em></span>
+            </div>
+            <div class="sk-meter">
+              <span [style.width.%]="shareOfMax(s, data()!.referrers)"></span>
+            </div>
+          </li>
+        }
+      </ul>
+    } @else {
+      <div class="empty-state"><p>Aucune provenance enregistrée.</p></div>
+    }
+  </section>
+
+  <!-- ───────────────────────────────────────────── note vie privée ─── -->
+  <section class="privacy">
+    <h2>Comment ces chiffres sont mesurés</h2>
+    <ul>
+      <li>
+        <strong>Aucun cookie, aucun traceur.</strong>
+        Rien n'est écrit sur l'appareil du visiteur. C'est pourquoi le site n'a pas besoin
+        de bandeau de consentement.
+      </li>
+      <li>
+        <strong>Aucune adresse IP conservée.</strong>
+        Le visiteur est réduit à une empreinte calculée avec un sel secret renouvelé chaque
+        jour : on peut compter les visiteurs distincts d'une journée, sans jamais pouvoir
+        suivre quelqu'un d'un jour sur l'autre ni remonter à une personne.
+      </li>
+      <li>
+        <strong>Conséquence assumée.</strong>
+        Un visiteur qui revient demain est compté comme nouveau. Un peu de précision en
+        moins, et aucun suivi individuel.
+      </li>
+    </ul>
+  </section>
+}

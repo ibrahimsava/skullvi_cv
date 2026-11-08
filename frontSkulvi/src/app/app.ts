@@ -1,14 +1,24 @@
-import { Component, signal } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { BackButton } from './shared/back-button/back-button';
+import { Tracking } from './core/tracking';
 
+/**
+ * Coquille de l'application.
+ *
+ * <p>Démarre la mesure d'audience ici plutôt que dans chaque page : un seul abonnement aux
+ * navigations, et aucune page ne peut être oubliée.
+ */
 @Component({
-  imports: [RouterOutlet, RouterOutlet, BackButton],
   selector: 'app-root',
+  imports: [RouterOutlet],
   styleUrl: './app.scss',
   templateUrl: './app.html',
 })
-export class App {
-  protected readonly title = signal('frontSkulvi');
-}
+export class App implements OnInit {
 
+  private readonly tracking = inject(Tracking);
+
+  ngOnInit(): void {
+    this.tracking.start();
+  }
+}

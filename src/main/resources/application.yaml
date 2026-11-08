@@ -54,19 +54,42 @@ talent:
     poll-ms: ${QUEUE_POLL_MS:3000}
     initial-delay-ms: ${QUEUE_INITIAL_DELAY_MS:10000}
 
-  billing:
-    trial-sweep-ms: ${TRIAL_SWEEP_MS:3600000}
-    trial-sweep-initial-ms: 60000
+  analytics:
+    # Purge de la mesure d'audience, chaque nuit à 4 h 30.
+    purge-cron: ${ANALYTICS_PURGE_CRON:0 30 4 * * *}
+
+
+stripe:
+  # Faux par défaut : une instance sans compte de paiement doit démarrer normalement, et
+  # l'interface propose alors un contact au lieu d'un bouton inopérant.
+  enabled: ${STRIPE_ENABLED:false}
+  secret-key: ${STRIPE_SECRET_KEY:}
+  webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+  success-path: ${STRIPE_SUCCESS_PATH:/admin/abonnement?paiement=ok}
+  cancel-path: ${STRIPE_CANCEL_PATH:/admin/abonnement?paiement=annule}
+  # Identifiants de tarif, un par plan payant. Les clés correspondent aux noms de l'enum
+  # Plan en minuscules : c'est ce qui permet au webhook de retrouver le plan d'un abonnement.
+  prices:
+    starter: ${STRIPE_PRICE_STARTER:}
+    pro: ${STRIPE_PRICE_PRO:}
+    business: ${STRIPE_PRICE_BUSINESS:}
 
 
 app:
+  # Adresse publique du site, utilisée pour les retours de paiement. En production, le vrai
+  # domaine — une adresse locale renverrait le client sur sa propre machine après avoir payé.
+  public-url: ${PUBLIC_URL:http://localhost:4200}
+
   security:
     jwt-secret: ${JWT_SECRET}
     jwt-expiration-minutes: ${JWT_EXPIRATION_MINUTES:480}
     admin-email: ${ADMIN_EMAIL:}
     admin-password: ${ADMIN_PASSWORD:}
-    # Plusieurs origines séparées par des virgules.
-    cors-origin: ${CORS_ORIGIN:http://localhost:4200}
+    # Origines autorisées, séparées par des virgules. Une entrée contenant « * » est traitée
+    # comme un motif : « http://localhost:* » couvre tous les ports du serveur de
+    # développement. En local, le mandataire Angular rend ce réglage inutile — le front et
+    # l'API sont alors sur la même origine.
+    cors-origin: ${CORS_ORIGIN:http://localhost:4200,http://localhost:*}
 
 
 springdoc:

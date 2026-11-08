@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { SiteHeader } from '../../layout/site-header/site-header';
 import { AuthService } from '../auth/auth';
 import { OrgSignupRequest } from '../auth/model';
 
@@ -15,7 +16,7 @@ import { OrgSignupRequest } from '../auth/model';
 @Component({
   standalone: true,
   selector: 'app-signup-org',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, SiteHeader],
   templateUrl: './signup-org.html',
   styleUrl: './signup-org.scss',
 })

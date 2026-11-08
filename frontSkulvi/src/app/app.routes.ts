@@ -13,6 +13,7 @@ import { Dashboard } from './features/admin/dashboard/dashboard';
 import { Candidatures } from './features/admin/candidatures/candidatures';
 import { OffresAdmin } from './features/admin/offres-admin/offres-admin';
 import { Abonnement } from './features/admin/abonnement/abonnement';
+import { Audience } from './features/admin/audience/audience';
 import { Equipe } from './features/admin/equipe/equipe';
 import { Postuler } from './features/postuler/postuler';
 
@@ -54,6 +55,7 @@ export const routes: Routes = [
       { path: 'offres', component: OffresAdmin },
       { path: 'offres/new', component: Form },
       { path: 'candidatures', component: Candidatures },
+      { path: 'audience', component: Audience },
       { path: 'equipe', component: Equipe },
       { path: 'abonnement', component: Abonnement },
     ],

@@ -1,10 +1,9 @@
 package org.example.skulvi_cv.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
+/** Enregistré par le {@code @ConfigurationPropertiesScan} de la classe de démarrage. */
 @ConfigurationProperties(prefix = "talent")
-@EnableConfigurationProperties(TalentProperties.class)
 public record TalentProperties(Llm llm, Scoring scoring, Storage storage) {
 
     public record Llm(String provider,
