@@ -11,7 +11,7 @@ import { AuthService } from '../../features/auth/auth';
  * propre gabarit. Les pages offres, tarifs, inscription et candidature n'offraient aucune
  * sortie, hormis le bouton « Retour » flottant.
  *
- * <p>Le bouton d'action change selon la session : un visiteur voit l'essai gratuit, un
+ * <p>Le bouton d'action change selon la session : un visiteur voit l'inscription, un
  * utilisateur connecté le raccourci vers son espace. Proposer « Créer un compte » à quelqu'un
  * déjà connecté est le genre de détail qui fait amateur.
  */
@@ -36,8 +36,21 @@ export class SiteHeader {
   readonly connected = computed(() => this.auth.user() !== null && this.auth.isLoggedIn());
   readonly isRecruiter = computed(() => this.auth.isRecruiter());
 
-  readonly spaceLink = computed(() => (this.isRecruiter() ? '/admin/dashboard' : '/mon-espace'));
-  readonly spaceLabel = computed(() => (this.isRecruiter() ? 'Mon espace' : 'Mes candidatures'));
+  /**
+   * Destination du raccourci, selon le type de compte.
+   *
+   * <p>L'administrateur de la plateforme passe en premier : n'appartenant à aucune
+   * organisation, il serait sinon renvoyé vers l'espace candidat, qui ne lui sert à rien.
+   */
+  readonly spaceLink = computed(() => {
+    if (this.auth.isPlatformAdmin()) return '/platform/audience';
+    return this.isRecruiter() ? '/admin/dashboard' : '/mon-espace';
+  });
+
+  readonly spaceLabel = computed(() => {
+    if (this.auth.isPlatformAdmin()) return 'Administration';
+    return this.isRecruiter() ? 'Mon espace' : 'Mes candidatures';
+  });
 
   constructor() {
     // Un menu mobile resté ouvert après une navigation masquerait la page d'arrivée.

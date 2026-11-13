@@ -1,0 +1,63 @@
+<div class="shell">
+  <aside class="rail" aria-label="Navigation de la plateforme">
+
+    <div class="brand">
+      <span class="mark" aria-hidden="true">S</span>
+      <span class="txt">
+        <strong>Skulvi</strong>
+        <small>Administration</small>
+      </span>
+    </div>
+
+    <nav>
+      <a routerLink="audience" routerLinkActive="active">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 20h18"/><rect x="4.5" y="12" width="3.5" height="6" rx="1"/>
+          <rect x="10.2" y="7" width="3.5" height="11" rx="1"/><rect x="16" y="4" width="3.5" height="14" rx="1"/>
+        </svg>
+        <span>Audience du site</span>
+      </a>
+
+      <a routerLink="clients" routerLinkActive="active">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="7" width="12" height="13" rx="1.5"/><path d="M15 11h6v9h-6"/>
+          <path d="M6.5 11h2M6.5 14.5h2M6.5 18h2"/>
+        </svg>
+        <span>Entreprises clientes</span>
+      </a>
+
+      <a routerLink="/" class="out">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/>
+        </svg>
+        <span>Voir le site</span>
+      </a>
+    </nav>
+
+    <div class="account">
+      <span class="avatar" aria-hidden="true">{{ initial() }}</span>
+      <div class="who">
+        <strong>Administrateur</strong>
+        <small>{{ email() }}</small>
+      </div>
+      <button type="button" class="logout" (click)="logout()" aria-label="Se déconnecter">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+        </svg>
+      </button>
+    </div>
+
+  </aside>
+
+  <main class="content">
+    <p class="scope-note">
+      Vous voyez des agrégats et les abonnements. Les candidatures et les CV des clients
+      restent inaccessibles depuis ce compte, par construction.
+    </p>
+    <router-outlet />
+  </main>
+</div>

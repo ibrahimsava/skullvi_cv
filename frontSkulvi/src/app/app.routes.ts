@@ -8,12 +8,15 @@ import { SignupOrg } from './features/signup-org/signup-org';
 import { Espace } from './features/espace/espace';
 import { authGuard } from './core/guards/auth-guard';
 import { recruiterGuard } from './core/guards/recruiter-guard';
+import { adminGuard } from './core/guards/admin-guard';
 import { AdminLayout } from './features/admin/admin-layout/admin-layout';
 import { Dashboard } from './features/admin/dashboard/dashboard';
 import { Candidatures } from './features/admin/candidatures/candidatures';
 import { OffresAdmin } from './features/admin/offres-admin/offres-admin';
 import { Abonnement } from './features/admin/abonnement/abonnement';
-import { Audience } from './features/admin/audience/audience';
+import { PlatformLayout } from './features/platform/platform-layout/platform-layout';
+import { Audience } from './features/platform/audience/audience';
+import { Clients } from './features/platform/clients/clients';
 import { Equipe } from './features/admin/equipe/equipe';
 import { Postuler } from './features/postuler/postuler';
 
@@ -55,9 +58,25 @@ export const routes: Routes = [
       { path: 'offres', component: OffresAdmin },
       { path: 'offres/new', component: Form },
       { path: 'candidatures', component: Candidatures },
-      { path: 'audience', component: Audience },
       { path: 'equipe', component: Equipe },
       { path: 'abonnement', component: Abonnement },
+    ],
+  },
+
+  // ---------------------------------------------------------------- plateforme
+  /*
+   * Espace de l'administrateur Skulvi. Séparé de /admin parce que ce compte n'appartient
+   * à aucune organisation : `recruiterGuard` lui refuserait l'entrée. Les statistiques de
+   * fréquentation du site vivent ici, et nulle part ailleurs.
+   */
+  {
+    path: 'platform',
+    component: PlatformLayout,
+    canActivate: [adminGuard],
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'audience' },
+      { path: 'audience', component: Audience },
+      { path: 'clients', component: Clients },
     ],
   },
 

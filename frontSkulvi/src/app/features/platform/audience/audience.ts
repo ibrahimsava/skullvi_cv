@@ -1,13 +1,20 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ChartConfiguration } from 'chart.js';
 import { BaseChartDirective, provideCharts, withDefaultRegisterables } from 'ng2-charts';
-import { AuthService } from '../../auth/auth';
 import { AudienceApi } from './audience-api';
 import { AnalyticsOverview, PlatformTotals, Slice } from './audience.models';
+import { AXIS, SERIES, categoricalFor, categoricalHoverFor, categorical } from './chart-palette';
 
 /** Fenêtres proposées. 7 jours pour réagir, 90 pour voir une tendance. */
 const RANGES = [7, 30, 90] as const;
 
+/**
+ * Fréquentation du site, réservée à l'administrateur de la plateforme.
+ *
+ * <p>La page vivait dans l'espace recruteur, où le compte d'administration n'a jamais pu
+ * entrer : n'appartenant à aucune organisation, la garde de cet espace le refusait. Elle est
+ * désormais là où elle doit être.
+ */
 @Component({
   standalone: true,
   selector: 'app-audience',
@@ -19,7 +26,6 @@ const RANGES = [7, 30, 90] as const;
 export class Audience implements OnInit {
 
   private readonly api = inject(AudienceApi);
-  private readonly auth = inject(AuthService);
 
   readonly ranges = RANGES;
 
@@ -29,22 +35,14 @@ export class Audience implements OnInit {
   loading = signal(true);
   loadError = signal(false);
 
-  /**
-   * L'administrateur de la plateforme voit tout le trafic du site ; un recruteur ne voit que
-   * ses propres pages carrière et ses offres.
-   */
-  readonly isPlatformAdmin = computed(() => this.auth.isPlatformAdmin());
-
   // ---------------------------------------------------------------- chargement
 
   ngOnInit(): void {
     this.load();
-    if (this.isPlatformAdmin()) {
-      this.api.platformTotals().subscribe({
-        next: (t) => this.platform.set(t),
-        error: () => this.platform.set(null),
-      });
-    }
+    this.api.platformTotals().subscribe({
+      next: (t) => this.platform.set(t),
+      error: () => this.platform.set(null),
+    });
   }
 
   setRange(days: number): void {
@@ -57,11 +55,7 @@ export class Audience implements OnInit {
     this.loading.set(true);
     this.loadError.set(false);
 
-    const source$ = this.isPlatformAdmin()
-      ? this.api.platformOverview(this.days())
-      : this.api.overview(this.days());
-
-    source$.subscribe({
+    this.api.platformOverview(this.days()).subscribe({
       next: (d) => {
         this.data.set(d);
         this.loading.set(false);
@@ -76,10 +70,10 @@ export class Audience implements OnInit {
   // ---------------------------------------------------------------- série temporelle
 
   /**
-   * Courbe des visites et des visiteurs distincts.
+   * Courbes des visites et des visiteurs distincts.
    *
-   * <p>Deux séries sur le même graphique, et l'écart entre elles est l'information utile :
-   * des visites très au-dessus des visiteurs signifie que les gens reviennent.
+   * <p>Deux teintes franchement différentes, et un tracé pointillé pour la seconde : l'écart
+   * entre les deux courbes est l'information utile, encore faut-il pouvoir les distinguer.
    */
   readonly lineData = computed<ChartConfiguration<'line'>['data']>(() => {
     const d = this.data();
@@ -91,30 +85,30 @@ export class Audience implements OnInit {
         {
           label: 'Visites',
           data: d.series.map((p) => p.visits),
-          borderColor: '#1d4ed8',
-          backgroundColor: 'rgba(29, 78, 216, 0.10)',
-          pointBackgroundColor: '#1d4ed8',
+          borderColor: SERIES.visits.stroke,
+          backgroundColor: SERIES.visits.fill,
+          pointBackgroundColor: SERIES.visits.point,
           pointBorderColor: '#fff',
           pointBorderWidth: 1.5,
           borderWidth: 2.5,
           fill: true,
-          tension: 0.35,
+          tension: 0.3,
           pointRadius: 0,
           pointHoverRadius: 5,
         },
         {
           label: 'Visiteurs distincts',
           data: d.series.map((p) => p.visitors),
-          borderColor: '#5b8def',
-          backgroundColor: 'transparent',
-          pointBackgroundColor: '#5b8def',
+          borderColor: SERIES.visitors.stroke,
+          backgroundColor: SERIES.visitors.fill,
+          pointBackgroundColor: SERIES.visitors.point,
           pointBorderColor: '#fff',
           pointBorderWidth: 1.5,
           borderWidth: 2,
-          // Pointillés : distingue les deux courbes sans compter sur la seule couleur.
+          // Pointillé : distingue les deux courbes sans compter sur la seule couleur.
           borderDash: [5, 4],
           fill: false,
-          tension: 0.35,
+          tension: 0.3,
           pointRadius: 0,
           pointHoverRadius: 5,
         },
@@ -127,22 +121,19 @@ export class Audience implements OnInit {
     maintainAspectRatio: false,
     // Survoler n'importe où sur la colonne affiche les deux valeurs du jour.
     interaction: { mode: 'index', intersect: false },
-    animation: { duration: 900, easing: 'easeOutQuart' },
+    animation: { duration: 800, easing: 'easeOutQuart' },
     plugins: {
       legend: {
-        display: true,
-        position: 'top',
-        align: 'end',
-        labels: { usePointStyle: true, pointStyle: 'line', boxWidth: 22, padding: 16,
-                  color: '#3c4c69', font: { size: 12, weight: 600 } },
+        display: true, position: 'top', align: 'end',
+        labels: {
+          usePointStyle: true, pointStyle: 'line', boxWidth: 24, padding: 16,
+          color: AXIS.label, font: { size: 12, weight: 600 },
+        },
       },
       tooltip: {
-        backgroundColor: '#0b1b3a',
-        padding: 11,
-        cornerRadius: 8,
-        titleFont: { size: 12, weight: 600 },
-        bodyFont: { size: 12 },
-        displayColors: true,
+        backgroundColor: AXIS.tooltipBg,
+        padding: 11, cornerRadius: 6,
+        titleFont: { size: 12, weight: 600 }, bodyFont: { size: 12 },
         usePointStyle: true,
       },
     },
@@ -150,33 +141,39 @@ export class Audience implements OnInit {
       y: {
         beginAtZero: true,
         border: { display: false },
-        grid: { color: '#e4ecfb' },
-        ticks: { precision: 0, color: '#6e7f9c', font: { size: 11 }, maxTicksLimit: 6 },
+        grid: { color: AXIS.grid },
+        ticks: { precision: 0, color: AXIS.tick, font: { size: 11 }, maxTicksLimit: 6 },
       },
       x: {
-        border: { color: '#dbe4f5' },
+        border: { color: AXIS.border },
         grid: { display: false },
-        ticks: { color: '#6e7f9c', font: { size: 11 }, maxTicksLimit: 12, autoSkip: true },
+        ticks: { color: AXIS.tick, font: { size: 11 }, maxTicksLimit: 12, autoSkip: true },
       },
     },
   };
 
   // ---------------------------------------------------------------- histogramme
 
-  /** Pages les plus consultées, en barres horizontales pour que les libellés tiennent. */
+  /**
+   * Pages les plus consultées.
+   *
+   * <p>Une couleur par barre, en barres horizontales pour que les chemins tiennent. Toutes
+   * les barres dans la même teinte n'apportaient rien : la couleur ne distinguait plus rien.
+   */
   readonly barData = computed<ChartConfiguration<'bar'>['data']>(() => {
     const d = this.data();
     if (!d) return { labels: [], datasets: [] };
 
+    const n = d.topPages.length;
     return {
       labels: d.topPages.map((s) => s.label),
       datasets: [{
         label: 'Visites',
         data: d.topPages.map((s) => s.count),
-        backgroundColor: '#2f6bea',
-        hoverBackgroundColor: '#1739a8',
-        borderRadius: 5,
-        barThickness: 18,
+        backgroundColor: categoricalFor(n),
+        hoverBackgroundColor: categoricalHoverFor(n),
+        borderRadius: 4,
+        barThickness: 20,
       }],
     };
   });
@@ -185,11 +182,11 @@ export class Audience implements OnInit {
     indexAxis: 'y',
     responsive: true,
     maintainAspectRatio: false,
-    animation: { duration: 900, easing: 'easeOutQuart' },
+    animation: { duration: 800, easing: 'easeOutQuart' },
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: '#0b1b3a', padding: 10, cornerRadius: 8, displayColors: false,
+        backgroundColor: AXIS.tooltipBg, padding: 10, cornerRadius: 6, displayColors: false,
         callbacks: { label: (c) => `${c.parsed.x} visite(s)` },
       },
     },
@@ -197,30 +194,31 @@ export class Audience implements OnInit {
       x: {
         beginAtZero: true,
         border: { display: false },
-        grid: { color: '#e4ecfb' },
-        ticks: { precision: 0, color: '#6e7f9c', font: { size: 11 }, maxTicksLimit: 6 },
+        grid: { color: AXIS.grid },
+        ticks: { precision: 0, color: AXIS.tick, font: { size: 11 }, maxTicksLimit: 6 },
       },
       y: {
         border: { display: false },
         grid: { display: false },
-        ticks: { color: '#3c4c69', font: { size: 11.5, weight: 500 } },
+        ticks: { color: AXIS.label, font: { size: 11.5, weight: 500 } },
       },
     },
   };
 
   // ---------------------------------------------------------------- anneau
 
-  /** Répartition mobile / ordinateur. */
+  /** Répartition des appareils, une teinte par catégorie. */
   readonly doughnutData = computed<ChartConfiguration<'doughnut'>['data']>(() => {
     const d = this.data();
     if (!d) return { labels: [], datasets: [] };
 
+    const n = d.devices.length;
     return {
       labels: d.devices.map((s) => s.label),
       datasets: [{
         data: d.devices.map((s) => s.count),
-        backgroundColor: ['#1d4ed8', '#5b8def', '#c0d2ff'],
-        hoverBackgroundColor: ['#1739a8', '#2f6bea', '#a8c4f7'],
+        backgroundColor: categoricalFor(n),
+        hoverBackgroundColor: categoricalHoverFor(n),
         borderColor: '#fff',
         borderWidth: 3,
         hoverOffset: 6,
@@ -232,14 +230,16 @@ export class Audience implements OnInit {
     responsive: true,
     maintainAspectRatio: false,
     cutout: '62%',
-    animation: { duration: 900, easing: 'easeOutQuart' },
+    animation: { duration: 800, easing: 'easeOutQuart' },
     plugins: {
       legend: {
         position: 'bottom',
-        labels: { usePointStyle: true, pointStyle: 'circle', boxWidth: 9, padding: 14,
-                  color: '#3c4c69', font: { size: 12 } },
+        labels: {
+          usePointStyle: true, pointStyle: 'circle', boxWidth: 9, padding: 14,
+          color: AXIS.label, font: { size: 12 },
+        },
       },
-      tooltip: { backgroundColor: '#0b1b3a', padding: 10, cornerRadius: 8 },
+      tooltip: { backgroundColor: AXIS.tooltipBg, padding: 10, cornerRadius: 6 },
     },
   };
 
@@ -247,7 +247,12 @@ export class Audience implements OnInit {
   readonly hasPages = computed(() => (this.data()?.topPages.length ?? 0) > 0);
   readonly hasTraffic = computed(() => (this.data()?.visits ?? 0) > 0);
 
-  // ---------------------------------------------------------------- jauges
+  // ---------------------------------------------------------------- provenances
+
+  /** Couleur de la barre d'une provenance, alignée sur la palette des graphiques. */
+  sourceColor(index: number): string {
+    return categorical(index);
+  }
 
   /**
    * Largeur d'une barre de répartition, normalisée sur la plus grande valeur.
@@ -260,7 +265,8 @@ export class Audience implements OnInit {
     return Math.round((slice.count / max) * 100);
   }
 
-  /** Classe de ton d'une variation : vert si en hausse, rouge si en baisse. */
+  // ---------------------------------------------------------------- indicateurs
+
   trendTone(value: number | null): 'ok' | 'danger' | '' {
     if (value == null || value === 0) return '';
     return value > 0 ? 'ok' : 'danger';
@@ -277,8 +283,14 @@ export class Audience implements OnInit {
     return Math.min(100, Math.max(0, Math.round(rate)));
   }
 
-  gaugeTone(rate: number): '' | 'warn' | 'danger' {
-    if (rate >= 40) return '';
+  /**
+   * Ton d'une étape de l'entonnoir.
+   *
+   * <p>Trois niveaux, et chacun a sa propre teinte : un entonnoir tout bleu ne dirait pas
+   * où ça coince. Le libellé en pourcentage reste affiché à côté.
+   */
+  gaugeTone(rate: number): 'ok' | 'warn' | 'danger' {
+    if (rate >= 40) return 'ok';
     if (rate >= 15) return 'warn';
     return 'danger';
   }

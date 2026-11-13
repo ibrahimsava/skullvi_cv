@@ -4,7 +4,7 @@
   <div class="sk-wrap wrap">
 
     <section class="pitch">
-      <p class="sk-eyebrow">Essai gratuit, 14 jours</p>
+      <p class="sk-eyebrow">Gratuit, sans limite de durée</p>
       <h1>Triez vos CV sans les lire tous</h1>
       <p class="lead">
         Vous décrivez le poste et les compétences attendues. Chaque CV déposé est analysé, puis
@@ -30,7 +30,9 @@
       </ul>
 
       <p class="fine">
-        Sans carte bancaire. 1 offre et 20 analyses de CV incluses pendant l'essai.
+        Sans carte bancaire et sans échéance : 2 offres ouvertes et 40 analyses de CV par
+        mois, aussi longtemps que vous voulez. Vous passez à un abonnement le jour où vous
+        dépassez ce volume.
       </p>
     </section>
 
@@ -88,14 +90,22 @@
         </div>
 
         <button type="submit" class="sk-btn primary block lg" [disabled]="loading()">
-          {{ loading() ? 'Création de votre espace…' : 'Démarrer mon essai gratuit' }}
+          {{ loading() ? 'Création de votre espace…' : 'Créer mon espace gratuitement' }}
         </button>
 
-        <p class="alt">
-          Déjà un espace ? <a class="sk-link" routerLink="/login">Se connecter</a>
-          <span class="sep" aria-hidden="true">·</span>
-          Vous cherchez un emploi ? <a class="sk-link" routerLink="/offres">Voir les offres</a>
-        </p>
+        <!-- Deux lignes distinctes, chacune « question + lien » : sur une seule ligne
+             séparée par un point médian, l'ensemble se cassait n'importe où selon la
+             largeur et les deux liens se retrouvaient désalignés. -->
+        <div class="alt">
+          <p>
+            Déjà un espace ?
+            <a class="sk-link plain" routerLink="/login">Se connecter</a>
+          </p>
+          <p>
+            Vous cherchez un emploi ?
+            <a class="sk-link plain" routerLink="/offres">Voir les offres</a>
+          </p>
+        </div>
       </form>
     </section>
 

@@ -67,6 +67,9 @@ stripe:
   webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
   success-path: ${STRIPE_SUCCESS_PATH:/admin/abonnement?paiement=ok}
   cancel-path: ${STRIPE_CANCEL_PATH:/admin/abonnement?paiement=annule}
+  portal-return-path: ${STRIPE_PORTAL_RETURN_PATH:/admin/abonnement}
+  # Purge des traces de webhooks deja traites.
+  ledger-purge-cron: ${STRIPE_LEDGER_PURGE_CRON:0 15 4 * * *}
   # Identifiants de tarif, un par plan payant. Les clés correspondent aux noms de l'enum
   # Plan en minuscules : c'est ce qui permet au webhook de retrouver le plan d'un abonnement.
   prices:

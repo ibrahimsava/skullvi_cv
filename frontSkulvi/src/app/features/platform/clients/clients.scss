@@ -1,0 +1,115 @@
+.summary {
+  display: grid; gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  margin-bottom: 18px;
+
+  div {
+    padding: 18px 20px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    border-top: 3px solid var(--line-strong);
+
+    /* Une teinte par indicateur, accordée à la palette des graphiques. */
+    &[data-tone='total']  { border-top-color: #1d4ed8; }
+    &[data-tone='paying'] { border-top-color: #0d9488; }
+    &[data-tone='mrr']    { border-top-color: #b45309; }
+  }
+
+  strong {
+    display: block;
+    font-size: 30px; font-weight: 700; letter-spacing: -0.035em; line-height: 1;
+    color: var(--ink);
+  }
+  span { display: block; margin-top: 7px; font-size: 12.5px; color: var(--muted); }
+}
+
+/* ---------------------------------------------------------------- tableau */
+
+.panel {
+  padding: 18px 20px 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  margin-bottom: 18px;
+}
+
+.panel-head { margin-bottom: 14px; }
+
+.search {
+  display: block;
+  max-width: 340px;
+
+  input {
+    width: 100%;
+    padding: 10px 13px;
+    border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
+    background: var(--surface); color: var(--ink);
+    font: inherit; font-size: 14px;
+
+    &::placeholder { color: #9aa8c2; }
+    &:focus {
+      outline: none;
+      border-color: var(--blue-500);
+      box-shadow: 0 0 0 3px rgba(47, 107, 234, 0.14);
+    }
+  }
+}
+
+/* Sept colonnes : le tableau glisse d'un bord à l'autre du panneau, d'où les marges
+   négatives qui annulent le rembourrage. Le défilement lui-même vient de .sk-scroll-x. */
+.sk-scroll-x.wide {
+  margin: 0 -20px;
+  padding: 0 20px;
+
+  > table { min-width: 860px; }
+}
+
+.name { display: block; font-size: 14px; font-weight: 650; color: var(--ink); }
+.slug { display: block; margin-top: 2px; font-size: 11.5px; color: var(--muted); }
+
+.num-col { text-align: right; }
+.date { font-size: 13px; color: var(--muted); white-space: nowrap; }
+
+.usage-cell { min-width: 150px; }
+
+.usage-val {
+  display: block; margin-bottom: 6px;
+  font-size: 13px; font-weight: 600; color: var(--ink-2);
+}
+
+/* La jauge est un span dans une cellule : il faut la remettre en bloc pour qu'elle
+   prenne la largeur et la hauteur définies par .sk-meter. */
+.usage-cell .sk-meter { display: block; }
+
+.plan-select {
+  padding: 7px 10px;
+  border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
+  background: var(--surface); color: var(--ink);
+  font: inherit; font-size: 13px; font-weight: 600;
+  cursor: pointer;
+
+  &:focus { outline: 2px solid var(--blue-500); outline-offset: -1px; }
+  &[disabled] { opacity: 0.5; cursor: default; }
+}
+
+/* ---------------------------------------------------------------- note */
+
+.note {
+  padding: 20px 22px;
+  background: var(--canvas-2);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--warn);
+  border-radius: var(--radius);
+
+  h2 { margin: 0 0 8px; font-size: 14px; font-weight: 700; color: var(--ink); }
+  p  { margin: 0; font-size: 13.5px; line-height: 1.62; color: var(--ink-2); max-width: 84ch; }
+  strong { color: var(--ink); font-weight: 700; }
+}
+
+@media (max-width: 640px) {
+  .summary strong { font-size: 25px; }
+  .panel { padding: 14px 14px 6px; }
+  .sk-scroll-x.wide { margin: 0 -14px; padding: 0 14px; }
+  .search { max-width: none; }
+}

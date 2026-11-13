@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { APP } from '../../core/app-config';
 
 /** Pied de page des pages publiques. */
 @Component({
@@ -11,4 +12,7 @@ import { RouterLink } from '@angular/router';
 })
 export class SiteFooter {
   readonly year = new Date().getFullYear();
+
+  /** Coordonnées et réseaux, lus depuis la configuration plutôt que recopiés ici. */
+  readonly app = APP;
 }

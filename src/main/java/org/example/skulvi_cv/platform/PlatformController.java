@@ -47,6 +47,15 @@ public class PlatformController {
                             String planLabel,
                             OrgStatus status,
                             boolean paid,
+                            /**
+                             * Prix mensuel du plan, en centimes.
+                             *
+                             * <p>Envoyé par le serveur plutôt que recalculé par l'interface :
+                             * la grille vit dans {@code Plan.java}, et la recopier côté front
+                             * ferait afficher un revenu faux dès le premier ajustement de
+                             * prix, sans que rien ne le signale.
+                             */
+                            int priceCents,
                             int analysesUsed,
                             Integer analysesLimit,
                             int activeOffers,
@@ -73,6 +82,7 @@ public class PlatformController {
         return analytics.platformTotals();
     }
 
+
     @Operation(summary = "Changer le plan d'une organisation",
             description = """
                     Pour les paiements encaissés hors ligne. Les abonnements souscrits en ligne
@@ -92,6 +102,7 @@ public class PlatformController {
         var usage = quotas.snapshot(org.getId());
         return new ClientRow(org.getId(), org.getName(), org.getSlug(), org.getPlan(),
                 org.getPlan().label(), org.getStatus(), org.hasPaidPlan(),
+                org.getPlan().priceCents(),
                 usage.analysesUsed(), usage.analysesLimit(),
                 usage.activeOffers(), usage.seats(), org.getCreatedAt());
     }

@@ -47,9 +47,12 @@ public class StripeWebhookController {
     private final StripeService stripe;
     private final SubscriptionService subscriptions;
     private final PriceCatalog prices;
+    private final WebhookLedger ledger;
 
     @Operation(summary = "Événements de paiement",
-            description = "Appelé par le prestataire. Signature vérifiée, jamais appelable à la main.")
+            description = """
+                    Appelé par le prestataire. Signature vérifiée, et chaque événement n'est
+                    traité qu'une fois même s'il est livré plusieurs fois.""")
     @PostMapping("/stripe")
     public ResponseEntity<String> receive(@RequestBody String payload,
                                           @RequestHeader(value = "Stripe-Signature", required = false) String signature) {
@@ -59,6 +62,21 @@ public class StripeWebhookController {
         }
 
         Event event = stripe.parseEvent(payload, signature);
+
+        /*
+         * Idempotence. Le prestataire garantit une livraison « au moins une fois » : il
+         * réessaie tant qu'il n'a pas reçu un 2xx, et un simple délai réseau suffit à lui
+         * faire renvoyer un événement déjà traité. Sans ce filtre, le même changement
+         * d'abonnement serait appliqué deux fois.
+         *
+         * On répond 200 sur un doublon, et surtout pas une erreur : un code d'échec
+         * relancerait une nouvelle tentative pour un événement qu'on a déjà honoré.
+         */
+        if (!ledger.claim(event.getId(), event.getType())) {
+            log.info("Webhook {} déjà traité : ignoré", event.getId());
+            return ResponseEntity.ok("déjà traité");
+        }
+
         log.info("Webhook reçu : {} ({})", event.getType(), event.getId());
 
         try {
@@ -82,8 +100,13 @@ public class StripeWebhookController {
              * Une erreur de notre côté doit renvoyer un code d'échec : le prestataire
              * réessaiera, et on ne perd pas un paiement à cause d'une base momentanément
              * indisponible.
+             *
+             * La trace d'idempotence est donc retirée : sans cela, la nouvelle tentative
+             * serait prise pour un doublon et l'événement ne serait jamais traité.
              */
-            log.error("Traitement du webhook {} en échec : {}", event.getId(), e.getMessage(), e);
+            ledger.release(event.getId());
+            log.error("Traitement du webhook {} en échec, trace retirée pour permettre la "
+                    + "nouvelle tentative : {}", event.getId(), e.getMessage(), e);
             return ResponseEntity.status(500).body("erreur de traitement");
         }
 

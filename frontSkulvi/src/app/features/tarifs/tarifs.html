@@ -7,8 +7,9 @@
       <p class="sk-eyebrow">Tarifs</p>
       <h1>Vous payez les CV que vous faites analyser</h1>
       <p class="lead">
-        Pas de frais d'installation, pas d'engagement annuel. Commencez par l'essai gratuit :
-        14 jours, une offre, 20 analyses de CV, sans carte bancaire.
+        Pas de frais d'installation, pas d'engagement. Le plan gratuit n'expire jamais :
+        2 offres ouvertes et 40 analyses de CV par mois, sans carte bancaire. Vous passez à
+        un abonnement le jour où vous dépassez ce volume.
       </p>
     </header>
 
@@ -32,7 +33,7 @@
 
             <p class="price">
               @if (p.priceCents === 0) {
-                <strong>0 €</strong><span>14 jours</span>
+                <strong>0 €</strong><span>sans échéance</span>
               } @else {
                 <strong>{{ euros(p.priceCents) }} €</strong><span>/ mois</span>
               }
@@ -57,13 +58,13 @@
                 @if (p.allowsOverage) {
                   Au-delà du quota : {{ euros(p.overageCents) }} € par analyse, le service continue
                 } @else {
-                  Le service s'arrête une fois les 20 analyses consommées
+                  Le compteur repart le 1er de chaque mois
                 }
               </li>
             </ul>
 
             @if (p.priceCents === 0) {
-              <a class="sk-btn ghost" routerLink="/inscription-entreprise">Démarrer l'essai</a>
+              <a class="sk-btn ghost" routerLink="/inscription-entreprise">Commencer</a>
             } @else {
               <a class="sk-btn" [class.primary]="isFeatured(p)" [class.ghost]="!isFeatured(p)"
                  routerLink="/inscription-entreprise">Choisir {{ p.label }}</a>
@@ -74,6 +75,15 @@
 
       <section class="faq">
         <h2>Questions fréquentes</h2>
+
+        <div class="qa">
+          <h3>Le plan gratuit a-t-il une date de fin ?</h3>
+          <p>
+            Non. Ce n'est pas un essai : vous pouvez mener des recrutements complets sans
+            jamais payer, dans la limite de 2 offres ouvertes et 40 analyses de CV par mois.
+            Pas de carte bancaire à l'inscription, et aucun compte à rebours.
+          </p>
+        </div>
 
         <div class="qa">
           <h3>Qu'est-ce qui compte comme une analyse ?</h3>
@@ -89,7 +99,7 @@
           <p>
             Sur un plan payant, rien ne s'arrête : les analyses supplémentaires sont facturées à
             l'unité en fin de mois. Nous ne coupons pas le service d'un client en pleine campagne
-            de recrutement. L'essai gratuit, lui, s'arrête à 20 analyses.
+            de recrutement. Le plan gratuit, lui, attend le 1er du mois suivant.
           </p>
         </div>
 
@@ -116,15 +126,16 @@
         <div class="qa">
           <h3>Puis-je arrêter quand je veux ?</h3>
           <p>
-            Oui, sans préavis. Si vous arrêtez, votre compte passe en lecture seule : vos
-            données restent accessibles, rien n'est supprimé.
+            Oui, sans préavis, depuis le portail de facturation. Vous redescendez alors sur
+            le plan gratuit : vos offres, vos candidatures et vos CV restent en place, et
+            vous gardez l'accès. Rien n'est supprimé, rien n'est bloqué.
           </p>
         </div>
       </section>
 
       <section class="cta">
-        <h2>Testez sur un vrai recrutement</h2>
-        <p>14 jours, 20 CV analysés, sans carte bancaire.</p>
+        <h2>Commencez gratuitement</h2>
+        <p>Gratuit sans échéance, 40 CV analysés par mois, sans carte bancaire.</p>
         <a class="sk-btn accent lg" routerLink="/inscription-entreprise">Créer mon espace</a>
       </section>
     }

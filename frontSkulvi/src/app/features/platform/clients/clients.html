@@ -1,0 +1,126 @@
+<header class="sk-page-head">
+  <div>
+    <h1>Entreprises clientes</h1>
+    <p>Consommation et abonnements. {{ rows().length }} organisation(s) inscrite(s).</p>
+  </div>
+</header>
+
+@if (toast(); as t) {
+  <p class="sk-alert" [class.error]="t.error" [class.ok]="!t.error" role="status">{{ t.text }}</p>
+}
+
+@if (loading()) {
+  <p class="sk-empty">Chargement…</p>
+
+} @else if (loadError()) {
+  <p class="sk-alert error" role="alert">Impossible de charger la liste des clients.</p>
+
+} @else {
+
+  <section class="summary">
+    <div data-tone="total">
+      <strong class="num">{{ rows().length }}</strong>
+      <span>entreprises</span>
+    </div>
+    <div data-tone="paying">
+      <strong class="num">{{ paying() }}</strong>
+      <span>abonnées</span>
+    </div>
+    <div data-tone="mrr">
+      <strong class="num">{{ mrr() }} €</strong>
+      <span>par mois, récurrent</span>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <label class="search">
+        <span class="sk-sr">Rechercher une entreprise</span>
+        <input type="search" placeholder="Nom ou identifiant d'entreprise"
+               [value]="search()" (input)="search.set($any($event.target).value)">
+      </label>
+    </div>
+
+    @if (visible().length === 0) {
+      <p class="sk-empty">
+        @if (search()) { Aucune entreprise ne correspond à « {{ search() }} ». }
+        @else { Aucune entreprise inscrite pour le moment. }
+      </p>
+
+    } @else {
+      <!-- Enveloppe défilante : un tableau de six colonnes ne tient pas sur un téléphone,
+           et le réduire le rendrait illisible. Mieux vaut le faire glisser. -->
+      <div class="sk-scroll-x wide">
+        <table class="sk-table">
+          <thead>
+            <tr>
+              <th>Entreprise</th>
+              <th>État</th>
+              <th>Analyses du mois</th>
+              <th class="num-col">Offres</th>
+              <th class="num-col">Membres</th>
+              <th>Inscrite le</th>
+              <th>Plan</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of visible(); track r.id) {
+              <tr>
+                <td>
+                  <strong class="name">{{ r.name }}</strong>
+                  <small class="slug">/c/{{ r.slug }}</small>
+                </td>
+
+                <td>
+                  <span class="sk-badge"
+                        [class.ok]="statusTone(r) === 'ok'"
+                        [class.warn]="statusTone(r) === 'warn'"
+                        [class.danger]="statusTone(r) === 'danger'">{{ statusLabel(r) }}</span>
+                </td>
+
+                <td class="usage-cell">
+                  <span class="usage-val num">
+                    {{ r.analysesUsed }} / {{ limitLabel(r.analysesLimit) }}
+                  </span>
+                  @if (r.analysesLimit !== null) {
+                    <span class="sk-meter"
+                          [class.ok]="usageTone(r) === 'ok'"
+                          [class.warn]="usageTone(r) === 'warn'"
+                          [class.danger]="usageTone(r) === 'danger'">
+                      <span [style.width.%]="percent(r)"></span>
+                    </span>
+                  }
+                </td>
+
+                <td class="num-col num">{{ r.activeOffers }}</td>
+                <td class="num-col num">{{ r.seats }}</td>
+                <td class="date">{{ r.createdAt | date:'dd/MM/yyyy' }}</td>
+
+                <td>
+                  <select class="plan-select" [value]="r.plan"
+                          [disabled]="busyId() === r.id"
+                          (change)="changePlan(r, $any($event.target).value)"
+                          [attr.aria-label]="'Plan de ' + r.name">
+                    @for (p of plans; track p) {
+                      <option [value]="p">{{ p }}</option>
+                    }
+                  </select>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
+  <section class="note">
+    <h2>Changer un plan à la main</h2>
+    <p>
+      Utile pour un encaissement par virement, un geste commercial, ou un dépannage. Pour un
+      client qui a souscrit <strong>en ligne</strong>, le webhook du prestataire reste la
+      source de vérité : un plan forcé ici sera écrasé au prochain événement — renouvellement,
+      changement de carte, résiliation.
+    </p>
+  </section>
+}

@@ -50,7 +50,7 @@ export class AuthService {
       .pipe(tap((res) => this.store(res)));
   }
 
-  /** Création d'un espace recruteur, en essai gratuit. */
+  /** Création d'un espace recruteur, sur le plan gratuit. */
   signupOrganization(request: OrgSignupRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.api}/auth/signup-organization`, request)
       .pipe(tap((res) => this.store(res)));

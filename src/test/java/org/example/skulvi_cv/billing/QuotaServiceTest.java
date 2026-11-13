@@ -197,7 +197,7 @@ class QuotaServiceTest {
 
         @Test
         void calcule_le_depassement_et_son_montant() {
-            onPaidPlan();
+            onPaidPlan();   // PRO : plafonné, donc un dépassement est facturable
             int limite = Plan.PRO.maxAnalysesPerMonth();
             analysesUsed(limite + 13);
             when(offers.countByOrganizationIdAndStatus(ORG, OfferStatus.OPEN)).thenReturn(2L);
@@ -227,7 +227,7 @@ class QuotaServiceTest {
         }
 
         @Test
-        @DisplayName("une limite illimitée vaut null, pas Integer.MAX_VALUE")
+        @DisplayName("sur le plan illimité, les trois limites valent null et non Integer.MAX_VALUE")
         void traduit_l_illimite_en_null() {
             org.setPlan(Plan.BUSINESS);
             analysesUsed(10);
@@ -236,10 +236,14 @@ class QuotaServiceTest {
 
             var snapshot = service.snapshot(ORG);
 
+            // Transmettre la sentinelle ferait afficher « 2147483647 offres » à l'écran.
+            assertThat(snapshot.analysesLimit()).isNull();
             assertThat(snapshot.activeOffersLimit()).isNull();
             assertThat(snapshot.seatsLimit()).isNull();
-            // Le Business plafonne quand même les analyses : cette limite reste un chiffre.
-            assertThat(snapshot.analysesLimit()).isEqualTo(Plan.BUSINESS.maxAnalysesPerMonth());
+
+            // Et aucun dépassement n'est annoncé : il n'y a pas de quota à dépasser.
+            assertThat(snapshot.overageCount()).isZero();
+            assertThat(snapshot.overageCents()).isZero();
         }
     }
 

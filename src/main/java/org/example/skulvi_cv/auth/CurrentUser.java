@@ -87,4 +87,5 @@ public class CurrentUser {
         }
         return token;
     }
+    // bj
 }

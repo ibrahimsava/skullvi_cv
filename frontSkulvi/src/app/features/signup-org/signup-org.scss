@@ -74,11 +74,19 @@
   .sub { margin: -10px 0 4px; }
 }
 
+/* Deux lignes centrées, un filet pour les détacher du bouton. Chaque ligne porte sa
+   question et son lien : plus rien ne peut se casser entre les deux. */
 .alt {
-  margin: 2px 0 0;
-  font-size: 13px; line-height: 1.7; color: var(--muted); text-align: center;
+  margin: 4px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  display: grid; gap: 7px;
+  text-align: center;
 
-  .sep { margin: 0 7px; color: var(--rule-strong); }
+  p {
+    margin: 0;
+    font-size: 13px; line-height: 1.6; color: var(--muted);
+  }
 }
 
 @media (max-width: 980px) {

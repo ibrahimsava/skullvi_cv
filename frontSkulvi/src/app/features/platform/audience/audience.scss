@@ -1,0 +1,259 @@
+/* ---------------------------------------------------------------- période */
+
+.ranges {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: var(--surface);
+
+  button {
+    padding: 8px 15px;
+    border: none; border-radius: 4px;
+    background: transparent;
+    font: inherit; font-size: 13.5px; font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    transition: background var(--t-fast), color var(--t-fast);
+
+    &:hover { color: var(--ink); }
+    &.on { background: var(--blue-600); color: #fff; }
+  }
+}
+
+/* ---------------------------------------------------------------- indicateurs */
+
+.kpis {
+  display: grid; gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  margin-bottom: 18px;
+}
+
+.kpi {
+  padding: 18px 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+
+  /* Un liseré de couleur par indicateur, accordé à la palette des graphiques :
+     on relie du regard la carte et la série qu'elle résume. */
+  border-top: 3px solid var(--line-strong);
+
+  &[data-tone='visits']   { border-top-color: #1d4ed8; }
+  &[data-tone='visitors'] { border-top-color: #0d9488; }
+  &[data-tone='signups']  { border-top-color: #b45309; }
+  &[data-tone='apply']    { border-top-color: #7c3aed; }
+}
+
+.kpi-label {
+  margin: 0 0 7px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--muted);
+}
+
+.kpi-value {
+  display: block;
+  font-size: 32px; font-weight: 700; letter-spacing: -0.035em; line-height: 1;
+  color: var(--ink);
+}
+
+.kpi-trend {
+  display: flex; align-items: center; gap: 5px;
+  margin: 9px 0 0;
+  font-size: 12.5px; color: var(--muted);
+
+  .arrow { font-size: 9px; }
+
+  /* La flèche double la couleur : la variation reste lisible sans percevoir la teinte. */
+  &.ok { color: var(--ok); font-weight: 600; }
+  &.danger { color: var(--danger); font-weight: 600; }
+}
+
+/* ---------------------------------------------------------------- totaux */
+
+.totals {
+  display: grid; gap: 22px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  padding: 20px 22px;
+  margin-bottom: 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  text-align: center;
+
+  strong {
+    display: block;
+    font-size: 26px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.15;
+    color: var(--ink);
+  }
+  span { font-size: 12.5px; color: var(--muted); }
+}
+
+/* ---------------------------------------------------------------- panneaux */
+
+.panel {
+  padding: 20px 22px 22px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  margin-bottom: 18px;
+}
+
+.panel-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+  margin-bottom: 18px;
+
+  h2 { margin: 0 0 4px; font-size: 16px; font-weight: 700; letter-spacing: -0.015em; color: var(--ink); }
+  p  { margin: 0; font-size: 13px; color: var(--muted); }
+}
+
+.chart { height: 250px; }
+.chart.tall { height: 320px; }
+
+.two-col {
+  display: grid; gap: 18px;
+  grid-template-columns: 1.5fr 1fr;
+  align-items: start;
+}
+
+.empty-state {
+  display: grid; gap: 8px; justify-items: center;
+  padding: 40px 0;
+  text-align: center;
+
+  p { margin: 0; font-size: 14px; color: var(--ink-2); }
+  small { font-size: 12.5px; color: var(--muted); max-width: 46ch; line-height: 1.55; }
+}
+
+/* ---------------------------------------------------------------- entonnoir */
+
+.funnel {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; gap: 18px;
+
+  li { display: grid; gap: 8px; }
+}
+
+.funnel-head {
+  display: flex; align-items: center; gap: 11px;
+
+  strong { margin-left: auto; font-size: 17px; font-weight: 700; color: var(--ink); }
+}
+
+.funnel-step {
+  display: grid; place-items: center;
+  flex: none; width: 23px; height: 23px;
+  border-radius: 50%;
+  font-size: 11.5px; font-weight: 700;
+  color: #fff;
+
+  /* Une teinte par étape, dans l'ordre de la palette : l'entonnoir se lit comme une
+     progression, pas comme trois barres identiques. */
+  &[data-step='1'] { background: #1d4ed8; }
+  &[data-step='2'] { background: #0d9488; }
+  &[data-step='3'] { background: #7c3aed; }
+}
+
+.funnel-label { font-size: 14px; font-weight: 600; color: var(--ink-2); }
+
+.funnel-rate {
+  font-style: normal;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-size: 11.5px; font-weight: 700;
+  background: var(--canvas-2); color: var(--ink-2);
+
+  /* Le taux porte le verdict : vert au-dessus de 40 %, ambre entre 15 et 40, rouge en
+     dessous. Le chiffre reste écrit, la couleur ne fait que le souligner. */
+  &[data-tone='ok']     { background: var(--ok-soft);     color: var(--ok); }
+  &[data-tone='warn']   { background: var(--warn-soft);   color: var(--warn); }
+  &[data-tone='danger'] { background: var(--danger-soft); color: var(--danger); }
+}
+
+.funnel-note {
+  margin: 20px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  font-size: 13.5px; line-height: 1.6; color: var(--ink-2);
+
+  strong { font-size: 15px; font-weight: 700; color: var(--accent-hover); }
+}
+
+/* ---------------------------------------------------------------- provenances */
+
+.sources {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; gap: 15px;
+}
+
+.source-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; margin-bottom: 7px;
+}
+
+.source-label {
+  display: flex; align-items: center; gap: 8px;
+  min-width: 0;
+  font-size: 14px; font-weight: 600; color: var(--ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+
+  .dot { flex: none; width: 9px; height: 9px; border-radius: 50%; }
+}
+
+.source-count {
+  flex: none;
+  font-size: 14px; font-weight: 700; color: var(--ink);
+
+  em { margin-left: 6px; font-style: normal; font-size: 12px; font-weight: 500; color: var(--muted); }
+}
+
+/* Rail de jauge local : la couleur vient de la palette, posée en ligne par le composant,
+   d'où un élément dédié plutôt que la classe .sk-meter qui impose le bleu. */
+.rail {
+  height: 7px; border-radius: var(--radius-pill); overflow: hidden;
+  background: var(--canvas-3);
+
+  span {
+    display: block; height: 100%;
+    border-radius: inherit;
+    transition: width 0.9s var(--ease);
+  }
+}
+
+/* ---------------------------------------------------------------- vie privée */
+
+.privacy {
+  padding: 22px 24px;
+  background: var(--canvas-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+
+  h2 { margin: 0 0 14px; font-size: 14px; font-weight: 700; color: var(--ink); }
+
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+
+  li {
+    padding-left: 14px;
+    border-left: 2px solid var(--blue-200);
+    font-size: 13px; line-height: 1.6; color: var(--ink-2);
+    max-width: 84ch;
+
+    strong { color: var(--ink); font-weight: 650; }
+  }
+}
+
+/* ---------------------------------------------------------------- adaptation */
+
+@media (max-width: 1000px) {
+  .two-col { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .sk-page-head { flex-direction: column; align-items: stretch; }
+  .ranges { width: 100%; button { flex: 1; } }
+  .kpi-value { font-size: 27px; }
+  .chart, .chart.tall { height: 230px; }
+  .panel { padding: 16px 14px 18px; }
+  .funnel-head { flex-wrap: wrap; }
+  .funnel-head strong { margin-left: 0; }
+}

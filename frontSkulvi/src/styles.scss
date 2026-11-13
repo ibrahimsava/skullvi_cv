@@ -225,8 +225,16 @@ body {
   &:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
 }
 
+/*
+  Lien d'action.
+
+  `display: inline` et non `inline-flex` : un conteneur flex pose sa propre ligne de base,
+  et le lien se décalait donc verticalement dès qu'il était mêlé à du texte — « Déjà un
+  compte ? Se connecter » avec les deux morceaux désalignés. En ligne, il suit la ligne de
+  base de la phrase comme n'importe quel mot.
+*/
 .sk-link {
-  display: inline-flex; align-items: center; gap: 5px;
+  display: inline;
   color: var(--accent);
   font-weight: 650;
   text-decoration: none;
@@ -235,14 +243,18 @@ body {
 
   &:hover { color: var(--accent-hover); border-bottom-color: var(--accent); }
 
-  /* La flèche avance au survol : indique une suite, sans ajouter de mot. */
+  /* La flèche avance au survol : indique une suite, sans ajouter de mot. Posée en
+     inline-block pour pouvoir être déplacée, ce qui n'affecte pas le lien lui-même. */
   &::after {
     content: '→';
+    display: inline-block;
+    margin-left: 5px;
     transition: transform var(--t) var(--ease);
   }
   &:hover::after { transform: translateX(3px); }
 
-  &.plain::after { content: none; }
+  /* Variante sans flèche, pour un lien au milieu d'une phrase. */
+  &.plain::after { content: none; margin-left: 0; }
 }
 
 :where(a, button, input, select, textarea, [tabindex]):focus-visible {
@@ -477,6 +489,34 @@ body {
 .sk-empty {
   margin: 0; padding: 42px 0;
   text-align: center; font-size: 14.5px; color: var(--muted);
+}
+
+/*
+  Enveloppe défilante pour un tableau trop large.
+
+  Un tableau de cinq colonnes ou plus ne tient pas sur un téléphone. Deux mauvaises
+  réponses courantes : le comprimer, et les libellés deviennent illisibles ; ou masquer
+  des colonnes, et l'information disparaît sans que l'utilisateur le sache. Le faire
+  glisser horizontalement garde tout accessible.
+
+  Les marges négatives annulent le rembourrage du panneau parent, pour que le tableau
+  glisse d'un bord à l'autre de l'écran plutôt que dans une fenêtre étroite au milieu.
+*/
+.sk-scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+
+  /* Ombre portée sur les bords pour signaler qu'il reste du contenu à droite. */
+  background:
+    linear-gradient(to right, var(--surface) 30%, rgba(255, 255, 255, 0)) left center,
+    linear-gradient(to left, var(--surface) 30%, rgba(255, 255, 255, 0)) right center,
+    radial-gradient(farthest-side at 0 50%, rgba(11, 27, 58, 0.09), transparent) left center,
+    radial-gradient(farthest-side at 100% 50%, rgba(11, 27, 58, 0.09), transparent) right center;
+  background-repeat: no-repeat;
+  background-size: 34px 100%, 34px 100%, 12px 100%, 12px 100%;
+  background-attachment: local, local, scroll, scroll;
+
+  > table { min-width: 620px; }
 }
 
 /*

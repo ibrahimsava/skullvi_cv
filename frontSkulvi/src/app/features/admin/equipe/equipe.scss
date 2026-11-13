@@ -68,6 +68,19 @@
 
 .sk-alert a { color: inherit; font-weight: 650; text-decoration: underline; }
 
+/* Le tableau glisse d'un bord à l'autre de la carte : les marges négatives annulent le
+   rembourrage de .sk-card, sinon il défilerait dans une fenêtre étroite au centre. */
+.sk-scroll-x {
+  margin: 0 -26px;
+  padding: 0 26px;
+
+  > table { min-width: 560px; }
+}
+
 @media (max-width: 680px) {
   .invite-form .row { grid-template-columns: 1fr; }
+  .sk-scroll-x { margin: 0 -18px; padding: 0 18px; }
+  /* Le nom tient sur deux lignes plutôt que de forcer la colonne à s'élargir. */
+  .person strong { display: block; }
+  .person .sk-badge { margin-left: 0; }
 }

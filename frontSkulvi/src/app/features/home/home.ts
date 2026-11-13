@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { SiteFooter } from '../../layout/site-footer/site-footer';
 import { SiteHeader } from '../../layout/site-header/site-header';
 import { PlanOption, PublicOffer } from '../admin/admin.models';
+import { mailto } from '../../core/app-config';
 import { OffresService } from '../offres/offres.service';
 import { CountUpDirective } from './count-up.directive';
 import { RevealDirective } from './reveal.directive';
@@ -322,6 +323,9 @@ export class Home implements OnInit, OnDestroy {
   isFeatured(plan: PlanOption): boolean {
     return plan.plan === 'PRO';
   }
+
+  /** Lien de contact, construit depuis la configuration de l'application. */
+  readonly contactLink = mailto('Une question sur Skulvi');
 
   /** Jours restants avant la clôture d'une offre, pour la pastille d'urgence. */
   closingSoon(offer: PublicOffer): boolean {

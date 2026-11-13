@@ -53,17 +53,51 @@ class PlanTest {
     }
 
     @Test
-    @DisplayName("le gratuit est le seul plan sans prix, et le seul à refuser le dépassement")
-    void le_gratuit_est_le_seul_plan_sans_depassement() {
+    @DisplayName("le gratuit est le seul plan sans prix")
+    void le_gratuit_est_le_seul_plan_sans_prix() {
         assertThat(Plan.FREE.priceCents()).isZero();
         assertThat(Plan.FREE.isPaid()).isFalse();
-        assertThat(Plan.FREE.allowsOverage()).isFalse();
 
         for (Plan plan : Plan.values()) {
             if (plan == Plan.FREE) continue;
             assertThat(plan.priceCents()).as("%s doit être payant", plan).isPositive();
             assertThat(plan.isPaid()).as("%s doit être marqué payant", plan).isTrue();
-            assertThat(plan.allowsOverage()).as("%s doit accepter le dépassement", plan).isTrue();
+        }
+    }
+
+    @Test
+    @DisplayName("seuls les paliers intermédiaires facturent un dépassement")
+    void qui_facture_le_depassement() {
+        // Le gratuit s'arrête à son quota, l'illimité n'en a pas : ni l'un ni l'autre n'a
+        // de dépassement à facturer. Entre les deux, Starter et Pro continuent à l'unité.
+        assertThat(Plan.FREE.allowsOverage()).isFalse();
+        assertThat(Plan.BUSINESS.allowsOverage()).isFalse();
+
+        assertThat(Plan.STARTER.allowsOverage()).isTrue();
+        assertThat(Plan.PRO.allowsOverage()).isTrue();
+    }
+
+    @Test
+    @DisplayName("le plan haut lève toutes les limites")
+    void le_plan_haut_est_illimite() {
+        assertThat(Plan.BUSINESS.isUnlimited()).isTrue();
+        assertThat(Plan.BUSINESS.maxAnalysesPerMonth()).isEqualTo(Plan.UNLIMITED);
+
+        for (Plan plan : Plan.values()) {
+            if (plan == Plan.BUSINESS) continue;
+            assertThat(plan.isUnlimited()).as("%s doit rester plafonné", plan).isFalse();
+        }
+    }
+
+    @Test
+    @DisplayName("aucun plan ne dépasse 20 € : plafond de prix décidé")
+    void le_prix_reste_sous_le_plafond() {
+        // Au-delà, l'offre sort de ce que paie une PME sans service RH. Si ce test casse,
+        // c'est une décision commerciale à prendre, pas une valeur à corriger au passage.
+        for (Plan plan : Plan.values()) {
+            assertThat(plan.priceCents())
+                    .as("%s ne doit pas dépasser 20 €", plan)
+                    .isLessThanOrEqualTo(2_000);
         }
     }
 
@@ -87,18 +121,12 @@ class PlanTest {
     @Test
     @DisplayName("le prix par analyse incluse décroît quand on monte en gamme")
     void monter_en_gamme_fait_baisser_le_prix_unitaire() {
+        // Comparaison limitée aux paliers plafonnés : diviser par la sentinelle « illimité »
+        // ne voudrait rien dire, et le plan haut est de toute façon le moins cher à l'unité.
         double starter = (double) Plan.STARTER.priceCents() / Plan.STARTER.maxAnalysesPerMonth();
         double pro = (double) Plan.PRO.priceCents() / Plan.PRO.maxAnalysesPerMonth();
-        double business = (double) Plan.BUSINESS.priceCents() / Plan.BUSINESS.maxAnalysesPerMonth();
 
         assertThat(pro).isLessThan(starter);
-        assertThat(business).isLessThan(pro);
-    }
-
-    @Test
-    void business_est_illimite_en_offres_et_en_sieges() {
-        assertThat(Plan.BUSINESS.maxActiveOffers()).isEqualTo(Plan.UNLIMITED);
-        assertThat(Plan.BUSINESS.maxSeats()).isEqualTo(Plan.UNLIMITED);
     }
 
     @Test

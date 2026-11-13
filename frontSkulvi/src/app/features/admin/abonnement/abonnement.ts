@@ -6,9 +6,9 @@ import { AuthService } from '../../auth/auth';
 import { PlanCode } from '../../auth/model';
 import { AdminApi } from '../admin-api';
 import { PlanOption, UsageSnapshot } from '../admin.models';
-
-/** Adresse de contact, utilisée quand le paiement en ligne n'est pas encore branché. */
-const SALES_EMAIL = 'contact@skulvi.fr';
+// Importé sous un autre nom : la méthode ci-dessous s'appelle aussi « mailto », et
+// la portée module l'emporterait silencieusement sur la méthode à la relecture.
+import { mailto as contactLink } from '../../../core/app-config';
 
 @Component({
   standalone: true,
@@ -205,6 +205,6 @@ export class Abonnement implements OnInit {
     const sujet = plan
       ? `Passer au plan ${plan.label} — ${this.organizationName() ?? ''}`
       : `Changer d'abonnement — ${this.organizationName() ?? ''}`;
-    return `mailto:${SALES_EMAIL}?subject=${encodeURIComponent(sujet)}`;
+    return contactLink(sujet);
   }
 }

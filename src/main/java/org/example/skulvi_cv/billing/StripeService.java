@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.Map;
 
 /**
@@ -82,6 +83,20 @@ public class StripeService {
         try {
             String customerId = ensureCustomer(org, ownerEmail);
 
+            /*
+             * Clé d'idempotence côté prestataire. Un double-clic sur le bouton, ou un
+             * navigateur qui rejoue la requête après un délai réseau, créerait sinon deux
+             * sessions de paiement — et potentiellement deux abonnements pour un seul client.
+             *
+             * La clé inclut l'organisation, le plan et la minute : deux tentatives dans la
+             * même minute renvoient la même session, alors qu'un changement de plan plus tard
+             * dans la journée en ouvre bien une nouvelle.
+             */
+            var options = com.stripe.net.RequestOptions.builder()
+                    .setIdempotencyKey("checkout-%s-%s-%d".formatted(
+                            org.getId(), plan.name(), Instant.now().getEpochSecond() / 60))
+                    .build();
+
             var params = com.stripe.param.checkout.SessionCreateParams.builder()
                     .setMode(com.stripe.param.checkout.SessionCreateParams.Mode.SUBSCRIPTION)
                     .setCustomer(customerId)
@@ -101,7 +116,7 @@ public class StripeService {
                     .setClientReferenceId(org.getId().toString())
                     .build();
 
-            var session = client.checkout().sessions().create(params);
+            var session = client.checkout().sessions().create(params, options);
             log.info("Session de paiement {} ouverte pour l'organisation {} (plan {})",
                     session.getId(), org.getId(), plan);
             return session.getUrl();
@@ -128,7 +143,7 @@ public class StripeService {
         try {
             var params = com.stripe.param.billingportal.SessionCreateParams.builder()
                     .setCustomer(org.getBillingCustomerId())
-                    .setReturnUrl(publicUrl + "/admin/abonnement")
+                    .setReturnUrl(publicUrl + props.portalReturnPath())
                     .build();
 
             return client.billingPortal().sessions().create(params).getUrl();
@@ -180,13 +195,23 @@ public class StripeService {
             return org.getBillingCustomerId();
         }
 
+        /*
+         * Clé dérivée de l'organisation, donc stable dans le temps : si cette création est
+         * rejouée, le prestataire renvoie le client déjà existant au lieu d'en créer un
+         * second. Deux clients pour une même organisation donneraient des abonnements
+         * orphelins, impossibles à rattacher au webhook.
+         */
+        var options = com.stripe.net.RequestOptions.builder()
+                .setIdempotencyKey("customer-" + org.getId())
+                .build();
+
         var customer = client.customers().create(CustomerCreateParams.builder()
                 .setName(org.getName())
                 .setEmail(ownerEmail)
                 .putAllMetadata(Map.of(
                         "organizationId", org.getId().toString(),
                         "slug", org.getSlug()))
-                .build());
+                .build(), options);
 
         org.setBillingCustomerId(customer.getId());
         return customer.getId();

@@ -22,11 +22,19 @@ public enum Plan {
      */
     FREE("Gratuit", 0, 2, 40, 2, 0),
 
-    STARTER("Starter", 2_900, 5, 200, 4, 1),
+    STARTER("Starter", 900, 5, 250, 4, 1),
 
-    PRO("Pro", 9_900, 20, 900, 12, 2),
+    PRO("Pro", 1_400, 15, 800, 10, 2),
 
-    BUSINESS("Business", 29_900, Integer.MAX_VALUE, 4_000, Integer.MAX_VALUE, 3);
+    /**
+     * Tout illimité, à 20 € par mois.
+     *
+     * <p>Plafond de prix décidé : au-delà, l'offre sort de ce que paie une PME sans service
+     * RH. La contrepartie à surveiller est la marge — une analyse coûte du temps CPU, et ce
+     * plan n'en plafonne plus le nombre. Si un client venait à consommer des milliers
+     * d'analyses par mois, c'est la priorité de file qui protège les autres, pas le prix.
+     */
+    BUSINESS("Illimité", 2_000, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE, 3);
 
     /**
      * Valeur sentinelle pour « pas de limite » : évite un Integer null à tester partout.
@@ -35,8 +43,12 @@ public enum Plan {
      */
     public static final int UNLIMITED = Integer.MAX_VALUE;
 
-    /** Prix facturé par analyse au-delà du quota mensuel, en centimes. */
-    public static final int OVERAGE_CENTS = 20;
+    /**
+     * Prix facturé par analyse au-delà du quota mensuel, en centimes.
+     *
+     * <p>Ne concerne que Starter et Pro : le plan illimité n'a pas de quota à dépasser.
+     */
+    public static final int OVERAGE_CENTS = 10;
 
     private final String label;
     private final int priceCents;
@@ -67,9 +79,19 @@ public enum Plan {
 
     public int queuePriority() { return queuePriority; }
 
-    /** Le dépassement est facturé à l'analyse : réservé aux plans payants. */
+    /**
+     * Le dépassement est-il facturé à l'analyse ?
+     *
+     * <p>Faux pour le gratuit, qui s'arrête à son quota, et faux pour l'illimité, qui n'en
+     * a pas. Seuls les paliers intermédiaires facturent le surplus.
+     */
     public boolean allowsOverage() {
-        return this != FREE;
+        return this != FREE && maxAnalysesPerMonth != UNLIMITED;
+    }
+
+    /** Ce plan lève-t-il toute limite ? */
+    public boolean isUnlimited() {
+        return maxAnalysesPerMonth == UNLIMITED;
     }
 
     public boolean isPaid() {

@@ -175,7 +175,72 @@ nav {
   }
 }
 
+/*
+  Sur mobile, la colonne latérale devient une barre horizontale défilante.
+
+  L'ancien repli la réduisait à un rail de 72 px d'icônes sans libellé : on ne savait plus
+  sur quoi on cliquait, et la colonne mangeait un cinquième de la largeur d'un téléphone.
+  Une barre en haut rend les libellés et toute la largeur au contenu.
+*/
 @media (max-width: 900px) {
-  .shell { --sb-width: 72px; .sidebar { @include rail; } .toggle { display: none; } }
-  .content { padding: 24px 16px 48px; }
+  .shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .sidebar {
+    position: sticky; top: 0; z-index: 30;
+    height: auto;
+    flex-direction: row; align-items: center;
+    gap: 14px;
+    padding: 10px 14px;
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .toggle { display: none; }
+
+  .brand {
+    padding: 0;
+    flex: none;
+    .brand-text small { display: none; }
+  }
+
+  nav {
+    flex: 1 1 auto;
+    flex-direction: row; align-items: center;
+    gap: 4px;
+
+    /* Les en-têtes de groupe n'ont plus de sens sur une seule ligne. */
+    .group { display: none; }
+
+    a {
+      flex: none;
+      padding: 8px 11px;
+      white-space: nowrap;
+
+      /* Le liseré vertical du lien actif dépassait de la barre : on le remplace par
+         un fond, qui se lit aussi bien à l'horizontale. */
+      &.active::before { display: none; }
+    }
+  }
+
+  .account {
+    flex: none;
+    padding-top: 0;
+    border-top: none;
+    .who { display: none; }
+  }
+
+  .content { padding: 22px 16px 48px; }
+  .trial-banner { margin-top: 0; }
+}
+
+@media (max-width: 520px) {
+  /* Encore plus étroit : seules les icônes restent, mais la barre défile donc rien
+     n'est inaccessible. */
+  .brand .brand-text { display: none; }
+  nav a span { display: none; }
 }

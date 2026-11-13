@@ -1,13 +1,7 @@
 <header class="sk-page-head">
   <div>
-    <h1>{{ isPlatformAdmin() ? 'Audience du site' : 'Qui visite vos offres' }}</h1>
-    <p>
-      @if (isPlatformAdmin()) {
-        Fréquentation de l'ensemble du site et inscriptions, {{ period() }}.
-      } @else {
-        Fréquentation de votre page carrière et de vos offres, {{ period() }}.
-      }
-    </p>
+    <h1>Audience du site</h1>
+    <p>Fréquentation et inscriptions, {{ period() }}.</p>
   </div>
 
   <div class="ranges" role="group" aria-label="Période">
@@ -32,7 +26,7 @@
   <!-- ───────────────────────────────────────────── indicateurs ───────── -->
   <section class="kpis" aria-label="Indicateurs clés">
 
-    <article class="kpi primary">
+    <article class="kpi" data-tone="visits">
       <p class="kpi-label">Visites</p>
       <strong class="kpi-value num">{{ data()!.visits }}</strong>
       <p class="kpi-trend" [class.ok]="trendTone(data()!.visitsTrend) === 'ok'"
@@ -44,7 +38,7 @@
       </p>
     </article>
 
-    <article class="kpi">
+    <article class="kpi" data-tone="visitors">
       <p class="kpi-label">Visiteurs distincts</p>
       <strong class="kpi-value num">{{ data()!.visitors }}</strong>
       <p class="kpi-trend" [class.ok]="trendTone(data()!.visitorsTrend) === 'ok'"
@@ -56,35 +50,27 @@
       </p>
     </article>
 
-    <article class="kpi">
+    <article class="kpi" data-tone="signups">
+      <p class="kpi-label">Inscriptions</p>
+      <strong class="kpi-value num">
+        {{ data()!.organizationSignups + data()!.candidateSignups }}
+      </strong>
+      <p class="kpi-trend">
+        {{ data()!.organizationSignups }} entreprise(s) ·
+        {{ data()!.candidateSignups }} candidat(s)
+      </p>
+    </article>
+
+    <article class="kpi" data-tone="apply">
       <p class="kpi-label">Candidatures envoyées</p>
       <strong class="kpi-value num">{{ data()!.funnel.applySent }}</strong>
       <p class="kpi-trend">sur {{ data()!.funnel.offerViews }} consultation(s) d'offre</p>
     </article>
-
-    @if (isPlatformAdmin()) {
-      <article class="kpi">
-        <p class="kpi-label">Inscriptions</p>
-        <strong class="kpi-value num">
-          {{ data()!.organizationSignups + data()!.candidateSignups }}
-        </strong>
-        <p class="kpi-trend">
-          {{ data()!.organizationSignups }} entreprise(s) ·
-          {{ data()!.candidateSignups }} candidat(s)
-        </p>
-      </article>
-    } @else {
-      <article class="kpi">
-        <p class="kpi-label">Taux de candidature</p>
-        <strong class="kpi-value num">{{ data()!.funnel.overallRate }} %</strong>
-        <p class="kpi-trend">des visiteurs d'offre vont au bout</p>
-      </article>
-    }
   </section>
 
   <!-- ───────────────────────────────────────────── totaux plateforme ── -->
-  @if (isPlatformAdmin() && platform(); as t) {
-    <section class="platform-strip" aria-label="Totaux de la plateforme">
+  @if (platform(); as t) {
+    <section class="totals" aria-label="Totaux de la plateforme">
       <div>
         <strong class="num">{{ t.organizations }}</strong>
         <span>entreprises inscrites</span>
@@ -101,7 +87,7 @@
   }
 
   <!-- ───────────────────────────────────────────── série temporelle ─── -->
-  <section class="panel wide">
+  <section class="panel">
     <header class="panel-head">
       <div>
         <h2>Fréquentation jour par jour</h2>
@@ -116,13 +102,7 @@
     } @else {
       <div class="empty-state">
         <p>Aucune visite enregistrée sur la période.</p>
-        <small>
-          @if (isPlatformAdmin()) {
-            Les visites sont comptées dès qu'un visiteur ouvre une page publique du site.
-          } @else {
-            Partagez votre page carrière ou une offre : les consultations apparaîtront ici.
-          }
-        </small>
+        <small>Les visites sont comptées dès qu'un visiteur ouvre une page publique du site.</small>
       </div>
     }
   </section>
@@ -139,21 +119,25 @@
     <ol class="funnel">
       <li>
         <div class="funnel-head">
-          <span class="funnel-step">1</span>
+          <span class="funnel-step" data-step="1">1</span>
           <span class="funnel-label">Offre consultée</span>
           <strong class="num">{{ data()!.funnel.offerViews }}</strong>
         </div>
-        <div class="sk-meter"><span [style.width.%]="100"></span></div>
+        <div class="sk-meter ok"><span [style.width.%]="100"></span></div>
       </li>
 
       <li>
         <div class="funnel-head">
-          <span class="funnel-step">2</span>
+          <span class="funnel-step" data-step="2">2</span>
           <span class="funnel-label">Formulaire ouvert</span>
           <strong class="num">{{ data()!.funnel.applyStarted }}</strong>
-          <em class="funnel-rate">{{ data()!.funnel.startRate }} %</em>
+          <em class="funnel-rate" [attr.data-tone]="gaugeTone(data()!.funnel.startRate)">
+            {{ data()!.funnel.startRate }} %
+          </em>
         </div>
-        <div class="sk-meter" [class.warn]="gaugeTone(data()!.funnel.startRate) === 'warn'"
+        <div class="sk-meter"
+             [class.ok]="gaugeTone(data()!.funnel.startRate) === 'ok'"
+             [class.warn]="gaugeTone(data()!.funnel.startRate) === 'warn'"
              [class.danger]="gaugeTone(data()!.funnel.startRate) === 'danger'">
           <span [style.width.%]="gauge(data()!.funnel.startRate)"></span>
         </div>
@@ -161,12 +145,16 @@
 
       <li>
         <div class="funnel-head">
-          <span class="funnel-step">3</span>
+          <span class="funnel-step" data-step="3">3</span>
           <span class="funnel-label">Candidature envoyée</span>
           <strong class="num">{{ data()!.funnel.applySent }}</strong>
-          <em class="funnel-rate">{{ data()!.funnel.completionRate }} %</em>
+          <em class="funnel-rate" [attr.data-tone]="gaugeTone(data()!.funnel.completionRate)">
+            {{ data()!.funnel.completionRate }} %
+          </em>
         </div>
-        <div class="sk-meter" [class.warn]="gaugeTone(data()!.funnel.completionRate) === 'warn'"
+        <div class="sk-meter"
+             [class.ok]="gaugeTone(data()!.funnel.completionRate) === 'ok'"
+             [class.warn]="gaugeTone(data()!.funnel.completionRate) === 'warn'"
              [class.danger]="gaugeTone(data()!.funnel.completionRate) === 'danger'">
           <span [style.width.%]="gauge(data()!.funnel.completionRate)"></span>
         </div>
@@ -190,9 +178,7 @@
   <div class="two-col">
 
     <section class="panel">
-      <header class="panel-head">
-        <div><h2>Pages les plus vues</h2></div>
-      </header>
+      <header class="panel-head"><div><h2>Pages les plus vues</h2></div></header>
 
       @if (hasPages()) {
         <div class="chart">
@@ -204,9 +190,7 @@
     </section>
 
     <section class="panel">
-      <header class="panel-head">
-        <div><h2>Appareils</h2></div>
-      </header>
+      <header class="panel-head"><div><h2>Appareils</h2></div></header>
 
       @if (hasDevices()) {
         <div class="chart">
@@ -230,14 +214,18 @@
 
     @if (data()!.referrers.length) {
       <ul class="sources">
-        @for (s of data()!.referrers; track s.label) {
+        @for (s of data()!.referrers; track s.label; let i = $index) {
           <li>
             <div class="source-head">
-              <span class="source-label">{{ s.label }}</span>
+              <span class="source-label">
+                <span class="dot" aria-hidden="true" [style.background]="sourceColor(i)"></span>
+                {{ s.label }}
+              </span>
               <span class="source-count num">{{ s.count }}<em>· {{ s.share }} %</em></span>
             </div>
-            <div class="sk-meter">
-              <span [style.width.%]="shareOfMax(s, data()!.referrers)"></span>
+            <div class="rail">
+              <span [style.width.%]="shareOfMax(s, data()!.referrers)"
+                    [style.background]="sourceColor(i)"></span>
             </div>
           </li>
         }

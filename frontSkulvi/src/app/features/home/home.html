@@ -31,7 +31,7 @@
         </div>
 
         <p class="hero-fine" [appReveal]="240">
-          Gratuit sans limite de durée · 40 CV analysés par mois · sans carte bancaire
+          Gratuit sans échéance · 40 CV analysés par mois · sans carte bancaire
         </p>
       </div>
 
@@ -427,7 +427,7 @@ score  = Σ points</code></pre>
       </p>
       <div class="closing-actions">
         <a class="sk-btn light lg" routerLink="/inscription-entreprise">Créer mon espace</a>
-        <a class="sk-btn outline-light lg" href="mailto:contact@skulvi.fr">Nous écrire</a>
+        <a class="sk-btn outline-light lg" [href]="contactLink">Nous écrire</a>
       </div>
       <p class="closing-fine">Gratuit sans échéance · sans carte bancaire · arrêt quand vous voulez</p>
     </div>

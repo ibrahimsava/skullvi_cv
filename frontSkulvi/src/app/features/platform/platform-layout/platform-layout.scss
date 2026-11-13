@@ -1,0 +1,153 @@
+.shell {
+  display: grid;
+  grid-template-columns: 246px 1fr;
+  min-height: 100vh;
+  background: var(--canvas);
+  font-family: var(--font);
+}
+
+/* ---------------------------------------------------------------- rail */
+
+.rail {
+  position: sticky; top: 0;
+  height: 100vh;
+  box-sizing: border-box;
+  display: flex; flex-direction: column;
+  padding: 18px 14px;
+  /* Marine : distingue immédiatement l'espace de la plateforme de celui d'un client. */
+  background: var(--navy);
+  color: var(--on-navy);
+}
+
+.ico { width: 19px; height: 19px; flex: none; }
+
+.brand {
+  display: flex; align-items: center; gap: 11px;
+  padding: 4px 8px 22px;
+
+  .mark {
+    display: grid; place-items: center;
+    width: 32px; height: 32px; flex: none;
+    border-radius: var(--radius-sm);
+    background: var(--blue-600); color: #fff;
+    font-size: 16px; font-weight: 800;
+  }
+
+  .txt { min-width: 0; display: flex; flex-direction: column; }
+  strong { font-size: 16px; font-weight: 700; letter-spacing: -0.02em; color: #fff; }
+  small { font-size: 11px; color: var(--on-navy-muted); }
+}
+
+nav {
+  flex: 1;
+  display: flex; flex-direction: column; gap: 3px;
+
+  a {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    color: var(--on-navy);
+    font-size: 14px; font-weight: 550;
+    text-decoration: none;
+    transition: background var(--t-fast), color var(--t-fast);
+
+    &:hover { background: rgba(255, 255, 255, 0.07); color: #fff; }
+
+    &.active {
+      background: var(--blue-600);
+      color: #fff;
+      font-weight: 650;
+    }
+
+    /* Sortie vers le site public, détachée du reste. */
+    &.out {
+      margin-top: 10px; padding-top: 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.11);
+      border-radius: 0;
+      color: var(--on-navy-muted);
+      &:hover { background: none; color: #fff; }
+    }
+  }
+}
+
+.account {
+  display: flex; align-items: center; gap: 10px;
+  padding-top: 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.11);
+
+  .avatar {
+    display: grid; place-items: center;
+    width: 33px; height: 33px; flex: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1); color: #fff;
+    font-size: 13px; font-weight: 700;
+  }
+
+  .who {
+    min-width: 0;
+    display: flex; flex-direction: column;
+    strong { font-size: 12.5px; font-weight: 650; color: #fff; }
+    small {
+      font-size: 11.5px; color: var(--on-navy-muted);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+  }
+
+  .logout {
+    margin-left: auto;
+    display: grid; place-items: center;
+    width: 32px; height: 32px; flex: none;
+    border: none; border-radius: var(--radius-sm);
+    background: transparent; color: var(--on-navy-muted);
+    cursor: pointer;
+    &:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+  }
+}
+
+/* ---------------------------------------------------------------- contenu */
+
+.content {
+  min-width: 0;
+  padding: 28px 36px 60px;
+}
+
+.scope-note {
+  margin: 0 0 24px;
+  padding: 11px 15px;
+  border-radius: var(--radius-sm);
+  background: var(--blue-50);
+  border: 1px solid var(--blue-200);
+  border-left: 3px solid var(--accent);
+  font-size: 13px; line-height: 1.55; color: var(--ink-2);
+  max-width: 88ch;
+}
+
+@media (max-width: 900px) {
+  /* Le rail passe en barre horizontale : une colonne fixe de 246 px sur un téléphone
+     ne laisserait rien au contenu. */
+  .shell { grid-template-columns: 1fr; }
+
+  .rail {
+    position: static; height: auto;
+    flex-direction: row; align-items: center; flex-wrap: wrap;
+    gap: 12px;
+    padding: 12px 16px;
+  }
+
+  .brand { padding: 0; margin-right: auto; }
+
+  nav {
+    flex: 0 1 auto;
+    flex-direction: row; flex-wrap: wrap;
+    a span { display: none; }
+    a { padding: 9px 11px; }
+    a.out { margin: 0; padding: 9px 11px; border: none; }
+  }
+
+  .account {
+    padding-top: 0; border-top: none;
+    .who { display: none; }
+  }
+
+  .content { padding: 20px 16px 48px; }
+}

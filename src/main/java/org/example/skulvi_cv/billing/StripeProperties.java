@@ -17,6 +17,7 @@ import java.util.Map;
  * @param prices          identifiant de tarif par plan, en minuscules : starter, pro, business
  * @param successPath     page de retour après un paiement réussi
  * @param cancelPath      page de retour si le client abandonne
+ * @param portalReturnPath page de retour en sortant du portail de facturation
  */
 @ConfigurationProperties(prefix = "stripe")
 public record StripeProperties(
@@ -25,12 +26,14 @@ public record StripeProperties(
         String webhookSecret,
         Map<String, String> prices,
         String successPath,
-        String cancelPath) {
+        String cancelPath,
+        String portalReturnPath) {
 
     public StripeProperties {
         prices = prices == null ? Map.of() : prices;
         successPath = blankTo(successPath, "/admin/abonnement?paiement=ok");
         cancelPath = blankTo(cancelPath, "/admin/abonnement?paiement=annule");
+        portalReturnPath = blankTo(portalReturnPath, "/admin/abonnement");
     }
 
     /** Le paiement n'est utilisable que si la clé et au moins un tarif sont renseignés. */
