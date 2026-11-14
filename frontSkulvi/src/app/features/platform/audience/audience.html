@@ -23,12 +23,16 @@
 
 } @else {
 
-  <!-- ───────────────────────────────────────────── indicateurs ───────── -->
+  <!-- ───────────────────────────────────────────── indicateurs ─────────
+    Les quatre indicateurs entrent échelonnés de 70 ms, et leurs chiffres défilent depuis
+    zéro. Le décalage n'est pas décoratif : il donne un ordre de lecture. Quatre nombres
+    apparus en même temps se lisent comme un bloc, et l'œil ne sait pas par où commencer.
+  -->
   <section class="kpis" aria-label="Indicateurs clés">
 
-    <article class="kpi" data-tone="visits">
+    <article class="kpi" data-tone="visits" [appReveal]="0">
       <p class="kpi-label">Visites</p>
-      <strong class="kpi-value num">{{ data()!.visits }}</strong>
+      <strong class="kpi-value num" [appCountUp]="data()!.visits" [countDelay]="120">0</strong>
       <p class="kpi-trend" [class.ok]="trendTone(data()!.visitsTrend) === 'ok'"
          [class.danger]="trendTone(data()!.visitsTrend) === 'danger'">
         @if (data()!.visitsTrend !== null) {
@@ -38,9 +42,9 @@
       </p>
     </article>
 
-    <article class="kpi" data-tone="visitors">
+    <article class="kpi" data-tone="visitors" [appReveal]="70">
       <p class="kpi-label">Visiteurs distincts</p>
-      <strong class="kpi-value num">{{ data()!.visitors }}</strong>
+      <strong class="kpi-value num" [appCountUp]="data()!.visitors" [countDelay]="190">0</strong>
       <p class="kpi-trend" [class.ok]="trendTone(data()!.visitorsTrend) === 'ok'"
          [class.danger]="trendTone(data()!.visitorsTrend) === 'danger'">
         @if (data()!.visitorsTrend !== null) {
@@ -50,44 +54,44 @@
       </p>
     </article>
 
-    <article class="kpi" data-tone="signups">
+    <article class="kpi" data-tone="signups" [appReveal]="140">
       <p class="kpi-label">Inscriptions</p>
-      <strong class="kpi-value num">
-        {{ data()!.organizationSignups + data()!.candidateSignups }}
-      </strong>
+      <strong class="kpi-value num"
+              [appCountUp]="data()!.organizationSignups + data()!.candidateSignups"
+              [countDelay]="260">0</strong>
       <p class="kpi-trend">
         {{ data()!.organizationSignups }} entreprise(s) ·
         {{ data()!.candidateSignups }} candidat(s)
       </p>
     </article>
 
-    <article class="kpi" data-tone="apply">
+    <article class="kpi" data-tone="apply" [appReveal]="210">
       <p class="kpi-label">Candidatures envoyées</p>
-      <strong class="kpi-value num">{{ data()!.funnel.applySent }}</strong>
+      <strong class="kpi-value num" [appCountUp]="data()!.funnel.applySent" [countDelay]="330">0</strong>
       <p class="kpi-trend">sur {{ data()!.funnel.offerViews }} consultation(s) d'offre</p>
     </article>
   </section>
 
   <!-- ───────────────────────────────────────────── totaux plateforme ── -->
   @if (platform(); as t) {
-    <section class="totals" aria-label="Totaux de la plateforme">
+    <section class="totals" aria-label="Totaux de la plateforme" [appReveal]="280">
       <div>
-        <strong class="num">{{ t.organizations }}</strong>
+        <strong class="num" [appCountUp]="t.organizations" [countDelay]="400">0</strong>
         <span>entreprises inscrites</span>
       </div>
       <div>
-        <strong class="num">{{ t.organizationsLast30 }}</strong>
+        <strong class="num" [appCountUp]="t.organizationsLast30" [countDelay]="470">0</strong>
         <span>nouvelles sur 30 jours</span>
       </div>
       <div>
-        <strong class="num">{{ t.users }}</strong>
+        <strong class="num" [appCountUp]="t.users" [countDelay]="540">0</strong>
         <span>comptes au total</span>
       </div>
     </section>
   }
 
   <!-- ───────────────────────────────────────────── série temporelle ─── -->
-  <section class="panel">
+  <section class="panel" [appReveal]="0">
     <header class="panel-head">
       <div>
         <h2>Fréquentation jour par jour</h2>
@@ -107,8 +111,12 @@
     }
   </section>
 
-  <!-- ───────────────────────────────────────────── entonnoir ────────── -->
-  <section class="panel">
+  <!-- ───────────────────────────────────────────── entonnoir ──────────
+    Les trois jauges se remplissent l'une après l'autre, à 160 ms d'écart. C'est la seule
+    animation de la page qui porte du sens : un entonnoir se lit de haut en bas, et voir les
+    barres se remplir dans cet ordre montre l'étape où la chute se produit.
+  -->
+  <section class="panel" [appReveal]="80">
     <header class="panel-head">
       <div>
         <h2>Du visiteur à la candidature</h2>
@@ -121,25 +129,27 @@
         <div class="funnel-head">
           <span class="funnel-step" data-step="1">1</span>
           <span class="funnel-label">Offre consultée</span>
-          <strong class="num">{{ data()!.funnel.offerViews }}</strong>
+          <strong class="num" [appCountUp]="data()!.funnel.offerViews" [countDelay]="200">0</strong>
         </div>
-        <div class="sk-meter ok"><span [style.width.%]="100"></span></div>
+        <div class="sk-meter ok grow">
+          <span [style.width.%]="100" [style.animationDelay]="'200ms'"></span>
+        </div>
       </li>
 
       <li>
         <div class="funnel-head">
           <span class="funnel-step" data-step="2">2</span>
           <span class="funnel-label">Formulaire ouvert</span>
-          <strong class="num">{{ data()!.funnel.applyStarted }}</strong>
+          <strong class="num" [appCountUp]="data()!.funnel.applyStarted" [countDelay]="360">0</strong>
           <em class="funnel-rate" [attr.data-tone]="gaugeTone(data()!.funnel.startRate)">
-            {{ data()!.funnel.startRate }} %
+            <span [appCountUp]="data()!.funnel.startRate" suffix=" %" [countDelay]="360">0 %</span>
           </em>
         </div>
-        <div class="sk-meter"
+        <div class="sk-meter grow"
              [class.ok]="gaugeTone(data()!.funnel.startRate) === 'ok'"
              [class.warn]="gaugeTone(data()!.funnel.startRate) === 'warn'"
              [class.danger]="gaugeTone(data()!.funnel.startRate) === 'danger'">
-          <span [style.width.%]="gauge(data()!.funnel.startRate)"></span>
+          <span [style.width.%]="gauge(data()!.funnel.startRate)" [style.animationDelay]="'360ms'"></span>
         </div>
       </li>
 
@@ -147,16 +157,16 @@
         <div class="funnel-head">
           <span class="funnel-step" data-step="3">3</span>
           <span class="funnel-label">Candidature envoyée</span>
-          <strong class="num">{{ data()!.funnel.applySent }}</strong>
+          <strong class="num" [appCountUp]="data()!.funnel.applySent" [countDelay]="520">0</strong>
           <em class="funnel-rate" [attr.data-tone]="gaugeTone(data()!.funnel.completionRate)">
-            {{ data()!.funnel.completionRate }} %
+            <span [appCountUp]="data()!.funnel.completionRate" suffix=" %" [countDelay]="520">0 %</span>
           </em>
         </div>
-        <div class="sk-meter"
+        <div class="sk-meter grow"
              [class.ok]="gaugeTone(data()!.funnel.completionRate) === 'ok'"
              [class.warn]="gaugeTone(data()!.funnel.completionRate) === 'warn'"
              [class.danger]="gaugeTone(data()!.funnel.completionRate) === 'danger'">
-          <span [style.width.%]="gauge(data()!.funnel.completionRate)"></span>
+          <span [style.width.%]="gauge(data()!.funnel.completionRate)" [style.animationDelay]="'520ms'"></span>
         </div>
       </li>
     </ol>
@@ -177,7 +187,7 @@
   <!-- ───────────────────────────────────────────── pages et appareils ─ -->
   <div class="two-col">
 
-    <section class="panel">
+    <section class="panel" [appReveal]="0">
       <header class="panel-head"><div><h2>Pages les plus vues</h2></div></header>
 
       @if (hasPages()) {
@@ -189,7 +199,7 @@
       }
     </section>
 
-    <section class="panel">
+    <section class="panel" [appReveal]="90">
       <header class="panel-head"><div><h2>Appareils</h2></div></header>
 
       @if (hasDevices()) {
@@ -204,7 +214,7 @@
   </div>
 
   <!-- ───────────────────────────────────────────── provenances ──────── -->
-  <section class="panel">
+  <section class="panel" [appReveal]="0">
     <header class="panel-head">
       <div>
         <h2>D'où viennent les visiteurs</h2>
@@ -221,11 +231,17 @@
                 <span class="dot" aria-hidden="true" [style.background]="sourceColor(i)"></span>
                 {{ s.label }}
               </span>
-              <span class="source-count num">{{ s.count }}<em>· {{ s.share }} %</em></span>
+              <span class="source-count num">
+                <span [appCountUp]="s.count" [countDelay]="150 + i * 60">0</span><em>· {{ s.share }} %</em>
+              </span>
             </div>
-            <div class="rail">
+            <!-- Le décalage suit l'ordre de la liste : les barres se déploient de haut en
+                 bas, ce qui laisse le temps de lire le classement. Plafonné au dixième rang,
+                 pour qu'une longue liste ne fasse pas attendre plusieurs secondes. -->
+            <div class="rail grow">
               <span [style.width.%]="shareOfMax(s, data()!.referrers)"
-                    [style.background]="sourceColor(i)"></span>
+                    [style.background]="sourceColor(i)"
+                    [style.animationDelay]="(150 + (i < 10 ? i : 10) * 60) + 'ms'"></span>
             </div>
           </li>
         }

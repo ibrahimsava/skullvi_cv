@@ -560,6 +560,42 @@ body {
   &.is-visible { opacity: 1; transform: none; }
 }
 
+/*
+  Barre de mesure qui se déploie au premier affichage.
+
+  Pourquoi une animation et non la transition déjà présente sur `.sk-meter > span` : une
+  transition CSS n'anime qu'un *changement* de valeur. Une barre rendue d'emblée à 42 % est
+  peinte à 42 % — il n'y a pas d'état antérieur à quitter, donc rien à animer. C'est
+  exactement ce qui donnait l'impression que les statistiques « apparaissaient d'un coup ».
+
+  `scaleX` plutôt qu'une animation de la largeur : la mise à l'échelle est calculée par le
+  compositeur, sans recalcul de mise en page à chaque image. Sur une page qui déploie une
+  dizaine de barres en même temps que trois graphiques, la différence est visible.
+
+  La transition sur la largeur reste utile et n'entre pas en conflit : elle prend le relais
+  lors d'un changement de période, où il y a bien une valeur de départ.
+*/
+.sk-meter.grow > span,
+.rail.grow > span {
+  transform-origin: left center;
+  animation: sk-grow var(--t-slow) var(--ease) both;
+}
+
+@keyframes sk-grow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* La barre doit rester à sa valeur, pas disparaître : `both` conserverait l'image de
+     départ, donc une barre vide, si l'animation était simplement coupée. */
+  .sk-meter.grow > span,
+  .rail.grow > span {
+    animation: none;
+    transform: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after {
