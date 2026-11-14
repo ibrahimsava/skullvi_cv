@@ -224,6 +224,94 @@ docker exec -it springboot-app ls -la /data/cvs
 > `--build` est obligatoire dès qu'on modifie du code Java, `application.yaml` ou une migration
 > (tout cela est dans le jar).
 
+### Avant un push en production
+
+**Aucun secret GitHub nouveau n'est nécessaire.** Le dépôt n'en utilise que quatre, tous déjà
+en place : `SERVER_HOST`, `SERVER_USER`, `SSH_PRIVATE_KEY`, et `GITHUB_TOKEN` fourni
+automatiquement. Rien de ce qui a été ajouté depuis ne se lit depuis GitHub — le backend lit
+son fichier `.env` **sur le serveur**, et le front n'embarque que des valeurs publiques.
+
+C'est donc `/opt/skulvi/.env` qu'il faut vérifier, pas les secrets du dépôt :
+
+| Variable | Valeur attendue en production | Conséquence si elle manque |
+|---|---|---|
+| `PUBLIC_URL` | `https://skulvicv.cloud` | le client payant est renvoyé vers sa **propre machine** après paiement, alors que le prélèvement a eu lieu |
+| `CORS_ORIGIN` | `https://skulvicv.cloud` | des origines de développement restent autorisées |
+| `SWAGGER_ENABLED` | `false` | toute la surface de l'API est décrite publiquement |
+| `ADMIN_PASSWORD` | 12 caractères au moins | ce compte voit tous les clients et toute la fréquentation |
+| `STRIPE_SECRET_KEY` | `sk_live_…` quand vous quittez le mode test | les paiements restent fictifs |
+| `STRIPE_WEBHOOK_SECRET` | celui de l'endpoint **de production** | les webhooks réels sont refusés, aucun abonnement ne s'active |
+| `STRIPE_PRICE_*` | ids créés en mode réel | la souscription échoue |
+
+Depuis la version actuelle, l'application **le dit elle-même au démarrage** :
+`ConfigurationAudit` écrit un encadré dans le journal pour chaque point douteux. À regarder
+après chaque déploiement :
+
+```powershell
+docker logs springboot-app | Select-String "CONFIGURATION" -Context 0,12
+```
+
+> Les clés Stripe de test et de production sont distinctes, et les identifiants de tarif
+> aussi. Relancez `scripts/stripe-setup.py` avec la clé réelle : il recréera les tarifs côté
+> production et réécrira les `STRIPE_PRICE_*`.
+
+### Le piège « variable définie mais vide »
+
+Dans `${VARIABLE:defaut}`, la valeur de repli ne s'applique que si la variable est
+**absente**. Une ligne `VARIABLE=` laissée sans valeur dans le fichier la définit à la chaîne
+vide — qui est une valeur comme une autre. Le repli est donc ignoré.
+
+Vérifié sur une instance réelle, avec `OLLAMA_MODEL=` vide :
+
+```
+Réglages effectifs : public-url=http://localhost:4200 · swagger=coupé
+                   · llm=ollama/(vide) sur http://ollama:11434 · paiement=inactif
+```
+
+Les deux comportements côte à côte, et c'est l'asymétrie qui surprend :
+
+| Dans le fichier | Résultat |
+|---|---|
+| ligne `PUBLIC_URL` **absente** | le défaut s'applique → `http://localhost:4200` |
+| ligne `OLLAMA_MODEL=` **présente et vide** | le défaut est ignoré → `""` |
+
+Conséquence concrète : un modèle vide fait échouer **toutes** les analyses de CV, sans erreur
+au démarrage. Pour vider un réglage, **retirez la ligne** — ne la laissez jamais sans valeur.
+
+`ConfigurationAudit` journalise maintenant les réglages effectifs à chaque démarrage, alerte
+ou non : c'est la seule façon de voir ce que l'application a réellement lu, par opposition à
+ce que le fichier semble dire. Le bloc `environment` du compose, les variables du système et
+le fichier `.env` se superposent selon un ordre de priorité qu'on ne devine pas en lisant un
+seul des trois.
+
+### Sécurité des fichiers YAML
+
+Aucun secret n'est écrit en dur : tout passe par `${VARIABLE}`, et les deux seules variables
+sans valeur de repli sont `JWT_SECRET` et `DB_PASSWORD` — l'application refuse donc de
+démarrer sans elles, ce qui est voulu. Trois points ont néanmoins été corrigés :
+
+1. **`SWAGGER_ENABLED` passe de `true` à `false` par défaut.** La valeur par défaut d'une
+   exposition doit être « fermé ». Avec l'ancien défaut, une instance dont le fichier
+   d'environnement oubliait la variable publiait la carte complète de l'API.
+2. **Postgres n'est plus publié que sur `127.0.0.1`.** Sans ce préfixe, Docker ouvre le port
+   sur toutes les interfaces **et écrit ses règles directement dans iptables** — un pare-feu
+   `ufw` configuré sur le serveur ne le protège pas. Pour y accéder à distance :
+   `ssh -L 5433:127.0.0.1:5433 utilisateur@serveur`.
+3. **Le backend non plus.** Publié largement, il était joignable sur `http://domaine:8080`,
+   donc en clair et sans passer par nginx : certificat TLS, en-têtes de sécurité et
+   limitation de débit se contournaient en changeant le port dans l'adresse.
+
+> **Le `compose.yaml` du dépôt n'est pas celui du serveur.** Il contient `build: .`, alors
+> que le déploiement fait `docker compose pull`, qui exige une ligne `image:`. Le serveur a
+> donc son propre fichier dans `/opt/skulvi`, et **les trois corrections ci-dessus doivent y
+> être reportées à la main**.
+
+> **Doublon à nettoyer.** Le dépôt se contient lui-même : `skullvi_cv/` est enregistré comme
+> sous-module (mode `160000`) figé sur un vieux commit, sans `.gitmodules`. Le CI ne récupère
+> pas les sous-modules, donc le déploiement n'est pas affecté, mais c'est 6,8 Mo de copie
+> périmée — et il contient des PDF personnels (factures). À retirer de l'index avec
+> `git rm --cached skullvi_cv` après avoir déplacé les documents ailleurs.
+
 ### Configuration : où va quoi
 
 ```powershell
@@ -572,7 +660,84 @@ select kind, count(*) from visit_event group by kind;
 
 ---
 
-## 13. Avant de prendre le premier euro
+## 13. Référencement
+
+Domaine de production : **`skulvicv.cloud`**. Deux marchés visés, France et Côte d'Ivoire,
+en français dans les deux cas.
+
+### Où vivent les métadonnées
+
+| Fichier | Rôle |
+|---|---|
+| `core/seo.ts` | pose titre, description, canonique, Open Graph, carte Twitter, `hreflang` |
+| `core/seo-router.ts` | les applique à chaque navigation, branché une fois dans `app.ts` |
+| `core/structured-data.ts` | les données structurées schema.org (`Organization`, `WebSite`, `SoftwareApplication`, `JobPosting`, `BreadcrumbList`, `FAQPage`) |
+| `app.routes.ts`, `data.seo` | titre et description de chaque route |
+| `public/robots.txt`, `public/sitemap.xml` | pages stables, servies en statique |
+| `offer/SitemapController.java` | plan du site des offres et pages carrière, reconstruit à chaque appel |
+| `environment.prod.ts`, `siteUrl` | le domaine. **Vide en développement**, exprès |
+
+`siteUrl` vide en local n'est pas un oubli : les adresses canoniques retombent alors sur
+l'origine courante. Écrire le domaine de production ferait servir en local un canonique
+« la vraie page est sur skulvicv.cloud » — inoffensif tant que rien n'est exposé, désastreux
+le jour où une préproduction est joignable, puisque le moteur désindexe la page au profit
+d'une autre.
+
+### Chaque page vise des requêtes différentes
+
+Deux pages optimisées pour « logiciel de tri de CV » se prennent mutuellement leur
+classement. C'est la **cannibalisation**, et c'est la façon la plus courante de mal se
+référencer en travaillant beaucoup. D'où la répartition : l'accueil prend la requête
+générique, `/tarifs` prend l'intention d'achat, `/offres` prend le visiteur candidat, et les
+pages d'annonce prennent chacune l'intitulé de leur poste.
+
+Les pages de connexion, l'espace recruteur et l'espace plateforme sont en `noindex` **et** en
+`Disallow`. Les deux sont nécessaires : `Disallow` empêche l'exploration, pas l'indexation
+d'une adresse déjà connue.
+
+### Deux limites à connaître
+
+**1. Les balises sont posées en JavaScript.** Google l'exécute et les voit. L'aperçu de lien
+de LinkedIn, WhatsApp ou Facebook, non : il ne lit que `index.html`, d'où les valeurs de repli
+écrites en dur dedans. Le remède complet est le **prérendu**, qui produirait un fichier HTML
+par page. Il n'est pas en place : huit accès directs au navigateur (`document.referrer`,
+`window.matchMedia`, `localStorage`) devraient d'abord être protégés par `isPlatformBrowser`,
+et `angular.json` modifié. C'est le prochain gain important, et il ne change pas le modèle de
+déploiement — la sortie resterait dans `dist/frontSkulvi/browser/`.
+
+**2. L'encart emploi de Google exige un lieu de travail.** Le modèle d'offre n'a pas de champ
+lieu, donc `jobLocation` est absent du balisage — et inventer une ville serait pire, un
+balisage qui ne correspond pas au contenu visible est une cause de sanction. Les annonces
+restent compréhensibles par les moteurs mais ne sont pas éligibles à l'encart. **Ajouter un
+champ « lieu » au formulaire d'offre est le seul obstacle restant**, et ce serait le levier de
+référencement le plus rentable du site.
+
+### Vérifier
+
+```powershell
+# le plan du site des offres, avec les en-têtes que pose nginx en production
+Invoke-WebRequest -Uri "http://localhost:8080/api/v1/public/sitemap.xml" -UseBasicParsing `
+  -Headers @{ 'X-Forwarded-Host' = 'skulvicv.cloud'; 'X-Forwarded-Proto' = 'https' }
+```
+
+Le domaine vient de la requête, jamais d'une variable : un plan du site dont les adresses
+pointent ailleurs que là où il est servi est rejeté en entier, et l'échec est silencieux — le
+fichier se télécharge, rien ne plante, les pages ne sont simplement jamais indexées.
+
+Une offre clôturée disparaît du plan du site, ce qui est voulu : une annonce pourvue qui
+traîne dans l'index dégrade la confiance accordée à tout le domaine.
+
+### Après un déploiement
+
+1. Déclarer le site dans la Search Console, et y soumettre `https://skulvicv.cloud/sitemap.xml`
+   ainsi que `https://skulvicv.cloud/api/v1/public/sitemap.xml`.
+2. Vérifier les données structurées sur `search.google.com/test/rich-results`.
+3. Remplacer l'image d'aperçu : `icon-512.png` est carré, donc rogné des deux côtés par
+   LinkedIn et Facebook. Il faut une vignette de **1200 × 630**.
+
+---
+
+## 14. Avant de prendre le premier euro
 
 - [x] Multi-client avec cloisonnement vérifié
 - [x] Quotas et compteur de consommation
@@ -591,7 +756,7 @@ select kind, count(*) from visit_event group by kind;
 
 ---
 
-## 14. Ce qui reste à faire côté produit
+## 15. Ce qui reste à faire côté produit
 
 - Upload de CV en masse (besoin n° 1 des cabinets, et ce qui justifie le plan Pro).
 - Export CSV/PDF du classement.

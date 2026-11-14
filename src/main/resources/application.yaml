@@ -96,8 +96,16 @@ app:
 
 
 springdoc:
+  # Documentation interactive de l'API.
+  #
+  # Défaut à « false », et c'est le point important : la valeur par défaut d'une exposition
+  # doit être « fermé ». Auparavant le défaut était « true », donc une instance dont le
+  # fichier d'environnement oublie la variable publiait la description complète de toutes
+  # les routes, de tous les paramètres et de tous les corps attendus — soit la carte de la
+  # surface d'attaque, offerte sans authentification.
+  #
+  # En développement, SWAGGER_ENABLED=true est posé dans .env : rien ne change en local.
   api-docs:
-    # Documentation coupée en production : elle décrit toute la surface d'attaque de l'API.
-    enabled: ${SWAGGER_ENABLED:true}
+    enabled: ${SWAGGER_ENABLED:false}
   swagger-ui:
-    enabled: ${SWAGGER_ENABLED:true}
+    enabled: ${SWAGGER_ENABLED:false}
