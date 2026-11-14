@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class PriceCatalogTest {
 
     private static StripeProperties props(Map<String, String> prices) {
-        return new StripeProperties(true, "sk_test_x", "whsec_x", prices, null, null);
+        return new StripeProperties(true, "sk_test_x", "whsec_x", prices, null, null, null);
     }
 
     @Test
@@ -77,13 +77,14 @@ class PriceCatalogTest {
         assertThat(props(Map.of()).usable()).isFalse();
 
         // Clé absente.
-        assertThat(new StripeProperties(true, "", "whsec", Map.of("pro", "p"), null, null).usable())
+        assertThat(new StripeProperties(true, "", "whsec", Map.of("pro", "p"), null, null, null).usable())
+
                 .isFalse();
-        assertThat(new StripeProperties(true, null, "whsec", Map.of("pro", "p"), null, null).usable())
+        assertThat(new StripeProperties(true, null, "whsec", Map.of("pro", "p"), null, null, null).usable())
                 .isFalse();
 
         // Désactivé explicitement.
-        assertThat(new StripeProperties(false, "sk_test", "whsec", Map.of("pro", "p"), null, null).usable())
+        assertThat(new StripeProperties(false, "sk_test", "whsec", Map.of("pro", "p"), null, null, null).usable())
                 .isFalse();
     }
 
@@ -92,7 +93,7 @@ class PriceCatalogTest {
     void chemins_de_retour_par_defaut() {
         // Sans valeur de repli, une configuration incomplète produirait une URL de retour
         // « https://domaine null » après un paiement réussi.
-        var p = new StripeProperties(true, "sk", "wh", Map.of("pro", "price"), null, "  ");
+        var p = new StripeProperties(true, "sk", "wh", Map.of("pro", "price"), null, "  ", null);
 
         assertThat(p.successPath()).startsWith("/");
         assertThat(p.cancelPath()).startsWith("/");
@@ -100,7 +101,8 @@ class PriceCatalogTest {
 
     @Test
     void les_tarifs_ne_sont_jamais_nuls() {
-        var p = new StripeProperties(true, "sk", "wh", null, null, null);
+        var p = new StripeProperties(true, "sk", "wh", null, null, null, null);
+        assertThat(p.portalReturnPath()).startsWith("/");
         assertThat(p.prices()).isEmpty();
         assertThat(p.priceFor("pro")).isNull();
     }

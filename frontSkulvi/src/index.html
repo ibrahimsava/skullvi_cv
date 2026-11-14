@@ -2,12 +2,51 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <title>Skulvi — Triez vos CV sans les lire tous</title>
+  <title>Skulvi — Logiciel de tri de CV par intelligence artificielle</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!--
+    Ces balises sont les valeurs de REPLI.
+
+    L'application les remplace page par page (src/app/core/seo.ts) : chaque adresse a son
+    propre titre et sa propre description, sans quoi le moteur n'a aucune raison de les
+    distinguer. Mais ce remplacement se fait en JavaScript. Google l'exécute et voit le bon
+    titre ; l'aperçu de lien de LinkedIn, WhatsApp ou Facebook, non — il ne lit que ce
+    fichier. D'où ces valeurs écrites en dur, qui doivent décrire correctement le site dans
+    son ensemble.
+
+    Le remède complet est le prérendu, qui produirait un fichier HTML par page.
+  -->
   <meta name="description"
-        content="Skulvi lit chaque CV, le note sur la grille de critères que vous avez définie, et vous explique chaque point attribué. Analyse hébergée en France, décision humaine.">
-  <meta name="theme-color" content="#fbf9f6">
+        content="Skulvi lit chaque CV, le note sur la grille de critères que vous avez définie, et vous explique chaque point attribué. Plan gratuit sans limite de durée. France et Côte d'Ivoire.">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+  <meta name="author" content="Skulvi">
+  <link rel="canonical" href="https://skulvicv.cloud/">
+
+  <!-- Deux régions, une langue : dit au moteur que la page sert la France et la Côte
+       d'Ivoire, au lieu de le laisser choisir et faire se concurrencer les deux. -->
+  <link rel="alternate" hreflang="fr-FR" href="https://skulvicv.cloud/">
+  <link rel="alternate" hreflang="fr-CI" href="https://skulvicv.cloud/">
+  <link rel="alternate" hreflang="x-default" href="https://skulvicv.cloud/">
+
+  <!-- Aperçu au partage : LinkedIn, Facebook, WhatsApp, Slack. -->
+  <meta property="og:site_name" content="Skulvi">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:title" content="Skulvi — Logiciel de tri de CV par intelligence artificielle">
+  <meta property="og:description"
+        content="Chaque CV lu, noté sur votre grille de critères, et chaque point justifié. Plan gratuit sans limite de durée.">
+  <meta property="og:url" content="https://skulvicv.cloud/">
+  <meta property="og:image" content="https://skulvicv.cloud/icon-512.png">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Skulvi — Logiciel de tri de CV par intelligence artificielle">
+  <meta name="twitter:description"
+        content="Chaque CV lu, noté sur votre grille de critères, et chaque point justifié.">
+  <meta name="twitter:image" content="https://skulvicv.cloud/icon-512.png">
+
+  <meta name="theme-color" content="#1d4ed8">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,11 +58,14 @@
   <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..600&display=swap">
 
+  <!-- favicon.ico a été retiré : le fichier n'existe pas dans public/, et sa déclaration
+       provoquait une requête en échec à chaque chargement de page. Les formats ci-dessous
+       couvrent tous les navigateurs actuels. -->
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="icon" type="image/x-icon" href="favicon.ico" sizes="48x48">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
 </head>
 <body>
   <app-root></app-root>

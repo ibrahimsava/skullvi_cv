@@ -78,7 +78,10 @@ export class Postuler implements OnInit {
     this.setMode(logged ? 'loggedIn' : 'create');
 
     this.api.getOffer(this.offerId).subscribe({
-      next: (o) => this.offer.set(o),
+      next: (o) => {
+        this.offer.set(o);
+        this.referencer(o);
+      },
       error: () => this.loadError.set(true),
     });
 
@@ -246,5 +249,49 @@ export class Postuler implements OnInit {
       default:
         return "Votre candidature n'a pas pu être envoyée. Vérifiez le formulaire et réessayez.";
     }
+  }
+
+  // ---------------------------------------------------------------- référencement
+
+  /**
+   * Décrit l'offre aux moteurs de recherche, une fois qu'elle est chargée.
+   *
+   * <p>Le titre réel compte ici plus qu'ailleurs : un candidat cherche « développeur Java
+   * Abidjan », pas « postuler à cette offre ». Une page d'annonce qui garde un titre générique
+   * ne peut remonter sur aucune recherche de poste, et c'est pourtant le trafic le plus
+   * qualifié que le site puisse recevoir.
+   */
+  private referencer(offre: PublicOffer): void {
+    const chezQui = offre.organizationName ? ` chez ${offre.organizationName}` : '';
+
+    this.seo.apply({
+      title: `${offre.title}${chezQui}`,
+      description: this.extrait(offre),
+      path: `/postuler/${offre.id}`,
+      ogType: 'article',
+    });
+
+    const site = this.seo.absolute('/').replace(/\/$/, '');
+    this.seo.jsonLd('offre', jobPostingLd(site, offre));
+    this.seo.jsonLd('fil', breadcrumbLd(site, [
+      { nom: 'Accueil', url: '/' },
+      { nom: "Offres d'emploi", url: '/offres' },
+      { nom: offre.title, url: `/postuler/${offre.id}` },
+    ]));
+  }
+
+  /**
+   * Description courte pour les résultats de recherche.
+   *
+   * <p>Coupée au dernier mot entier avant 155 caractères : au-delà, le moteur tronque
+   * lui-même, et le fait volontiers au milieu d'un mot.
+   */
+  private extrait(offre: PublicOffer): string {
+    const brut = (offre.description || '').replace(/\s+/g, ' ').trim();
+    const texte = brut || `${offre.title} — candidature en ligne, analyse de votre CV.`;
+
+    if (texte.length <= 155) return texte;
+    const coupe = texte.slice(0, 155);
+    return `${coupe.slice(0, coupe.lastIndexOf(' '))}…`;
   }
 }

@@ -1,0 +1,29 @@
+# Skulvi — règles d'exploration
+#
+# Les espaces connectés sont interdits : ils exigent un jeton, un robot n'y verrait qu'une
+# page de connexion, et des dizaines d'adresses vides diluent la valeur du reste du site.
+#
+# Attention : « Disallow » empêche l'exploration, pas l'indexation d'une adresse déjà connue.
+# C'est la balise « noindex » posée par l'application sur ces routes qui fait le travail. Les
+# deux sont nécessaires, et c'est pour cela que les deux sont là.
+
+User-agent: *
+
+Disallow: /admin
+Disallow: /platform
+Disallow: /mon-espace
+Disallow: /login
+Disallow: /register
+Disallow: /auth
+
+# L'API ne contient aucune page : l'explorer ne gaspille que du budget d'exploration.
+# Exception plus bas pour le plan du site des offres, qui est servi par le backend.
+Disallow: /api/
+Allow: /api/v1/public/sitemap.xml
+
+# Paramètres de campagne : même page, adresse différente. L'adresse canonique les neutralise
+# déjà, ceci évite en plus de les explorer pour rien.
+Disallow: /*?utm_
+
+Sitemap: https://skulvicv.cloud/sitemap.xml
+Sitemap: https://skulvicv.cloud/api/v1/public/sitemap.xml

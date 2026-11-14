@@ -12,4 +12,14 @@
 export const environment = {
   production: false,
   apiBaseUrl: '/api/v1',
+
+  /**
+   * Volontairement vide en développement.
+   *
+   * <p>Les adresses canoniques retombent alors sur l'origine courante. Écrire le domaine de
+   * production ici ferait servir en local un canonique « la vraie page est sur
+   * skulvicv.cloud » — inoffensif tant que rien n'est exposé, désastreux le jour où une
+   * préproduction est accessible : le moteur désindexe la page au profit d'une autre.
+   */
+  siteUrl: '',
 };

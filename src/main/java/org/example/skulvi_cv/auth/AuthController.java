@@ -25,7 +25,10 @@ public class AuthController {
     }
 
     @Operation(summary = "Créer un espace recruteur",
-            description = "Crée le compte propriétaire et son organisation, en essai gratuit de 14 jours.")
+            description = """
+                    Crée le compte propriétaire et son organisation, sur le plan gratuit et
+                    sans échéance. Le passage à un plan payant se fait depuis l'espace
+                    d'administration, quand les quotas du gratuit sont atteints.""")
     @PostMapping("/signup-organization")
     @ResponseStatus(HttpStatus.CREATED)
     public TokenResponse signupOrganization(@Valid @RequestBody SignupRequest request) {

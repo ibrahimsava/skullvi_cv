@@ -73,14 +73,24 @@ export class Auth implements OnInit {
   /**
    * Oriente vers le bon espace après connexion.
    *
-   * <p>La destination vient de la réponse du serveur, et non d'un rôle lu dans le jeton :
-   * `organizationId` dit sans ambiguïté si ce compte a un espace recruteur. L'ancienne version
-   * testait un rôle « ADMIN » qui n'existe plus que pour l'administrateur de la plateforme, et
-   * aurait envoyé tous les recruteurs sur la liste des offres publiques.
+   * <p>La destination d'un recruteur vient de la réponse du serveur, et non d'un rôle lu dans
+   * le jeton : `organizationId` dit sans ambiguïté si ce compte a un espace recruteur.
+   * L'ancienne version testait un rôle « ADMIN » qui n'existe plus que pour l'administrateur
+   * de la plateforme, et aurait envoyé tous les recruteurs sur la liste des offres publiques.
+   *
+   * <p>L'administrateur de la plateforme passe en premier, et c'est le seul cas où le rôle du
+   * jeton tranche : n'appartenant à aucune organisation, il n'a pas d'`organizationId` et
+   * tombait donc dans l'espace candidat — qui ne lui sert à rien et où les statistiques de
+   * fréquentation semblaient avoir disparu. L'en-tête, lui, pointait déjà au bon endroit : la
+   * seule chose qui manquait était cette branche.
    */
   private goAfterLogin(res: AuthResponse): void {
     if (this.redirectTo && this.redirectTo.startsWith('/')) {
       this.router.navigateByUrl(this.redirectTo);
+      return;
+    }
+    if (this.authService.isPlatformAdmin()) {
+      this.router.navigateByUrl('/platform/audience');
       return;
     }
     if (res.user?.organizationId) {

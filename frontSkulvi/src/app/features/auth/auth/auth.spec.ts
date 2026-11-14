@@ -14,9 +14,22 @@ function route(path: string, suite?: string) {
   };
 }
 
-function tokenResponse(organizationId: string | null): AuthResponse {
+/**
+ * Un jeton décodable par `jwt-decode`, avec les rôles demandés.
+ *
+ * <p>La signature est factice : `jwt-decode` ne la vérifie pas, et c'est bien le serveur qui
+ * la contrôle à chaque appel. Un jeton non décodable rendrait `roles()` vide, et le test de
+ * l'administrateur de la plateforme passerait pour une mauvaise raison.
+ */
+function jeton(roles: string[]): string {
+  const b64 = (o: unknown) =>
+    btoa(JSON.stringify(o)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ roles })}.signature-factice`;
+}
+
+function tokenResponse(organizationId: string | null, roles?: string[]): AuthResponse {
   return {
-    accessToken: 'jeton-de-test',
+    accessToken: roles ? jeton(roles) : 'jeton-de-test',
     tokenType: 'Bearer',
     expiresInSeconds: 3600,
     user: {
@@ -83,6 +96,20 @@ describe('Auth', () => {
     http.expectOne((r) => r.url.endsWith('/auth/login')).flush(tokenResponse('org-1'));
 
     expect(navigate).toHaveBeenCalledWith('/admin/dashboard');
+  });
+
+  /*
+   * L'administrateur de la plateforme n'a pas d'organisation : sans cette branche il tombait
+   * dans l'espace candidat, et la page de fréquentation du site paraissait avoir disparu.
+   */
+  it("envoie l'administrateur de la plateforme vers la fréquentation du site", () => {
+    const { component, http, navigate } = setup('login');
+    component.userRequest = { firstName: '', lastName: '', email: 'admin@skulvi.com', password: 'motdepasse1' };
+    component.submit();
+
+    http.expectOne((r) => r.url.endsWith('/auth/login')).flush(tokenResponse(null, ['ROLE_ADMIN']));
+
+    expect(navigate).toHaveBeenCalledWith('/platform/audience');
   });
 
   it('envoie un candidat vers son espace personnel', () => {

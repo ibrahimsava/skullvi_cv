@@ -45,6 +45,15 @@ MANQUANTES = [
     ('STRIPE_CANCEL_PATH', '/admin/abonnement?paiement=annule', None),
     ('STRIPE_PORTAL_RETURN_PATH', '/admin/abonnement',
      "Page de retour en sortant du portail de facturation."),
+    ('STRIPE_CURRENCY', 'eur',
+     "Devise de facturation. Lue par scripts/stripe-setup.py au moment de créer les\n"
+     "#  tarifs. La changer ensuite n'a aucun effet : un tarif Stripe est immuable, il faut\n"
+     "#  en créer de nouveaux — relancer le script s'en charge."),
+    ('STRIPE_TAX_CODE', 'txcd_10103001',
+     "Code fiscal du produit vendu : « SaaS - business use ».\n"
+     "#  Sans lui, Stripe refuse d'ouvrir une session de paiement dès que « Managed\n"
+     "#  Payments » est actif, et ne saurait de toute façon pas quelle TVA appliquer.\n"
+     "#  Pour une vente aux particuliers : txcd_10103000 (« SaaS - personal use »)."),
 
     (None, None, "---------------------------------------------------------------- File d'analyse"),
     ('QUEUE_POLL_MS', '3000',
@@ -54,9 +63,11 @@ MANQUANTES = [
      "#  charger son modèle : sans ce délai, les premières analyses échouent toutes."),
 
     (None, None, "---------------------------------------------------------------- Entretien"),
-    ('ANALYTICS_PURGE_CRON', '0 30 4 * * *',
+    # Entre guillemets : une expression cron contient des espaces, et tout shell qui
+    # source le fichier tenterait sinon d'executer les champs suivants.
+    ('ANALYTICS_PURGE_CRON', '"0 30 4 * * *"',
      "Purge de la mesure d'audience (plus de 400 jours), chaque nuit à 4 h 30."),
-    ('STRIPE_LEDGER_PURGE_CRON', '0 15 4 * * *',
+    ('STRIPE_LEDGER_PURGE_CRON', '"0 15 4 * * *"',
      "Purge des traces de webhooks déjà traités (plus de 30 jours)."),
 ]
 
