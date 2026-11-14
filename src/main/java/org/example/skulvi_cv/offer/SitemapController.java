@@ -93,7 +93,7 @@ public class SitemapController {
      * du conteneur. Les en-têtes {@code X-Forwarded-*} portent le domaine et le schéma vus par
      * le visiteur, qui sont les seuls à faire sens dans un plan du site.
      */
-    private static String baseUrl(HttpServletRequest request) {
+    static String baseUrl(HttpServletRequest request) {
         String host = premier(request.getHeader("X-Forwarded-Host"));
         if (host == null || host.isBlank()) {
             host = request.getHeader("Host");

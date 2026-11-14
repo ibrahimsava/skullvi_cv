@@ -9,6 +9,8 @@ import { AuthService } from '../auth/auth';
 import { User } from '../auth/model';
 import { PublicOffer } from '../admin/admin.models';
 import { ApplicationApi } from './application-api';
+import { Seo } from '../../core/seo';
+import { breadcrumbLd, jobPostingLd } from '../../core/structured-data';
 
 type Mode = 'loggedIn' | 'create' | 'login';
 
@@ -26,6 +28,7 @@ export class Postuler implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly auth = inject(AuthService);
   private readonly api = inject(ApplicationApi);
+  private readonly seo = inject(Seo);
 
   private readonly offerId = this.route.snapshot.paramMap.get('offerId') ?? '';
 
