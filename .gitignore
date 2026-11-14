@@ -37,3 +37,9 @@ build/
 .git/
 .idea/
 
+
+#  Copie obsolete du projet, enregistree par erreur comme sous-module.
+#  Le depot se contenait lui-meme, fige sur un vieux commit : source de confusion
+#  sur « quel dossier est a jour », pour zero benefice. Ignore au cas ou il
+#  reapparaitrait.
+skullvi_cv/
