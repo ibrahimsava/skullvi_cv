@@ -4,6 +4,8 @@ import { SiteFooter } from '../../layout/site-footer/site-footer';
 import { SiteHeader } from '../../layout/site-header/site-header';
 import { PublicOffer } from '../admin/admin.models';
 import { OffresService, PublicOrganization } from './offres.service';
+import { Seo } from '../../core/seo';
+import { breadcrumbLd } from '../../core/structured-data';
 
 /**
  * Liste publique des offres.
@@ -26,6 +28,7 @@ export class Offres implements OnInit {
 
   private readonly offresService = inject(OffresService);
   private readonly route = inject(ActivatedRoute);
+  private readonly seo = inject(Seo);
 
   offres = signal<PublicOffer[]>([]);
   loading = signal(true);
@@ -60,7 +63,10 @@ export class Offres implements OnInit {
 
     if (slug) {
       this.offresService.organization(slug).subscribe({
-        next: (org) => this.company.set(org),
+        next: (org) => {
+          this.company.set(org);
+          this.referencerPageCarriere(org);
+        },
         error: () => this.company.set(null),
       });
     }
@@ -81,6 +87,37 @@ export class Offres implements OnInit {
           : err?.status ? `erreur ${err.status}` : 'serveur injoignable');
       },
     });
+  }
+
+  // ---------- Référencement ----------
+
+  /**
+   * Décrit la page carrière d'une entreprise aux moteurs de recherche.
+   *
+   * <p>Ces pages sont le meilleur levier d'acquisition gratuite du site : chaque client partage
+   * lui-même l'adresse de sa propre page, et un candidat qui cherche « recrutement » suivi du
+   * nom de l'entreprise doit tomber dessus. Encore faut-il que la page porte ce nom dans son
+   * titre — un titre générique ne peut remonter sur aucun nom d'entreprise.
+   *
+   * <p>Appelé seulement en page carrière : sur le job board général, la description de la route
+   * est déjà la bonne.
+   */
+  private referencerPageCarriere(org: PublicOrganization): void {
+    const postes = org.openOffers === 1 ? '1 poste ouvert' : `${org.openOffers} postes ouverts`;
+
+    this.seo.apply({
+      title: `Recrutement ${org.name}`,
+      description: `${postes} chez ${org.name}. Consultez les offres et postulez en ligne : `
+        + 'votre CV est analysé et vous recevez une réponse argumentée.',
+      path: `/c/${org.slug}`,
+    });
+
+    const site = this.seo.absolute('/').replace(/\/$/, '');
+    this.seo.jsonLd('fil', breadcrumbLd(site, [
+      { nom: 'Accueil', url: '/' },
+      { nom: "Offres d'emploi", url: '/offres' },
+      { nom: org.name, url: `/c/${org.slug}` },
+    ]));
   }
 
   // ---------- Affichage des cartes ----------
