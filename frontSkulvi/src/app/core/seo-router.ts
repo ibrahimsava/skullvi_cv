@@ -74,7 +74,7 @@ export class SeoRouter {
  * avec un titre générique, qui ferait concurrence à l'accueil sur ses propres mots clés.
  */
 const REPLI: PageSeo = {
-  title: 'Skulvi',
-  description: 'Tri et analyse de CV pour les recruteurs.',
+  title: 'Skulvi, la plateforme de recrutement pour les entreprises africaines, en Côte d’Ivoire et au Sénégal , et partout en Afrique  , pour les recruteurs et les candidats. en Europe et en Afrique, pour les recruteurs et les candidats.',
+  description: 'Tri et analyse de CV pour les recruteurs. Offres d’emploi pour les candidats. Skulvi est la plateforme de recrutement pour les entreprises africaines, en Côte d’Ivoire et au Sénégal , et partout en Afrique  , pour les recruteurs et les candidats. en Europe et en Afrique, pour les recruteurs et les candidats.',
   noindex: true,
 };
