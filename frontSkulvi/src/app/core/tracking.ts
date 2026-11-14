@@ -41,8 +41,15 @@ export class Tracking {
   private readonly router = inject(Router);
   private readonly api = environment.apiBaseUrl;
 
-  /** Préfixes exclus de la mesure : espaces privés. */
-  private readonly privatePrefixes = ['/admin', '/mon-espace'];
+  /**
+   * Préfixes exclus de la mesure : espaces privés.
+   *
+   * <p>`/platform` en fait partie, et c'est le plus important des trois : c'est la page où
+   * l'administrateur consulte la fréquentation du site. Sans cette exclusion, chacune de ses
+   * visites s'ajoute aux chiffres qu'il est précisément en train de lire — un compteur qui
+   * compte celui qui le regarde.
+   */
+  private readonly privatePrefixes = ['/admin', '/platform', '/mon-espace'];
 
   /** Dernier chemin signalé, pour ne pas compter deux fois la même page. */
   private lastPath = '';

@@ -4,6 +4,8 @@ import { BaseChartDirective, provideCharts, withDefaultRegisterables } from 'ng2
 import { AudienceApi } from './audience-api';
 import { AnalyticsOverview, PlatformTotals, Slice } from './audience.models';
 import { AXIS, SERIES, categoricalFor, categoricalHoverFor, categorical } from './chart-palette';
+import { CountUpDirective } from '../../../core/animations/count-up.directive';
+import { RevealDirective } from '../../../core/animations/reveal.directive';
 
 /** Fenêtres proposées. 7 jours pour réagir, 90 pour voir une tendance. */
 const RANGES = [7, 30, 90] as const;
@@ -18,7 +20,7 @@ const RANGES = [7, 30, 90] as const;
 @Component({
   standalone: true,
   selector: 'app-audience',
-  imports: [BaseChartDirective],
+  imports: [BaseChartDirective, CountUpDirective, RevealDirective],
   providers: [provideCharts(withDefaultRegisterables())],
   templateUrl: './audience.html',
   styleUrl: './audience.scss',
