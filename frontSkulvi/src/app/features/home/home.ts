@@ -5,8 +5,8 @@ import { SiteHeader } from '../../layout/site-header/site-header';
 import { PlanOption, PublicOffer } from '../admin/admin.models';
 import { mailto } from '../../core/app-config';
 import { OffresService } from '../offres/offres.service';
-import { CountUpDirective } from './count-up.directive';
-import { RevealDirective } from './reveal.directive';
+import { CountUpDirective } from '../../core/animations/count-up.directive';
+import { RevealDirective } from '../../core/animations/reveal.directive';
 
 /** Une ligne de la grille de notation. */
 interface Row {
@@ -17,15 +17,6 @@ interface Row {
   points: number;
   /** Extrait du CV qui justifie le point. Absent si le critère n'est pas satisfait. */
   evidence?: string;
-}
-
-/** Une ligne du tableau de candidatures montré dans le héros. */
-interface Candidate {
-  initials: string;
-  name: string;
-  role: string;
-  score: number;
-  state: 'high' | 'review' | 'low' | 'pending';
 }
 
 interface Faq {
@@ -64,23 +55,6 @@ export class Home implements OnInit, OnDestroy {
 
   /** Grille tarifaire lue depuis l'API, pour que la page n'affiche jamais un prix périmé. */
   plans = signal<PlanOption[]>([]);
-
-  // ---------------------------------------------------------------- tableau du héros
-
-  /**
-   * Extrait d'un écran de candidatures.
-   *
-   * <p>Montrer l'écran réel plutôt qu'une illustration : c'est ce que le recruteur verra, et
-   * ça répond à sa vraie question — « à quoi ça ressemble quand je m'en sers ? ».
-   */
-  readonly candidates: Candidate[] = [
-    { initials: 'KB', name: 'Karim Bensaïd', role: 'Dév. back-end Java', score: 81, state: 'high' },
-    { initials: 'AM', name: 'Aïcha Mensah', role: 'Dév. back-end Java', score: 76, state: 'high' },
-    { initials: 'TL', name: 'Thomas Lefèvre', role: 'Dév. back-end Java', score: 64, state: 'review' },
-    { initials: 'SD', name: 'Sarah Diallo', role: 'Dév. back-end Java', score: 58, state: 'review' },
-    { initials: 'MO', name: 'Marc Ouédraogo', role: 'Dév. back-end Java', score: 37, state: 'low' },
-    { initials: 'YN', name: 'Yasmine Ndiaye', role: 'Dév. back-end Java', score: 0, state: 'pending' },
-  ];
 
   // ---------------------------------------------------------------- grille de notation
 
@@ -301,15 +275,6 @@ export class Home implements OnInit, OnDestroy {
   ratio(row: Row): number {
     if (!this.barsFilled()) return 0;
     return row.weight === 0 ? 0 : Math.round((row.points / row.weight) * 100);
-  }
-
-  stateLabel(c: Candidate): string {
-    switch (c.state) {
-      case 'high': return 'Priorité élevée';
-      case 'review': return 'À examiner';
-      case 'low': return 'Faible';
-      case 'pending': return 'En analyse';
-    }
   }
 
   euros(cents: number): string {

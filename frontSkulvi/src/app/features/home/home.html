@@ -4,94 +4,51 @@
 
 <main id="contenu">
 
-  <!-- ═══════════════════════════════════════════════════ HÉROS ═══════════ -->
+  <!-- ═══════════════════════════════════════════════════ HÉROS ═══════════
+    Une seule colonne, menée par la typographie.
+
+    L'ancienne version plaçait une fausse copie d'écran de l'application à droite, avec des
+    candidats inventés. C'était le principal défaut de la page, pour deux raisons :
+
+      1. Un tableau de bord factice à côté du titre est le motif le plus reconnaissable des
+         gabarits de site. Il signale « modèle », pas « produit ».
+      2. Il faisait du premier écran un exercice de lecture : deux colonnes, deux niveaux de
+         titre, un tableau de six lignes avec des noms qui n'existent pas. Le visiteur
+         arrivait devant du déchiffrage au lieu d'une proposition.
+
+    Ce qui remplace : le titre, une phrase, deux actions, et trois faits sur une ligne. Rien
+    d'autre. L'écran suivant montre les vraies offres — du contenu réel, pas une maquette.
+  -->
   <section class="hero">
-    <div class="sk-wrap hero-grid">
+    <div class="sk-wrap hero-copy">
 
-      <div class="hero-copy">
-        <p class="sk-eyebrow" [appReveal]="0">Tri de CV expliqué</p>
+      <h1 [appReveal]="0">
+        Cent CV reçus.<br>
+        Un classement justifié, <span class="hl">ligne par ligne.</span>
+      </h1>
 
-        <h1 [appReveal]="60">
-          Cent CV reçus.<br>
-          Un classement justifié,<br>
-          <span class="hl">ligne par ligne.</span>
-        </h1>
+      <p class="lead" [appReveal]="90">
+        Vous décrivez le poste et les compétences attendues. Chaque CV est lu et noté sur
+        <strong>votre</strong> grille, avec l'extrait du document qui justifie chaque point.
+        La décision reste la vôtre.
+      </p>
 
-        <p class="lead" [appReveal]="120">
-          Vous décrivez le poste et les compétences attendues. Chaque CV est lu et noté sur
-          <strong>votre</strong> grille, avec l'extrait du document qui justifie chaque point.
-          La décision reste la vôtre.
-        </p>
-
-        <div class="hero-actions" [appReveal]="180">
-          <a class="sk-btn primary lg" routerLink="/inscription-entreprise">
-            Commencer gratuitement
-          </a>
-          <a class="sk-btn ghost lg" routerLink="/offres">Voir les offres</a>
-        </div>
-
-        <p class="hero-fine" [appReveal]="240">
-          Gratuit sans échéance · 40 CV analysés par mois · sans carte bancaire
-        </p>
+      <div class="hero-actions" [appReveal]="160">
+        <a class="sk-btn primary lg" routerLink="/inscription-entreprise">
+          Commencer gratuitement
+        </a>
+        <a class="sk-btn ghost lg" routerLink="/offres">Voir les offres</a>
       </div>
 
       <!--
-        Copie d'écran de l'application plutôt qu'une illustration : c'est exactement ce que
-        le recruteur verra, et ça répond à sa vraie question — à quoi ça ressemble quand on
-        s'en sert.
+        Trois faits sur une ligne, séparés par des filets. Pas de cartes : trois encadrés
+        pour trois fragments de phrase, c'est de l'emballage autour de douze mots.
       -->
-      <div class="app-shot" [appReveal]="100" revealFrom="right" aria-label="Aperçu de l'espace recruteur">
-
-        <div class="shot-bar">
-          <span class="shot-title">Candidatures · Développeur back-end Java</span>
-          <span class="shot-count num">6 reçues</span>
-        </div>
-
-        <div class="shot-toolbar">
-          <span class="filter on">Toutes</span>
-          <span class="filter">Priorité élevée</span>
-          <span class="filter">À examiner</span>
-        </div>
-
-        <table class="shot-table">
-          <thead>
-            <tr>
-              <th>Candidat</th>
-              <th class="num-col">Score</th>
-              <th>État</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (c of candidates; track c.name) {
-              <tr [class.pending]="c.state === 'pending'">
-                <td>
-                  <span class="who">
-                    <span class="av" aria-hidden="true">{{ c.initials }}</span>
-                    <span class="who-txt">
-                      <strong>{{ c.name }}</strong>
-                      <small>{{ c.role }}</small>
-                    </span>
-                  </span>
-                </td>
-                <td class="num-col">
-                  @if (c.state === 'pending') {
-                    <span class="dash">—</span>
-                  } @else {
-                    <span class="score num" [attr.data-state]="c.state">{{ c.score }}</span>
-                  }
-                </td>
-                <td>
-                  <span class="state" [attr.data-state]="c.state">{{ stateLabel(c) }}</span>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-
-        <div class="shot-foot">
-          Classement calculé sur vos critères · scoring v1
-        </div>
-      </div>
+      <ul class="hero-facts" [appReveal]="230">
+        <li><strong>Gratuit</strong><span>sans échéance, sans carte bancaire</span></li>
+        <li><strong>40 CV</strong><span>analysés par mois sur le plan gratuit</span></li>
+        <li><strong>En France</strong><span>analyse sur nos serveurs, aucun service tiers</span></li>
+      </ul>
 
     </div>
   </section>
