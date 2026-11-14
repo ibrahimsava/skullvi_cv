@@ -16,11 +16,11 @@
 #
 # Restauration de la base :
 #
-#   gunzip -c base-2026-11-07.sql.gz | docker exec -i postgres psql -U "$DB_USER" -d "$DB_NAME"
+#   gunzip -c base-2026-11-07.sql.gz | docker exec -i skulvi-db psql -U "$DB_USER" -d "$DB_NAME"
 #
-# Restauration des CV :
+# Restauration des CV (remplacer le nom du volume par celui que le script affiche) :
 #
-#   docker run --rm -v cvs:/data -v "$PWD":/backup alpine \
+#   docker run --rm -v skulvi_skulvi_cvs:/data -v "$PWD":/backup alpine \
 #     tar xzf /backup/cvs-2026-11-07.tar.gz -C /data
 #
 set -euo pipefail
@@ -30,13 +30,26 @@ set -euo pipefail
 APP_DIR="${APP_DIR:-/opt/skulvi}"
 BACKUP_DIR="${BACKUP_DIR:-/var/backups/skulvi}"
 RETENTION_DAYS="${RETENTION_DAYS:-30}"
-DB_CONTAINER="${DB_CONTAINER:-postgres}"
-CV_VOLUME="${CV_VOLUME:-cvs}"
+
+# Chemin du stockage des CV dans le conteneur. Sert à retrouver le volume, quel que soit
+# son nom : voir plus bas.
+CV_PATH="${CV_PATH:-/data/cvs}"
 
 DATE="$(date +%Y-%m-%d_%H%M)"
 
 log() { printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*"; }
 fail() { log "ÉCHEC : $*"; exit 1; }
+
+# Premier conteneur existant parmi ceux proposés.
+premier_conteneur() {
+  for nom in "$@"; do
+    if docker inspect "$nom" >/dev/null 2>&1; then
+      printf '%s' "$nom"
+      return 0
+    fi
+  done
+  return 1
+}
 
 # -------------------------------------------------------------------- contrôles
 
@@ -48,8 +61,41 @@ set -a; . "$APP_DIR/.env"; set +a
 : "${DB_USER:?DB_USER absent de .env}"
 : "${DB_NAME:?DB_NAME absent de .env}"
 
-docker inspect "$DB_CONTAINER" >/dev/null 2>&1 \
-  || fail "conteneur « $DB_CONTAINER » introuvable"
+#
+# Les noms diffèrent entre la production et le développement, et ce script doit marcher
+# sur les deux sans réglage.
+#
+#   serveur         : skulvi-db     / skulvi-backend
+#   poste de dev    : postgres      / springboot-app
+#
+# Les deviner est préférable à les écrire en dur : une sauvegarde qui échoue parce qu'un
+# conteneur a été renommé ne se remarque qu'au moment d'une restauration, c'est-à-dire
+# trop tard.
+#
+DB_CONTAINER="${DB_CONTAINER:-$(premier_conteneur skulvi-db postgres || true)}"
+APP_CONTAINER="${APP_CONTAINER:-$(premier_conteneur skulvi-backend springboot-app || true)}"
+
+[ -n "$DB_CONTAINER" ] \
+  || fail "aucun conteneur de base trouvé (essayés : skulvi-db, postgres). Posez DB_CONTAINER."
+[ -n "$APP_CONTAINER" ] \
+  || fail "aucun conteneur applicatif trouvé (essayés : skulvi-backend, springboot-app). Posez APP_CONTAINER."
+
+#
+# Le volume des CV est lu sur le conteneur lui-même, et non écrit en dur.
+#
+# Compose préfixe les volumes du nom du projet : « skulvi_cvs » déclaré dans le fichier
+# devient « skulvi_skulvi_cvs » une fois créé, et ce préfixe dépend du nom du répertoire.
+# Interroger le conteneur donne le vrai nom sans avoir à reconstituer cette règle.
+#
+if [ -z "${CV_VOLUME:-}" ]; then
+  CV_VOLUME="$(docker inspect "$APP_CONTAINER" \
+    --format '{{range .Mounts}}{{if eq .Destination "'"$CV_PATH"'"}}{{.Name}}{{end}}{{end}}')"
+fi
+
+[ -n "$CV_VOLUME" ] \
+  || fail "aucun volume monté sur $CV_PATH dans « $APP_CONTAINER ». Posez CV_VOLUME."
+
+log "base : conteneur « $DB_CONTAINER » · CV : volume « $CV_VOLUME »"
 
 mkdir -p "$BACKUP_DIR"
 
