@@ -27,9 +27,9 @@
             <p class="desc">{{ o.description }}</p>
           }
 
-          <a class="sk-link all" [routerLink]="['/c', o.organizationSlug]">
-            Les autres offres de {{ o.organizationName }}
-          </a>
+          <!-- Sur une seule ligne : un retour à la ligne dans un <a> compte comme une
+               espace, et le soulignement du lien dépassait du texte de chaque côté. -->
+          <a class="sk-link all" [routerLink]="['/c', o.organizationSlug]">Les autres offres de {{ o.organizationName }}</a>
         </aside>
 
         <!-- ------------------------------------------------ formulaire -->

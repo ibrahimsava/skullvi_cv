@@ -84,13 +84,30 @@
   input[type='text'], input[type='number'], select { @include control; }
 
   .check {
-    justify-self: center;
     width: 18px; height: 18px;
     margin: 0;
     accent-color: var(--accent);
     cursor: pointer;
   }
 }
+
+/* La cellule n'est qu'un conteneur : `min-width: 0` l'empêche d'imposer la largeur
+   intrinsèque de son contenu et de faire déborder la grille. */
+.crit-cell {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+
+  &.oblig {
+    justify-items: center;
+    align-content: center;
+    cursor: pointer;
+  }
+}
+
+/* Masqué sur grand écran : c'est `.crit-head` qui porte les libellés de colonnes, et les
+   répéter sur chaque ligne tripleraait la hauteur du tableau. */
+.crit-label { display: none; }
 
 .icon-btn {
   display: grid; place-items: center;
@@ -133,15 +150,59 @@
 
 @media (max-width: 720px) {
   .grid, .grid.cols-3 { grid-template-columns: 1fr; }
+
+  /* L'en-tête de colonnes disparaît : chaque cellule porte alors son propre libellé. */
   .crit-head { display: none; }
 
   .crit-row {
     grid-template-columns: 1fr 1fr;
+    gap: 12px;
     padding: 14px;
     border: 1px solid var(--line);
     border-radius: var(--radius-sm);
 
-    input[type='text'] { grid-column: 1 / -1; }
+    /* Le nom du critère prend toute la largeur : c'est le champ le plus long et le seul
+       dont le contenu ne tient pas sur une demi-ligne. */
+    .crit-cell.nom { grid-column: 1 / -1; }
+
+    /* Le bouton de suppression revient en haut à droite de la carte, où on le cherche,
+       au lieu de flotter en fin de grille après la case à cocher. */
+    .icon-btn {
+      position: absolute;
+      top: 8px; right: 8px;
+    }
+
+    position: relative;
+    padding-top: 18px;
   }
+
+  .crit-label {
+    display: block;
+    font-size: 12px; font-weight: 600; color: var(--muted);
+  }
+
+  /* La case et son texte sur une ligne, alignés : empilés, la case centrée au-dessus du mot
+     « Obligatoire » ne ressemblait plus à une case à cocher. */
+  .crit-cell.oblig {
+    grid-auto-flow: column;
+    justify-items: start;
+    align-items: center;
+    gap: 9px;
+    grid-column: 1 / -1;
+    padding-top: 2px;
+
+    .crit-label { color: var(--ink-2); }
+  }
+
   .panel-title.with-action { flex-direction: column; }
+
+  .panel { padding: 18px 16px; }
+
+  /* La barre d'action collante garde ses deux éléments sur une ligne jusqu'au bout : sous
+     420 px, l'indication et le bouton se chevauchaient. */
+  .actions {
+    flex-wrap: wrap;
+    .hint { flex: 1 1 100%; order: -1; }
+    .sk-btn { flex: 1 1 auto; justify-content: center; }
+  }
 }

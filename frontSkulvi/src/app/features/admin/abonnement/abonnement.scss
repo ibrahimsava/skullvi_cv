@@ -125,3 +125,47 @@
   li { padding-left: 14px; border-left: 2px solid var(--blue-200); max-width: 76ch; }
   strong { color: var(--ink); font-weight: 650; }
 }
+
+/* ---------------------------------------------------------------- petits écrans */
+
+@media (max-width: 680px) {
+  .panel { padding: 18px 16px; }
+
+  .card-head {
+    /* L'en-tête et ses boutons se partageaient la ligne : le nom du plan se retrouvait sur
+       trois lignes pendant que deux boutons occupaient la moitié de la largeur. */
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  /* Les actions prennent toute la largeur plutôt que de s'empiler en escalier. */
+  .head-right {
+    width: 100%;
+    .sk-btn { flex: 1 1 auto; justify-content: center; }
+  }
+
+  /*
+    Une seule colonne de plans.
+
+    `minmax(216px, 1fr)` tenait deux colonnes dès 450 px de large : deux cartes de 216 px
+    dont 40 px de rembourrage chacune, soit 136 px de contenu utile. Le prix de 28 px et le
+    libellé « Illimité » se chevauchaient. Mieux vaut faire défiler que ne pas pouvoir lire.
+  */
+  .plans { grid-template-columns: 1fr; }
+
+  .plan {
+    padding: 18px;
+
+    /* L'action n'est plus poussée en bas : à une colonne, il n'y a plus de rangée à aligner,
+       et `margin-top: auto` creusait un vide sous les cartes les plus courtes. */
+    .sk-btn, button, .muted-note { margin-top: 10px; }
+    .sk-btn, button { width: 100%; }
+  }
+
+  .meter-label {
+    /* Le total passait sous le libellé en s'alignant à gauche, donc sous le mauvais chiffre. */
+    flex-wrap: wrap;
+    gap: 2px 12px;
+  }
+}

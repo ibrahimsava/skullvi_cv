@@ -62,3 +62,39 @@
     strong { font-size: 15px; font-weight: 700; color: var(--ink); }
   }
 }
+
+/* ---------------------------------------------------------------- petits écrans */
+
+@media (max-width: 720px) {
+  /*
+    Une colonne, et non plus `auto-fit minmax(180px, …)`.
+
+    Sur un écran de 360 px, la grille automatique tenait deux colonnes de 180 px — soit
+    exactement la largeur disponible, padding non compris. Les nombres de 28 px passaient
+    donc à la ligne au milieu, et « 12 » s'affichait « 1 / 2 ».
+  */
+  .summary { grid-template-columns: 1fr; }
+
+  .stat {
+    /* En ligne plutôt qu'empilé : douze cartes empilées sur une colonne font une page de
+       trois écrans de haut avant d'atteindre le graphique. */
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 14px 16px;
+
+    strong { font-size: 22px; }
+    span { text-align: right; }
+  }
+
+  .panel {
+    padding: 18px 16px 20px;
+
+    /* 320 px de haut sur un téléphone laissaient le graphique écrasé entre deux titres,
+       et le défilement de la page devenait difficile — le doigt tombait dans le graphique. */
+    .chart { height: 240px; }
+  }
+
+  .quota-head { gap: 10px; }
+}
