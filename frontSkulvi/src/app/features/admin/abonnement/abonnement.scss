@@ -21,6 +21,34 @@
 
 .head-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 
+/*
+  Trois points qui pulsent, pendant l'attente de l'activation.
+
+  Un indicateur de patience plutôt qu'un bouton : l'attente ne dépend pas de
+  l'utilisateur, et lui proposer d'agir lui ferait croire qu'il doit intervenir.
+*/
+.attente {
+  display: inline-block;
+  width: 26px;
+  text-align: left;
+
+  &::after {
+    content: '···';
+    letter-spacing: 2px;
+    animation: sk-attente 1.4s steps(4, end) infinite;
+  }
+}
+
+@keyframes sk-attente {
+  0%   { content: '·'; }
+  33%  { content: '··'; }
+  66%  { content: '···'; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .attente::after { animation: none; content: '···'; }
+}
+
 /* Bouton d'actualisation posé dans un message : garde l'allure d'un lien. */
 .inline-link {
   padding: 0;

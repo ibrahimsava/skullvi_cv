@@ -1,7 +1,9 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
+import { switchMap, takeWhile, timer } from 'rxjs';
 import { AuthService } from '../../auth/auth';
 import { PlanCode } from '../../auth/model';
 import { AdminApi } from '../admin-api';
@@ -22,11 +24,26 @@ export class Abonnement implements OnInit {
   private readonly api = inject(AdminApi);
   private readonly auth = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
 
   usage = signal<UsageSnapshot | null>(null);
   plans = signal<PlanOption[]>([]);
   loading = signal(true);
   loadError = signal(false);
+
+  /**
+   * L'activation est-elle en attente du prestataire ?
+   *
+   * <p>Le navigateur revient du passage en caisse presque toujours <b>avant</b> que le
+   * webhook n'ait été traité : la redirection part de chez Stripe à la seconde où le
+   * paiement est accepté, l'événement signé arrive par un autre chemin. La page interroge
+   * donc le serveur jusqu'à ce que le plan change, au lieu de laisser l'utilisateur devant
+   * un « Gratuit » qui a l'air d'un échec.
+   */
+  activationEnAttente = signal(false);
+
+  /** Vrai si l'attente s'est épuisée sans que le plan ne change. */
+  activationTropLongue = signal(false);
 
   /** Le paiement en ligne est-il configuré sur cette instance ? */
   paymentOnline = signal(false);
@@ -63,22 +80,76 @@ export class Abonnement implements OnInit {
       next: (s) => this.paymentOnline.set(s.online),
       error: () => this.paymentOnline.set(false),
     });
+
+    if (paiement === 'ok') {
+      this.attendreActivation();
+    }
   }
 
   reload(): void {
     this.loading.set(true);
     this.api.getUsage().subscribe({
       next: (u) => {
-        this.usage.set(u);
+        this.appliquer(u);
         this.loading.set(false);
-        // Le plan a pu changer entre-temps : on resynchronise l'en-tête de l'application.
-        this.auth.refreshUser().subscribe({ error: () => {} });
       },
       error: () => {
         this.loading.set(false);
         this.loadError.set(true);
       },
     });
+  }
+
+  /**
+   * Interroge le serveur jusqu'à ce que l'abonnement soit actif.
+   *
+   * <p>Treize tentatives espacées de deux secondes, soit une demi-minute. Le webhook arrive
+   * presque toujours en moins de cinq secondes ; cette marge couvre une première livraison
+   * perdue et la relance que le prestataire envoie derrière.
+   *
+   * <p>`takeWhile(…, true)` laisse passer la dernière valeur, celle qui a fait cesser la
+   * boucle : sans cela, le plan tout juste activé serait écarté et l'écran resterait sur
+   * « Gratuit » au moment précis où il devenait faux.
+   */
+  private attendreActivation(): void {
+    this.activationEnAttente.set(true);
+    this.activationTropLongue.set(false);
+
+    let tentatives = 0;
+    const MAX = 13;
+
+    timer(1200, 2000)
+      .pipe(
+        switchMap(() => this.api.getUsage()),
+        takeWhile((u) => !u.paid && ++tentatives < MAX, true),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (u) => this.appliquer(u),
+        error: () => this.activationEnAttente.set(false),
+        complete: () => {
+          this.activationEnAttente.set(false);
+          // Toujours pas payant au bout de trente secondes : le webhook n'arrive pas.
+          // Le dire franchement vaut mieux qu'un écran qui tourne indéfiniment.
+          this.activationTropLongue.set(this.usage()?.paid !== true);
+        },
+      });
+  }
+
+  /**
+   * Applique une consommation fraîchement lue.
+   *
+   * <p>Resynchronise au passage l'identité stockée : le plan y figure, et l'en-tête de
+   * l'application le lit. Sans cela, le bandeau du haut continuerait d'afficher « Gratuit »
+   * alors que la page, elle, serait à jour.
+   */
+  private appliquer(u: UsageSnapshot): void {
+    const avant = this.usage()?.plan;
+    this.usage.set(u);
+
+    if (u.plan !== avant) {
+      this.auth.refreshUser().subscribe({ error: () => {} });
+    }
   }
 
   // ---------------------------------------------------------------- souscription
@@ -190,6 +261,23 @@ export class Abonnement implements OnInit {
 
   bannerTone(u: UsageSnapshot): 'warn' | 'error' {
     return u.status === 'PAST_DUE' ? 'error' : 'warn';
+  }
+
+  /**
+   * Ce plan est-il celui de l'organisation ?
+   *
+   * <p>Déduit de la consommation, et <b>non</b> du drapeau `current` que le serveur pose sur
+   * chaque tarif. Les deux disent la même chose, mais pas au même moment : la grille des
+   * tarifs est lue une seule fois à l'ouverture de la page, alors que la consommation est
+   * rechargée — par le bouton « Actualiser », et par l'attente d'activation après un
+   * paiement. Se fier au drapeau laissait donc « Votre plan » collé sur Gratuit
+   * indéfiniment, y compris après un paiement réussi et après un changement fait à la main
+   * depuis l'administration.
+   *
+   * <p>Une seule source de vérité, donc : celle qu'on rafraîchit.
+   */
+  estCourant(plan: PlanOption): boolean {
+    return this.usage()?.plan === plan.plan;
   }
 
   /** Vrai si ce plan est au-dessus du plan courant. */

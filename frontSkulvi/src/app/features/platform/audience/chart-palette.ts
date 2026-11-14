@@ -22,53 +22,18 @@ export const CATEGORICAL = [
   '#a16207',   // ocre
 ] as const;
 
-/** Variantes plus sombres, pour l'état survolé. */
-export const CATEGORICAL_HOVER = [
-  '#1739a8',
-  '#0b6f68',
-  '#8a4208',
-  '#6128c4',
-  '#990e30',
-  '#116630',
-  '#02547d',
-  '#834f05',
-] as const;
-
 /** Couleur d'une série, en bouclant si la liste est plus longue que la palette. */
 export function categorical(index: number): string {
   return CATEGORICAL[index % CATEGORICAL.length];
 }
 
-export function categoricalHover(index: number): string {
-  return CATEGORICAL_HOVER[index % CATEGORICAL_HOVER.length];
-}
+/*
+  Ce fichier contenait aussi CATEGORICAL_HOVER, categoricalHover, categoricalFor,
+  categoricalHoverFor, SERIES et AXIS. Tous existaient pour configurer chart.js : teintes de
+  survol, couleurs d'axes, de grille et d'infobulles.
 
-/** Une couleur par élément d'une liste. */
-export function categoricalFor(count: number): string[] {
-  return Array.from({ length: count }, (_, i) => categorical(i));
-}
-
-export function categoricalHoverFor(count: number): string[] {
-  return Array.from({ length: count }, (_, i) => categoricalHover(i));
-}
-
-/**
- * Teintes des deux courbes de la série temporelle.
- *
- * <p>Visites en bleu plein, visiteurs distincts en sarcelle pointillée : deux signaux
- * différents, donc deux teintes franchement distinctes. Le pointillé double l'information
- * pour qui ne distingue pas les deux couleurs.
- */
-export const SERIES = {
-  visits: { stroke: '#1d4ed8', fill: 'rgba(29, 78, 216, 0.12)', point: '#1d4ed8' },
-  visitors: { stroke: '#0d9488', fill: 'transparent', point: '#0d9488' },
-} as const;
-
-/** Couleurs communes des axes, de la grille et des infobulles. */
-export const AXIS = {
-  grid: '#e4ecfb',
-  border: '#dbe4f5',
-  tick: '#6e7f9c',
-  label: '#3c4c69',
-  tooltipBg: '#0b1b3a',
-} as const;
+  La page de fréquentation est passée aux petits multiples, dessinés en SVG et en CSS — le
+  survol, les axes et les infobulles y sont du ressort de la feuille de style. Ces exports
+  n'avaient donc plus un seul appelant. Les garder « au cas où » laisse croire qu'ils sont
+  en service, et la prochaine personne les maintiendrait pour rien.
+*/

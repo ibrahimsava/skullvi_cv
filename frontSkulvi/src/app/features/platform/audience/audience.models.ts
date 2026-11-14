@@ -22,6 +22,21 @@ export interface Funnel {
   overallRate: number;
 }
 
+/**
+ * Un indicateur et sa série journalière : de quoi dessiner un « petit multiple ».
+ *
+ * <p>`daily` est aligné sur `series` — un point par jour de la période, zéros compris. Chaque
+ * vignette a sa propre échelle verticale : on compare des formes, pas des hauteurs.
+ */
+export interface Metric {
+  key: string;
+  label: string;
+  total: number;
+  /** Variation en pourcentage. Null quand la période précédente est vide. */
+  trend: number | null;
+  daily: number[];
+}
+
 /** Tout ce qu'affiche la page de statistiques, en un seul appel. */
 export interface AnalyticsOverview {
   days: number;
@@ -35,6 +50,8 @@ export interface AnalyticsOverview {
   visitsTrend: number | null;
   visitorsTrend: number | null;
   series: DayPoint[];
+  /** Un indicateur par vignette, tous alignés sur le même axe de temps. */
+  metrics: Metric[];
   topPages: Slice[];
   referrers: Slice[];
   devices: Slice[];

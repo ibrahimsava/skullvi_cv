@@ -23,100 +23,79 @@
 
 } @else {
 
-  <!-- ───────────────────────────────────────────── indicateurs ─────────
-    Les quatre indicateurs entrent échelonnés de 70 ms, et leurs chiffres défilent depuis
-    zéro. Le décalage n'est pas décoratif : il donne un ordre de lecture. Quatre nombres
-    apparus en même temps se lisent comme un bloc, et l'œil ne sait pas par où commencer.
+  <!-- ═══════════════════════════════════════════ PETITS MULTIPLES ══════
+    Une vignette par indicateur, toutes sur le même axe de temps.
+
+    L'ordre suit le parcours d'un visiteur : il arrive, consulte une offre, ouvre le
+    formulaire, envoie sa candidature. Parcourir la grille revient donc à suivre
+    l'entonnoir, et une chute se repère sans calcul.
+
+    Chaque vignette a sa propre échelle verticale — d'où le pic affiché sous la courbe.
+    Sans ce repère, deux courbes d'allure identique pourraient valoir 3 et 3 000.
   -->
-  <section class="kpis" aria-label="Indicateurs clés">
+  <section class="multiples" aria-label="Indicateurs jour par jour">
+    @for (m of metrics(); track m.key; let i = $index) {
+      <article class="tile" [appReveal]="i * 45">
 
-    <article class="kpi" data-tone="visits" [appReveal]="0">
-      <p class="kpi-label">Visites</p>
-      <strong class="kpi-value num" [appCountUp]="data()!.visits" [countDelay]="120">0</strong>
-      <p class="kpi-trend" [class.ok]="trendTone(data()!.visitsTrend) === 'ok'"
-         [class.danger]="trendTone(data()!.visitsTrend) === 'danger'">
-        @if (data()!.visitsTrend !== null) {
-          <span class="arrow" aria-hidden="true">{{ data()!.visitsTrend! > 0 ? '▲' : '▼' }}</span>
-        }
-        {{ trendLabel(data()!.visitsTrend) }}
-      </p>
-    </article>
+        <p class="tile-label">{{ m.label }}</p>
 
-    <article class="kpi" data-tone="visitors" [appReveal]="70">
-      <p class="kpi-label">Visiteurs distincts</p>
-      <strong class="kpi-value num" [appCountUp]="data()!.visitors" [countDelay]="190">0</strong>
-      <p class="kpi-trend" [class.ok]="trendTone(data()!.visitorsTrend) === 'ok'"
-         [class.danger]="trendTone(data()!.visitorsTrend) === 'danger'">
-        @if (data()!.visitorsTrend !== null) {
-          <span class="arrow" aria-hidden="true">{{ data()!.visitorsTrend! > 0 ? '▲' : '▼' }}</span>
-        }
-        {{ trendLabel(data()!.visitorsTrend) }}
-      </p>
-    </article>
+        <p class="tile-value">
+          <strong class="num" [appCountUp]="m.total" [countDelay]="120 + i * 45">0</strong>
+          <em class="tile-trend" [attr.data-tone]="trendTone(m.trend)">
+            @if (m.trend !== null && m.trend !== 0) {
+              <span aria-hidden="true">{{ m.trend > 0 ? '▲' : '▼' }}</span>
+            }
+            {{ trendLabel(m.trend) }}
+          </em>
+        </p>
 
-    <article class="kpi" data-tone="signups" [appReveal]="140">
-      <p class="kpi-label">Inscriptions</p>
-      <strong class="kpi-value num"
-              [appCountUp]="data()!.organizationSignups + data()!.candidateSignups"
-              [countDelay]="260">0</strong>
-      <p class="kpi-trend">
-        {{ data()!.organizationSignups }} entreprise(s) ·
-        {{ data()!.candidateSignups }} candidat(s)
-      </p>
-    </article>
+        <div class="tile-chart">
+          <app-sparkline [values]="m.daily" [couleur]="couleur(m)" />
+        </div>
 
-    <article class="kpi" data-tone="apply" [appReveal]="210">
-      <p class="kpi-label">Candidatures envoyées</p>
-      <strong class="kpi-value num" [appCountUp]="data()!.funnel.applySent" [countDelay]="330">0</strong>
-      <p class="kpi-trend">sur {{ data()!.funnel.offerViews }} consultation(s) d'offre</p>
-    </article>
+        <p class="tile-foot">
+          <span>max <strong class="num">{{ pic(m) }}</strong>/jour</span>
+          <span>moy. <strong class="num">{{ parJour(m) }}</strong></span>
+        </p>
+      </article>
+    }
   </section>
 
-  <!-- ───────────────────────────────────────────── totaux plateforme ── -->
+  <!-- Axe de temps commun, posé une seule fois sous la grille : le répéter sur chacune
+       des sept vignettes ajouterait sept fois la même information. -->
+  <p class="axe" aria-hidden="true">
+    <span>{{ axeDebut() }}</span>
+    <span class="axe-trait"></span>
+    <span>{{ axeFin() }}</span>
+  </p>
+
+  @if (!hasTraffic()) {
+    <p class="sk-alert" role="status">
+      Aucune visite enregistrée sur la période. Les courbes restent à plat tant que personne
+      n'a ouvert une page publique du site.
+    </p>
+  }
+
+  <!-- ═══════════════════════════════════════════ TOTAUX ════════════════ -->
   @if (platform(); as t) {
-    <section class="totals" aria-label="Totaux de la plateforme" [appReveal]="280">
+    <section class="totals" aria-label="Totaux de la plateforme" [appReveal]="320">
       <div>
-        <strong class="num" [appCountUp]="t.organizations" [countDelay]="400">0</strong>
+        <strong class="num" [appCountUp]="t.organizations" [countDelay]="440">0</strong>
         <span>entreprises inscrites</span>
       </div>
       <div>
-        <strong class="num" [appCountUp]="t.organizationsLast30" [countDelay]="470">0</strong>
+        <strong class="num" [appCountUp]="t.organizationsLast30" [countDelay]="510">0</strong>
         <span>nouvelles sur 30 jours</span>
       </div>
       <div>
-        <strong class="num" [appCountUp]="t.users" [countDelay]="540">0</strong>
+        <strong class="num" [appCountUp]="t.users" [countDelay]="580">0</strong>
         <span>comptes au total</span>
       </div>
     </section>
   }
 
-  <!-- ───────────────────────────────────────────── série temporelle ─── -->
+  <!-- ═══════════════════════════════════════════ ENTONNOIR ═════════════ -->
   <section class="panel" [appReveal]="0">
-    <header class="panel-head">
-      <div>
-        <h2>Fréquentation jour par jour</h2>
-        <p>L'écart entre les deux courbes indique les visiteurs qui reviennent.</p>
-      </div>
-    </header>
-
-    @if (hasTraffic()) {
-      <div class="chart tall">
-        <canvas baseChart type="line" [data]="lineData()" [options]="lineOptions"></canvas>
-      </div>
-    } @else {
-      <div class="empty-state">
-        <p>Aucune visite enregistrée sur la période.</p>
-        <small>Les visites sont comptées dès qu'un visiteur ouvre une page publique du site.</small>
-      </div>
-    }
-  </section>
-
-  <!-- ───────────────────────────────────────────── entonnoir ──────────
-    Les trois jauges se remplissent l'une après l'autre, à 160 ms d'écart. C'est la seule
-    animation de la page qui porte du sens : un entonnoir se lit de haut en bas, et voir les
-    barres se remplir dans cet ordre montre l'étape où la chute se produit.
-  -->
-  <section class="panel" [appReveal]="80">
     <header class="panel-head">
       <div>
         <h2>Du visiteur à la candidature</h2>
@@ -184,74 +163,111 @@
     </p>
   </section>
 
-  <!-- ───────────────────────────────────────────── pages et appareils ─ -->
-  <div class="two-col">
+  <!-- ═══════════════════════════════════════════ RÉPARTITIONS ══════════
+    Trois listes de barres plutôt que trois graphiques.
+
+    L'anneau qui occupait le bloc « Appareils » exigeait de comparer des angles pour
+    trois valeurs, et masquait les nombres. Une barre et son chiffre se lisent
+    directement, prennent moins de place, et se comparent entre les trois listes.
+  -->
+  <div class="repartitions">
 
     <section class="panel" [appReveal]="0">
-      <header class="panel-head"><div><h2>Pages les plus vues</h2></div></header>
+      <header class="panel-head">
+        <div>
+          <h2>Pages les plus vues</h2>
+          <p>Chemins publics, identifiants masqués.</p>
+        </div>
+      </header>
 
       @if (hasPages()) {
-        <div class="chart">
-          <canvas baseChart type="bar" [data]="barData()" [options]="barOptions"></canvas>
-        </div>
+        <ul class="bars">
+          @for (s of data()!.topPages; track s.label; let i = $index) {
+            <li>
+              <div class="bar-head">
+                <span class="bar-label" [title]="s.label">{{ s.label }}</span>
+                <span class="bar-count num">
+                  <span [appCountUp]="s.count" [countDelay]="120 + i * 45">0</span><em>· {{ s.share }} %</em>
+                </span>
+              </div>
+              <div class="rail grow">
+                <span [style.width.%]="shareOfMax(s, data()!.topPages)"
+                      [style.background]="sourceColor(i)"
+                      [style.animationDelay]="(120 + (i < 10 ? i : 10) * 45) + 'ms'"></span>
+              </div>
+            </li>
+          }
+        </ul>
       } @else {
         <div class="empty-state"><p>Aucune page consultée sur la période.</p></div>
       }
     </section>
 
-    <section class="panel" [appReveal]="90">
-      <header class="panel-head"><div><h2>Appareils</h2></div></header>
+    <section class="panel" [appReveal]="70">
+      <header class="panel-head">
+        <div>
+          <h2>Appareils</h2>
+          <p>Déduits de l'en-tête du navigateur.</p>
+        </div>
+      </header>
 
       @if (hasDevices()) {
-        <div class="chart">
-          <canvas baseChart type="doughnut" [data]="doughnutData()" [options]="doughnutOptions"></canvas>
-        </div>
+        <ul class="bars">
+          @for (s of data()!.devices; track s.label; let i = $index) {
+            <li>
+              <div class="bar-head">
+                <span class="bar-label">{{ s.label }}</span>
+                <span class="bar-count num">
+                  <span [appCountUp]="s.count" [countDelay]="160 + i * 45">0</span><em>· {{ s.share }} %</em>
+                </span>
+              </div>
+              <div class="rail grow">
+                <span [style.width.%]="shareOfMax(s, data()!.devices)"
+                      [style.background]="sourceColor(i)"
+                      [style.animationDelay]="(160 + i * 45) + 'ms'"></span>
+              </div>
+            </li>
+          }
+        </ul>
       } @else {
         <div class="empty-state"><p>Pas encore de données.</p></div>
       }
     </section>
 
+    <section class="panel" [appReveal]="140">
+      <header class="panel-head">
+        <div>
+          <h2>D'où viennent les visiteurs</h2>
+          <p>Domaine de provenance uniquement — jamais l'adresse complète.</p>
+        </div>
+      </header>
+
+      @if (data()!.referrers.length) {
+        <ul class="bars">
+          @for (s of data()!.referrers; track s.label; let i = $index) {
+            <li>
+              <div class="bar-head">
+                <span class="bar-label">{{ s.label }}</span>
+                <span class="bar-count num">
+                  <span [appCountUp]="s.count" [countDelay]="200 + i * 45">0</span><em>· {{ s.share }} %</em>
+                </span>
+              </div>
+              <div class="rail grow">
+                <span [style.width.%]="shareOfMax(s, data()!.referrers)"
+                      [style.background]="sourceColor(i)"
+                      [style.animationDelay]="(200 + i * 45) + 'ms'"></span>
+              </div>
+            </li>
+          }
+        </ul>
+      } @else {
+        <div class="empty-state"><p>Aucune provenance enregistrée.</p></div>
+      }
+    </section>
+
   </div>
 
-  <!-- ───────────────────────────────────────────── provenances ──────── -->
-  <section class="panel" [appReveal]="0">
-    <header class="panel-head">
-      <div>
-        <h2>D'où viennent les visiteurs</h2>
-        <p>Domaine de provenance uniquement — jamais l'adresse complète.</p>
-      </div>
-    </header>
-
-    @if (data()!.referrers.length) {
-      <ul class="sources">
-        @for (s of data()!.referrers; track s.label; let i = $index) {
-          <li>
-            <div class="source-head">
-              <span class="source-label">
-                <span class="dot" aria-hidden="true" [style.background]="sourceColor(i)"></span>
-                {{ s.label }}
-              </span>
-              <span class="source-count num">
-                <span [appCountUp]="s.count" [countDelay]="150 + i * 60">0</span><em>· {{ s.share }} %</em>
-              </span>
-            </div>
-            <!-- Le décalage suit l'ordre de la liste : les barres se déploient de haut en
-                 bas, ce qui laisse le temps de lire le classement. Plafonné au dixième rang,
-                 pour qu'une longue liste ne fasse pas attendre plusieurs secondes. -->
-            <div class="rail grow">
-              <span [style.width.%]="shareOfMax(s, data()!.referrers)"
-                    [style.background]="sourceColor(i)"
-                    [style.animationDelay]="(150 + (i < 10 ? i : 10) * 60) + 'ms'"></span>
-            </div>
-          </li>
-        }
-      </ul>
-    } @else {
-      <div class="empty-state"><p>Aucune provenance enregistrée.</p></div>
-    }
-  </section>
-
-  <!-- ───────────────────────────────────────────── note vie privée ─── -->
+  <!-- ═══════════════════════════════════════════ MESURE ════════════════ -->
   <section class="privacy">
     <h2>Comment ces chiffres sont mesurés</h2>
     <ul>
@@ -267,9 +283,10 @@
         suivre quelqu'un d'un jour sur l'autre ni remonter à une personne.
       </li>
       <li>
-        <strong>Conséquence assumée.</strong>
-        Un visiteur qui revient demain est compté comme nouveau. Un peu de précision en
-        moins, et aucun suivi individuel.
+        <strong>Chaque vignette a sa propre échelle.</strong>
+        C'est voulu : mille visites et dix inscriptions sur un axe commun écraseraient la
+        seconde courbe à plat. On compare des formes, et le pic journalier est écrit sous
+        chacune pour que la hauteur garde un sens.
       </li>
     </ul>
   </section>
