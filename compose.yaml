@@ -8,9 +8,21 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      # En production, retirer cette publication : la base n'a aucune raison d'être
-      # joignable depuis l'extérieur. Pour un accès ponctuel, passer par un tunnel SSH.
-      - "${DB_EXPOSED_PORT:-5433}:5432"
+      #
+      # « 127.0.0.1: » devant le port, et c'est tout ce qui change — mais cela change tout.
+      #
+      # Sans ce préfixe, Docker publie le port sur TOUTES les interfaces réseau de la
+      # machine : la base de données devient joignable depuis l'internet, et Docker écrit
+      # ses règles directement dans iptables, donc un pare-feu ufw configuré sur le serveur
+      # ne la protège pas. N'importe qui peut alors tenter des mots de passe sur le compte
+      # Postgres, indéfiniment.
+      #
+      # Avec le préfixe, le port n'est accessible que depuis la machine elle-même : un outil
+      # local (pgAdmin, psql) fonctionne comme avant, l'extérieur ne voit rien. Pour y
+      # accéder à distance, un tunnel SSH :
+      #     ssh -L 5433:127.0.0.1:5433 utilisateur@serveur
+      #
+      - "127.0.0.1:${DB_EXPOSED_PORT:-5433}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -32,12 +44,30 @@ services:
       - ollama_data:/root/.ollama
 
   app:
+    # « build » et non « image » : ce fichier sert au développement local.
+    #
+    # Le serveur de production a son propre compose.yaml, dans /opt/skulvi, avec une ligne
+    # « image: ghcr.io/… » — sans quoi le « docker compose pull » du déploiement n'aurait rien
+    # à tirer. Les deux fichiers sont donc distincts, et les réglages de sécurité ci-dessous
+    # doivent être reportés à la main dans celui du serveur.
     build: .
     container_name: springboot-app
     restart: unless-stopped
     env_file: .env
     ports:
-      - "${APP_PORT:-8080}:8080"
+      #
+      # Réservé à la machine locale, pour la même raison que la base.
+      #
+      # Publié sur toutes les interfaces, le backend était joignable en direct sur
+      # http://domaine:8080, c'est-à-dire en clair et sans passer par le serveur frontal :
+      # le certificat TLS, les en-têtes de sécurité et la limitation de débit posés par
+      # nginx étaient contournables en changeant simplement le port dans l'adresse.
+      #
+      # nginx tourne sur la machine hôte, il atteint donc 127.0.0.1:8080 normalement.
+      # Si nginx devait un jour tourner lui-même dans un conteneur, il faudrait retirer
+      # toute publication et le laisser joindre « app » par le réseau interne.
+      #
+      - "127.0.0.1:${APP_PORT:-8080}:8080"
     depends_on:
       postgres:
         condition: service_healthy
