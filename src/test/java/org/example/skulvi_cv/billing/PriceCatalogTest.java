@@ -76,6 +76,21 @@ class PriceCatalogTest {
         // Activé mais sans tarif : un bouton de souscription ne mènerait à rien.
         assertThat(props(Map.of()).usable()).isFalse();
 
+        /*
+         * Le cas réel, et celui qui manquait.
+         *
+         * La configuration déclare les trois clés en dur — « starter: ${STRIPE_PRICE_STARTER:} »
+         * — donc la table contient toujours trois entrées, même quand aucune variable n'est
+         * renseignée : leurs valeurs sont des chaînes vides. Tester seulement « la table
+         * n'est pas vide » répondait donc « paiement disponible » en permanence, et le client
+         * recevait une 503 après avoir cliqué sur le bouton de souscription.
+         */
+        assertThat(props(Map.of("starter", "", "pro", "", "business", "")).usable()).isFalse();
+        assertThat(props(Map.of("starter", "   ")).usable()).isFalse();
+
+        // Un seul tarif renseigné parmi les trois suffit : on peut vendre ce plan-là.
+        assertThat(props(Map.of("starter", "", "pro", "price_P", "business", "")).usable()).isTrue();
+
         // Clé absente.
         assertThat(new StripeProperties(true, "", "whsec", Map.of("pro", "p"), null, null, null).usable())
 

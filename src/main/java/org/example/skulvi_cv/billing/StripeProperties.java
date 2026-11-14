@@ -36,9 +36,24 @@ public record StripeProperties(
         portalReturnPath = blankTo(portalReturnPath, "/admin/abonnement");
     }
 
-    /** Le paiement n'est utilisable que si la clé et au moins un tarif sont renseignés. */
+    /**
+     * Le paiement n'est utilisable que si la clé et au moins un tarif sont renseignés.
+     *
+     * <p>Le tarif doit être <b>non vide</b>, et non seulement présent. La nuance n'est pas
+     * théorique : la configuration déclare les trois clés en dur
+     * ({@code starter: ${STRIPE_PRICE_STARTER:}}), donc la table contient toujours trois
+     * entrées, même quand aucune variable n'est renseignée — leurs valeurs sont alors des
+     * chaînes vides. Un simple {@code !prices.isEmpty()} répondait donc « oui » en
+     * permanence.
+     *
+     * <p>Conséquence concrète du défaut : une instance avec une clé mais sans identifiant de
+     * tarif affichait un bouton de souscription, et le client recevait une erreur 503 après
+     * avoir cliqué. Mieux vaut proposer un contact que mener à une impasse.
+     */
     public boolean usable() {
-        return enabled && secretKey != null && !secretKey.isBlank() && !prices.isEmpty();
+        return enabled
+                && secretKey != null && !secretKey.isBlank()
+                && prices.values().stream().anyMatch(id -> id != null && !id.isBlank());
     }
 
     public String priceFor(String planKey) {
