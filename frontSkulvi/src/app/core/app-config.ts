@@ -10,16 +10,18 @@
  */
 export const APP = {
   /** Adresse de contact commercial et support. */
-  contactEmail: 'contact@skulvi.fr',
+  contactEmail: 'savadogoibrahim0915@gmail.com',
 
   /** Téléphone affiché dans le pied de page. */
   phone: '+225 05 76 47 82 31',
   phoneHref: 'tel:+2250576478231',
 
+  siteUrl: 'https://skulvicv.cloud',
+
   city: "Abidjan, Côte d'Ivoire",
 
   social: {
-    linkedin: 'https://www.linkedin.com',
+    linkedin: 'https://www.linkedin.com/in/ibrahim-savadogo-0a1b4b1a9/',
     facebook: 'https://www.facebook.com',
   },
 } as const;
