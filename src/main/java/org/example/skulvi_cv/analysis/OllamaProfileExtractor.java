@@ -24,6 +24,7 @@ public class OllamaProfileExtractor implements ProfileExtractor {
     // dans la classe :
     private static final Logger log = LoggerFactory.getLogger(OllamaProfileExtractor.class);
 
+    ///
 
     private static final int MAX_CHARS = 12_000;
 
