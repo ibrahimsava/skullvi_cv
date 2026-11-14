@@ -63,19 +63,27 @@
         </button>
       </form>
 
+      <!--
+        Deux corrections sur ces liens, qui paraissaient mal finis.
+
+        1. L'interpolation est sur la même ligne que les balises. Un retour à la ligne à
+           l'intérieur d'un <a> compte comme une espace : le soulignement du lien dépassait
+           donc du texte, à gauche et à droite.
+        2. Variante « plain », donc sans la flèche. C'est la règle que le système de design
+           énonce lui-même pour un lien inséré au milieu d'une phrase — une flèche collée à
+           « Se connecter » au beau milieu d'un texte ressemble à un oubli.
+      -->
       <footer class="panel-foot">
         <p>
           {{ isLogin ? 'Pas encore de compte ?' : 'Déjà un compte ?' }}
-          <a class="sk-link" [routerLink]="isLogin ? '/register' : '/login'">
-            {{ isLogin ? 'Créer un compte candidat' : 'Se connecter' }}
-          </a>
+          <a class="sk-link plain" [routerLink]="isLogin ? '/register' : '/login'">{{ isLogin ? 'Créer un compte candidat' : 'Se connecter' }}</a>
         </p>
 
         <!-- Les deux parcours sont distincts : un recruteur a besoin du nom de son
              entreprise, un candidat non. Les mélanger perdait tout le monde. -->
         <p class="recruiter">
           Vous recrutez ?
-          <a class="sk-link" routerLink="/inscription-entreprise">Créer un espace entreprise</a>
+          <a class="sk-link plain" routerLink="/inscription-entreprise">Créer un espace entreprise</a>
         </p>
       </footer>
 

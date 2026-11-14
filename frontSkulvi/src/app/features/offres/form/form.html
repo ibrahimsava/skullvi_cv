@@ -110,19 +110,46 @@
         }
 
         @for (criterion of criteria.controls; track $index) {
+          <!--
+            Chaque contrôle est enveloppé dans une cellule qui porte son propre libellé.
+
+            Ces libellés ne s'affichent que sur petit écran, là où l'en-tête de colonnes
+            (.crit-head) est masqué : sans eux, la carte ne montrait qu'un menu déroulant sans
+            intitulé, deux nombres dont le texte indicatif disparaît dès la première saisie, et
+            une case à cocher que rien n'expliquait. Exactement un des deux mécanismes de
+            libellé est visible à chaque largeur, jamais les deux.
+          -->
           <div class="crit-row" [formGroupName]="$index">
-            <input type="text" formControlName="name" placeholder="Ex : Spring Boot" aria-label="Nom du critère">
+            <div class="crit-cell nom">
+              <span class="crit-label">Critère</span>
+              <input type="text" formControlName="name" placeholder="Ex : Spring Boot" aria-label="Nom du critère">
+            </div>
 
-            <select formControlName="type" aria-label="Type de critère">
-              @for (type of criterionTypes; track type) {
-                <option [value]="type">{{ type }}</option>
-              }
-            </select>
+            <div class="crit-cell">
+              <span class="crit-label">Type</span>
+              <select formControlName="type" aria-label="Type de critère">
+                @for (type of criterionTypes; track type) {
+                  <option [value]="type">{{ type }}</option>
+                }
+              </select>
+            </div>
 
-            <input type="number" min="0" formControlName="weight" placeholder="Poids" aria-label="Poids">
-            <input type="number" min="0" formControlName="threshold" placeholder="Seuil" aria-label="Seuil">
+            <div class="crit-cell">
+              <span class="crit-label">Poids</span>
+              <input type="number" min="0" formControlName="weight" placeholder="Poids" aria-label="Poids">
+            </div>
 
-            <input type="checkbox" formControlName="mandatory" class="check" aria-label="Critère obligatoire">
+            <div class="crit-cell">
+              <span class="crit-label">Seuil</span>
+              <input type="number" min="0" formControlName="threshold" placeholder="Seuil" aria-label="Seuil">
+            </div>
+
+            <!-- Le libellé entoure la case : sur mobile, tout le texte devient cliquable,
+                 ce qui donne une cible bien plus large que les 18 px de la case seule. -->
+            <label class="crit-cell oblig">
+              <input type="checkbox" formControlName="mandatory" class="check" aria-label="Critère obligatoire">
+              <span class="crit-label">Obligatoire</span>
+            </label>
 
             <button type="button" class="icon-btn" (click)="removeCriterion($index)" aria-label="Supprimer ce critère">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
