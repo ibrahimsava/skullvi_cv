@@ -6,10 +6,25 @@
 </header>
 
 @if (outcome() === 'ok') {
-  <p class="sk-alert ok" role="status">
-    Paiement reçu, merci. L'activation se fait à la confirmation de notre prestataire,
-    en général immédiate. <button type="button" class="inline-link" (click)="reload()">Actualiser</button>
-  </p>
+  @if (activationEnAttente()) {
+    <!-- Le navigateur revient de chez le prestataire avant que l'événement signé n'ait été
+         traité. La page attend donc, au lieu d'afficher un « Gratuit » qui passe pour un
+         échec et de laisser l'utilisateur chercher un bouton à cliquer. -->
+    <p class="sk-alert" role="status" aria-live="polite">
+      <strong>Paiement reçu, merci.</strong> Activation de votre abonnement en cours…
+      <span class="attente" aria-hidden="true"></span>
+    </p>
+  } @else if (activationTropLongue()) {
+    <p class="sk-alert warn" role="status">
+      <strong>Paiement reçu, merci.</strong> L'activation prend plus de temps que
+      d'habitude — elle se fera automatiquement dès la confirmation de notre prestataire.
+      <button type="button" class="inline-link" (click)="reload()">Vérifier maintenant</button>
+    </p>
+  } @else {
+    <p class="sk-alert ok" role="status">
+      <strong>Votre abonnement est actif.</strong> Merci pour votre paiement.
+    </p>
+  }
 } @else if (outcome() === 'annule') {
   <p class="sk-alert" role="status">
     Paiement abandonné. Rien n'a été débité, et votre plan n'a pas changé.
@@ -133,10 +148,13 @@
 
     <div class="plans">
       @for (p of plans(); track p.plan) {
-        <article class="plan" [class.current]="p.current">
+        <!-- « estCourant » et non « p.current » : voir le commentaire du composant. Le
+             drapeau du serveur est figé au chargement de la grille, alors que la
+             consommation est rechargée — c'est elle qui fait foi. -->
+        <article class="plan" [class.current]="estCourant(p)">
           <header>
             <h3>{{ p.label }}</h3>
-            @if (p.current) { <span class="sk-badge accent">Votre plan</span> }
+            @if (estCourant(p)) { <span class="sk-badge accent">Votre plan</span> }
           </header>
 
           <p class="price">
@@ -160,7 +178,7 @@
             </li>
           </ul>
 
-          @if (p.current) {
+          @if (estCourant(p)) {
             <button type="button" class="sk-btn ghost sm" disabled>Plan actuel</button>
           } @else if (!canManage()) {
             <span class="muted-note">Réservé au propriétaire</span>

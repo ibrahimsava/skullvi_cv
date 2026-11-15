@@ -20,52 +20,116 @@
   }
 }
 
-/* ---------------------------------------------------------------- indicateurs */
+/* ---------------------------------------------------------------- petits multiples */
 
-.kpis {
-  display: grid; gap: 14px;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  margin-bottom: 18px;
-}
+/*
+  Une grille de vignettes, séparées par des filets d'un pixel et non par des cartes.
 
-.kpi {
-  padding: 18px 20px;
-  background: var(--surface);
+  Le `gap: 1px` sur un fond gris : chaque vignette est blanche, et l'écart laisse voir le
+  fond, qui fait office de trait de séparation. Résultat, un seul bloc dense au lieu de
+  sept objets flottants — c'est ce qui distingue un tableau de bord d'une page de
+  présentation, et c'est la grille qui porte la structure, pas l'ombre des cartes.
+*/
+.multiples {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(188px, 1fr));
+  gap: 1px;
+  margin-bottom: 0;
+  background: var(--line);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-
-  /* Un liseré de couleur par indicateur, accordé à la palette des graphiques :
-     on relie du regard la carte et la série qu'elle résume. */
-  border-top: 3px solid var(--line-strong);
-
-  &[data-tone='visits']   { border-top-color: #1d4ed8; }
-  &[data-tone='visitors'] { border-top-color: #0d9488; }
-  &[data-tone='signups']  { border-top-color: #b45309; }
-  &[data-tone='apply']    { border-top-color: #7c3aed; }
+  overflow: hidden;
 }
 
-.kpi-label {
-  margin: 0 0 7px;
-  font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 16px 17px 13px;
+  background: var(--surface);
+  transition: background var(--t-fast);
+
+  &:hover { background: var(--blue-50); }
+}
+
+.tile-label {
+  margin: 0;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+  color: var(--muted);
+
+  /* Deux lignes au maximum, hauteur réservée : sans cela, « Candidatures envoyées »
+     passe à la ligne et désaligne sa vignette de toutes les autres de la rangée. */
+  min-height: 2.6em;
+  line-height: 1.3;
+}
+
+/* Le nombre et sa variation sur la même ligne de base : la variation qualifie le
+   nombre, la mettre en dessous la détacherait de ce qu'elle décrit. */
+.tile-value {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+
+  strong {
+    font-size: 28px; font-weight: 700; letter-spacing: -0.035em; line-height: 1;
+    color: var(--ink);
+  }
+}
+
+.tile-trend {
+  font-style: normal;
+  font-size: 11.5px; font-weight: 650;
+  color: var(--muted);
+  white-space: nowrap;
+
+  /* La flèche double la couleur : la variation reste lisible sans percevoir la teinte. */
+  &[data-tone='ok']     { color: var(--ok); }
+  &[data-tone='danger'] { color: var(--danger); }
+}
+
+/*
+  Hauteur fixe, et c'est le point essentiel des petits multiples : toutes les courbes
+  occupent exactement la même bande, donc leurs formes se comparent d'un coup d'œil.
+  Une hauteur qui s'adapterait au contenu détruirait la comparaison.
+*/
+.tile-chart {
+  height: 34px;
+  margin-top: auto;
+}
+
+.tile-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0;
+  padding-top: 7px;
+  border-top: 1px solid var(--line);
+  font-size: 10.5px;
+  color: var(--muted);
+
+  strong { font-weight: 700; color: var(--ink-2); }
+}
+
+/*
+  Axe de temps commun, sous la grille.
+
+  Posé une seule fois : les sept vignettes partagent le même intervalle, et le répéter
+  sur chacune ajouterait sept fois la même information pour rien.
+*/
+.axe {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 9px 0 20px;
+  font-size: 10.5px; letter-spacing: 0.04em;
   color: var(--muted);
 }
 
-.kpi-value {
-  display: block;
-  font-size: 32px; font-weight: 700; letter-spacing: -0.035em; line-height: 1;
-  color: var(--ink);
-}
-
-.kpi-trend {
-  display: flex; align-items: center; gap: 5px;
-  margin: 9px 0 0;
-  font-size: 12.5px; color: var(--muted);
-
-  .arrow { font-size: 9px; }
-
-  /* La flèche double la couleur : la variation reste lisible sans percevoir la teinte. */
-  &.ok { color: var(--ok); font-weight: 600; }
-  &.danger { color: var(--danger); font-weight: 600; }
+.axe-trait {
+  flex: 1;
+  height: 1px;
+  background: var(--line-strong);
 }
 
 /* ---------------------------------------------------------------- totaux */
@@ -107,12 +171,16 @@
   p  { margin: 0; font-size: 13px; color: var(--muted); }
 }
 
-.chart { height: 250px; }
-.chart.tall { height: 320px; }
+/*
+  Trois listes de répartition côte à côte.
 
-.two-col {
+  `1fr` partout et non des largeurs inégales : les trois listes portent la même nature
+  d'information — un libellé, un compte, une barre — et des colonnes de largeurs
+  différentes feraient croire à une hiérarchie qui n'existe pas.
+*/
+.repartitions {
   display: grid; gap: 18px;
-  grid-template-columns: 1.5fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
   align-items: start;
 }
 
@@ -179,32 +247,37 @@
   strong { font-size: 15px; font-weight: 700; color: var(--accent-hover); }
 }
 
-/* ---------------------------------------------------------------- provenances */
+/* ---------------------------------------------------------------- répartitions */
 
-.sources {
+/*
+  Une barre et son chiffre, répétés — à la place de l'anneau qui occupait le bloc
+  « Appareils ».
+
+  Un anneau demande de comparer des angles, ce que l'œil fait mal, et il repousse les
+  nombres dans une légende. Une barre horizontale se lit directement, tient dans moins de
+  place, et surtout se compare d'une liste à l'autre puisque les trois ont la même forme.
+*/
+.bars {
   list-style: none; margin: 0; padding: 0;
-  display: grid; gap: 15px;
+  display: grid; gap: 13px;
 }
 
-.source-head {
+.bar-head {
   display: flex; align-items: baseline; justify-content: space-between;
-  gap: 12px; margin-bottom: 7px;
+  gap: 12px; margin-bottom: 6px;
 }
 
-.source-label {
-  display: flex; align-items: center; gap: 8px;
+.bar-label {
   min-width: 0;
-  font-size: 14px; font-weight: 600; color: var(--ink);
+  font-size: 13.5px; font-weight: 600; color: var(--ink);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-
-  .dot { flex: none; width: 9px; height: 9px; border-radius: 50%; }
 }
 
-.source-count {
+.bar-count {
   flex: none;
-  font-size: 14px; font-weight: 700; color: var(--ink);
+  font-size: 13.5px; font-weight: 700; color: var(--ink);
 
-  em { margin-left: 6px; font-style: normal; font-size: 12px; font-weight: 500; color: var(--muted); }
+  em { margin-left: 6px; font-style: normal; font-size: 11.5px; font-weight: 500; color: var(--muted); }
 }
 
 /* Rail de jauge local : la couleur vient de la palette, posée en ligne par le composant,
@@ -244,16 +317,38 @@
 
 /* ---------------------------------------------------------------- adaptation */
 
-@media (max-width: 1000px) {
-  .two-col { grid-template-columns: 1fr; }
-}
-
 @media (max-width: 640px) {
   .sk-page-head { flex-direction: column; align-items: stretch; }
   .ranges { width: 100%; button { flex: 1; } }
-  .kpi-value { font-size: 27px; }
-  .chart, .chart.tall { height: 230px; }
+
+  /*
+    Deux colonnes et non une seule.
+
+    Les petits multiples perdent tout leur intérêt empilés : la comparaison des formes
+    exige de les voir ensemble. Deux par rangée restent lisibles jusqu'à 320 px — on
+    resserre le rembourrage et on réduit le nombre plutôt que de passer à une colonne.
+  */
+  .multiples { grid-template-columns: 1fr 1fr; }
+
+  .tile {
+    padding: 12px 12px 10px;
+    gap: 7px;
+  }
+  .tile-label { font-size: 10px; min-height: 2.8em; }
+  .tile-value strong { font-size: 22px; }
+  .tile-chart { height: 28px; }
+
+  /* Le pic suffit sur petit écran : les deux chiffres côte à côte sous 160 px de large
+     se chevauchaient. */
+  .tile-foot span:last-child { display: none; }
+
   .panel { padding: 16px 14px 18px; }
   .funnel-head { flex-wrap: wrap; }
   .funnel-head strong { margin-left: 0; }
+}
+
+/* En dessous de 380 px, deux colonnes deviennent trop étroites pour le nombre. */
+@media (max-width: 380px) {
+  .multiples { grid-template-columns: 1fr; }
+  .tile-foot span:last-child { display: inline; }
 }
