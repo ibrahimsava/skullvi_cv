@@ -46,6 +46,21 @@ public final class AnalyticsDtos {
             double completionRate,
             double overallRate) {}
 
+    /**
+     * Un indicateur et sa série journalière : de quoi dessiner un « petit multiple ».
+     *
+     * <p>Une vignette par indicateur, toutes alignées sur le même axe de temps : c'est ce qui
+     * permet de comparer des grandeurs d'ordres très différents — mille visites et dix-sept
+     * inscriptions — sans écraser la plus petite. Un seul grand graphique ne le permet pas.
+     *
+     * @param key    identifiant stable, pour la couleur et l'ordre d'affichage
+     * @param label  libellé affiché
+     * @param total  total sur la période
+     * @param trend  variation en pourcentage, ou {@code null} si la période précédente est vide
+     * @param daily  un point par jour de la période, aligné sur {@code series}, zéros compris
+     */
+    public record Metric(String key, String label, long total, Double trend, List<Long> daily) {}
+
     /** Tout ce qu'affiche la page de statistiques, en un seul appel. */
     public record AnalyticsOverview(
             int days,
@@ -59,6 +74,8 @@ public final class AnalyticsDtos {
             Double visitsTrend,
             Double visitorsTrend,
             List<DayPoint> series,
+            /** Un indicateur par vignette, tous alignés sur le même axe de temps. */
+            List<Metric> metrics,
             List<Slice> topPages,
             List<Slice> referrers,
             List<Slice> devices,

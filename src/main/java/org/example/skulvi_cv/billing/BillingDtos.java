@@ -10,6 +10,7 @@ public final class BillingDtos {
 
     private BillingDtos() {}
 
+    //
     /**
      * Ce que l'organisation consomme ce mois-ci, face à ce que son plan autorise.
      * Alimente directement la page « Abonnement » : aucun calcul de quota côté front.

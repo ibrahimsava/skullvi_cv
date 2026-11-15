@@ -5,8 +5,10 @@ import org.example.skulvi_cv.Utilisateur.AppUserRepository;
 import org.example.skulvi_cv.analytics.AnalyticsDtos.AnalyticsOverview;
 import org.example.skulvi_cv.analytics.AnalyticsDtos.DayPoint;
 import org.example.skulvi_cv.analytics.AnalyticsDtos.Funnel;
+import org.example.skulvi_cv.analytics.AnalyticsDtos.Metric;
 import org.example.skulvi_cv.analytics.AnalyticsDtos.Slice;
 import org.example.skulvi_cv.analytics.VisitEventRepository.CountRow;
+import org.example.skulvi_cv.analytics.VisitEventRepository.DailyKindRow;
 import org.example.skulvi_cv.analytics.VisitEventRepository.DailyRow;
 import org.example.skulvi_cv.org.OrganizationRepository;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -17,6 +19,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -73,6 +76,8 @@ public class AnalyticsService {
                 ? events.dailyAll(from)
                 : events.dailyForOrg(orgId, from);
 
+        List<DayPoint> series = fillGaps(rows, from, today);
+
         return new AnalyticsOverview(
                 span,
                 from,
@@ -83,7 +88,10 @@ public class AnalyticsService {
                 Math.max(0, visitorsBefore),
                 trend(visits, Math.max(0, visitsBefore)),
                 trend(visitors, Math.max(0, visitorsBefore)),
-                fillGaps(rows, from, today),
+                series,
+                metrics(orgId, from, previousFrom, today, series,
+                        visits, Math.max(0, visitsBefore),
+                        visitors, Math.max(0, visitorsBefore)),
                 slices(orgId == null ? events.topPaths(from) : events.topPathsForOrg(orgId, from)),
                 slices(orgId == null ? events.topReferrers(from) : events.topReferrersForOrg(orgId, from)),
                 slices(deviceLabels(orgId == null ? events.deviceSplit(from) : events.deviceSplitForOrg(orgId, from))),
@@ -121,6 +129,78 @@ public class AnalyticsService {
             series.add(new DayPoint(d, row == null ? 0 : row.getVisits(), row == null ? 0 : row.getVisitors()));
         }
         return series;
+    }
+
+    /**
+     * Construit les vignettes d'indicateurs.
+     *
+     * <p>Les visites et les visiteurs distincts viennent de la série déjà calculée : les
+     * recompter serait une requête de plus pour le même chiffre, avec le risque qu'il diffère.
+     * Les autres natures d'événement sont lues en <b>une seule</b> requête couvrant la période
+     * affichée et la précédente, puis découpées par date — la comparaison exige les deux, et
+     * deux requêtes coûteraient un aller-retour supplémentaire pour rien.
+     *
+     * <p>L'ordre des vignettes est celui du parcours réel d'un visiteur : il arrive, consulte
+     * une offre, ouvre le formulaire, envoie sa candidature. Lire la grille de gauche à droite
+     * revient donc à suivre l'entonnoir, et une chute se repère sans calcul.
+     */
+    private List<Metric> metrics(UUID orgId, LocalDate from, LocalDate previousFrom,
+                                 LocalDate today, List<DayPoint> series,
+                                 long visits, long visitsBefore,
+                                 long visitors, long visitorsBefore) {
+
+        List<DailyKindRow> rows = orgId == null
+                ? events.dailyByKind(previousFrom)
+                : events.dailyByKindForOrg(orgId, previousFrom);
+
+        List<Metric> metrics = new ArrayList<>();
+
+        metrics.add(new Metric("visits", "Visites", visits, trend(visits, visitsBefore),
+                series.stream().map(DayPoint::visits).toList()));
+        metrics.add(new Metric("visitors", "Visiteurs distincts", visitors,
+                trend(visitors, visitorsBefore),
+                series.stream().map(DayPoint::visitors).toList()));
+
+        for (var entree : Map.of(
+                VisitKind.OFFER_VIEW, "Offres consultées",
+                VisitKind.APPLY_START, "Formulaires ouverts",
+                VisitKind.APPLY_DONE, "Candidatures envoyées",
+                VisitKind.SIGNUP_ORG, "Entreprises inscrites",
+                VisitKind.SIGNUP_CANDIDATE, "Candidats inscrits").entrySet()) {
+
+            metrics.add(metricFor(rows, entree.getKey(), entree.getValue(), from, previousFrom, today));
+        }
+
+        // Ordre imposé : Map.of ne garantit aucun ordre d'itération, et une grille dont les
+        // vignettes changent de place à chaque appel serait illisible.
+        List<String> ordre = List.of("visits", "visitors", "offer_view", "apply_start",
+                "apply_done", "signup_org", "signup_candidate");
+        return metrics.stream()
+                .sorted(Comparator.comparingInt(m -> ordre.indexOf(m.key())))
+                .toList();
+    }
+
+    /** Une vignette pour une nature d'événement, découpée entre période courante et précédente. */
+    private static Metric metricFor(List<DailyKindRow> rows, VisitKind kind, String label,
+                                    LocalDate from, LocalDate previousFrom, LocalDate today) {
+        Map<LocalDate, Long> parJour = rows.stream()
+                .filter(r -> kind.name().equals(r.getKind()))
+                .collect(Collectors.toMap(DailyKindRow::getDay, DailyKindRow::getTotal, Long::sum));
+
+        List<Long> daily = new ArrayList<>();
+        long total = 0;
+        for (LocalDate d = from; !d.isAfter(today); d = d.plusDays(1)) {
+            long n = parJour.getOrDefault(d, 0L);
+            daily.add(n);
+            total += n;
+        }
+
+        long before = 0;
+        for (LocalDate d = previousFrom; d.isBefore(from); d = d.plusDays(1)) {
+            before += parJour.getOrDefault(d, 0L);
+        }
+
+        return new Metric(kind.name().toLowerCase(), label, total, trend(total, before), daily);
     }
 
     private static List<Slice> slices(List<CountRow> rows) {
