@@ -32,6 +32,13 @@ public interface VisitEventRepository extends JpaRepository<VisitEvent, UUID> {
         long getTotal();
     }
 
+    /** Un compte par jour <b>et par nature d'événement</b>. */
+    interface DailyKindRow {
+        LocalDate getDay();
+        String getKind();
+        long getTotal();
+    }
+
     // ---------------------------------------------------------------- séries
 
     @Query("""
@@ -52,6 +59,38 @@ public interface VisitEventRepository extends JpaRepository<VisitEvent, UUID> {
             order by v.day asc
             """)
     List<DailyRow> dailyForOrg(@Param("org") UUID organizationId, @Param("since") LocalDate since);
+
+    /**
+     * Compte par jour et par nature d'événement.
+     *
+     * <p>Alimente les « petits multiples » : une courbe par indicateur demande une série
+     * journalière par indicateur, et il n'y en avait qu'une, pour les pages vues. Les
+     * consultations d'offre, les candidatures et les inscriptions n'avaient que leur total
+     * sur la période — de quoi afficher un nombre, pas une tendance.
+     *
+     * <p>Une seule requête couvre la période affichée <b>et</b> la précédente : l'appelant
+     * découpe ensuite par date. Le résultat est déjà agrégé — au plus une ligne par jour et
+     * par nature, soit quelques centaines — donc le découpage en Java ne coûte rien, alors
+     * qu'une seconde requête doublerait les allers-retours.
+     */
+    @Query("""
+            select v.day as day, cast(v.kind as string) as kind, count(v) as total
+            from VisitEvent v
+            where v.day >= :since
+            group by v.day, v.kind
+            order by v.day asc
+            """)
+    List<DailyKindRow> dailyByKind(@Param("since") LocalDate since);
+
+    @Query("""
+            select v.day as day, cast(v.kind as string) as kind, count(v) as total
+            from VisitEvent v
+            where v.day >= :since and v.organizationId = :org
+            group by v.day, v.kind
+            order by v.day asc
+            """)
+    List<DailyKindRow> dailyByKindForOrg(@Param("org") UUID organizationId,
+                                         @Param("since") LocalDate since);
 
     // ---------------------------------------------------------------- totaux
 
